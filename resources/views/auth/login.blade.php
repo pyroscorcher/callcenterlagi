@@ -11,7 +11,7 @@
 
         {{-- Logo + brand --}}
         <div class="flex items-center gap-3 mb-8">
-            
+            <img src="{{ asset('logositaba.png') }}" alt="Logo SITABA" class="w-fit h-fit max-h-12">
         </div>
 
         {{-- Card --}}
@@ -30,7 +30,6 @@
             <form method="POST" action="{{ route('login') }}" class="space-y-5">
                 @csrf
 
-                {{-- Username --}}
                 <div>
                     <label for="username" class="block text-base text-gray-900 mb-1">
                         Username
@@ -48,7 +47,6 @@
                     />
                 </div>
 
-                {{-- Password --}}
                 <div>
                     <label for="password" class="block text-base text-gray-900 mb-1">
                         Password
