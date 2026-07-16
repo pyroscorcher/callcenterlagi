@@ -1,17 +1,24 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use iIlluminate\Validation\ValidationException;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    /**
+     * Show the login form.
+     */
     public function login()
     {
         return view('auth.login');
     }
 
+    /**
+     * Handle a login attempt.
+     */
     public function authenticate(Request $request)
     {
         $credentials = $request->validate([
@@ -29,6 +36,10 @@ class AuthController extends Controller
 
         return redirect()->intended('/dashboard');
     }
+
+    /**
+     * Log the user out.
+     */
     public function logout(Request $request)
     {
         Auth::logout();
