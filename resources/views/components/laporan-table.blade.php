@@ -16,7 +16,7 @@
                 <th class="px-6 py-4 font-bold text-gray-900">Aksi</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="laporanTableBody">
             @forelse ($laporans as $index => $laporan)
                 <tr class="{{ $index % 2 === 0 ? 'bg-white' : 'bg-gray-50' }} border-t border-gray-100">
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->created_at?->translatedFormat('d F Y \p\u\k\u\l H.i') }}</td>
@@ -26,12 +26,12 @@
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->lokasi }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->status }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->pelapor }}</td>
-                    {{-- <td class="px-6 py-4">
-                        <a href="{{ route('laporan.show', $laporan->id) }}"
+                    <td class="px-6 py-4">
+                        {{-- <a href="{{ route('laporan.show', $laporan->id) }}"
                            class="text-[#3B39C4] hover:underline font-medium">
                             Detail
-                        </a>
-                    </td> --}}
+                        </a> --}}
+                    </td>
                 </tr>
             @empty
                 <tr>

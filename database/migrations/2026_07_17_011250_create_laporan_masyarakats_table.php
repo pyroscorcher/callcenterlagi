@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->string('pelapor', 255);
+            $table->string('telepon', 255);
             $table->string('jenis_bencana', 255);
             $table->string('nama_bencana', 255);
             $table->string('dampak_bencana', 255);

@@ -15,6 +15,7 @@ class WhatsappWebhookController extends Controller
 
         $validated = $request->validate([
             'pelapor' => ['required', 'string', 'max:255'],
+            'telepon' => ['required', 'string', 'max:255'],
             'jenis_bencana' => ['required', 'string', 'max:255'],
             'nama_bencana' => ['required', 'string', 'max:255'],
             'dampak_bencana' => ['required', 'string', 'max:255'],
@@ -24,13 +25,10 @@ class WhatsappWebhookController extends Controller
             'deskripsi' => ['required', 'string', 'max:255'],
             'infrastruktur_terdampak' => ['required', 'string', 'max:255'],
             'kebutuhan_mendesak' => ['nullable', 'string', 'max:255'],
-            // Optional — the bot only sends this when the reporter attaches a photo.
             'foto' => ['nullable', 'image', 'max:5120'], // 5MB
         ]);
 
         if ($request->hasFile('foto')) {
-            // Stored under storage/app/public/laporan-foto — make sure you've run
-            // `php artisan storage:link` so this is reachable at /storage/laporan-foto/...
             $validated['foto'] = $request->file('foto')->store('laporan-foto', 'public');
         }
 

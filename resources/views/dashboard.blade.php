@@ -10,7 +10,6 @@
 
     <div class="flex min-h-screen">
 
-        {{-- Sidebar — pass logo-url="{{ asset('images/logo.png') }}" once you have the real logo asset --}}
         <x-sidebar :logo-url="asset('logositaba.png')" />
 
         {{-- Main content --}}
@@ -22,30 +21,20 @@
                 </h1>
 
                 <div class="flex items-center gap-3 flex-1 justify-end">
-                    <form method="GET" class="relative w-full max-w-xs">
+                    <div class="relative w-full max-w-xs">
                         <input
                             type="text"
-                            name="search"
-                            value="{{ request('search') }}"
+                            id="searchInput"
                             placeholder="Cari Laporan...."
                             class="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-10
-                                   focus:outline-none focus:ring-2 focus:ring-[#3B39C4]"
+                                focus:outline-none focus:ring-2 focus:ring-[#3B39C4]"
                         />
-                        <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2"
+                        <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+                                d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
                         </svg>
-                    </form>
-
-                    <button type="button"
-                            class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 font-medium text-gray-700">
-                        Filter
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M3 4h18M6 8h12M10 12h4M11 16h2" />
-                        </svg>
-                    </button>
+                    </div>
 
                     {{-- <a href="{{ route('laporan.export') }}"
                        class="flex items-center gap-2 rounded-lg bg-[#161446] px-5 py-2.5 font-medium text-white">
@@ -62,6 +51,25 @@
 
         </main>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('searchInput');
+            const tableBody = document.getElementById('laporanTableBody');
+ 
+            if (!searchInput || !tableBody) return;
+ 
+            searchInput.addEventListener('input', function () {
+                const query = searchInput.value.trim().toLowerCase();
+                const rows = tableBody.querySelectorAll('tr');
+ 
+                rows.forEach(function (row) {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
+            });
+        });
+    </script>
 
 </body>
 </html>

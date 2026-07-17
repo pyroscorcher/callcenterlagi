@@ -11,6 +11,7 @@ class LaporanMasyarakat extends Model
 
     protected $fillable = [
         'pelapor',
+        'telepon',
         'jenis_bencana',
         'nama_bencana',
         'dampak_bencana',
