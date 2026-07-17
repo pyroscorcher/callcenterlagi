@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'whatsapp_bot' => [
+        'secret' => env('WHATSAPP_BOT_SECRET', 'SITABA_PROTOTYPE_SECRET_2026'),
+    ],
+
 ];

@@ -20,13 +20,13 @@ return new class extends Migration
             $table->string('dampak_bencana', 255);
             $table->string('waktu_kejadian', 255);
             $table->string('wilayah_waktu', 255);
-            $table->string('alamat', 255);
             $table->string('lokasi', 255);
             $table->string('deskripsi', 255);
             $table->string('infrastruktur_terdampak', 255);
             $table->string('status', 255);
-            $table->string('detail_status', 255);
-            $table->string('kebutuhan_mendesak', 255);
+            $table->string('detail_status', 255)->nullable();
+            $table->string('kebutuhan_mendesak', 255)->nullable();
+            $table->string('foto', 255)->nullable();
         });
     }
 

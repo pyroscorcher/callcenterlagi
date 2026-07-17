@@ -16,12 +16,12 @@ class LaporanMasyarakat extends Model
         'dampak_bencana',
         'waktu_kejadian',
         'wilayah_waktu',
-        'alamat',
         'lokasi',
         'deskripsi',
         'infrastruktur_terdampak',
         'status',
         'detail_status',
         'kebutuhan_mendesak',
+        'foto',
     ];
 }
