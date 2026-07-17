@@ -7,7 +7,7 @@
     {{-- Logo section — replaceable --}}
     <div class="flex items-center gap-3 px-6 py-6">
         @if ($logoUrl)
-            <img src="{{ $logoUrl }}" alt="Logo" class="w-fit h-fit max-h-12">
+            <img src="{{ $logoUrl }}" alt="Logo" class="w-fit h-fit">
         @elseif (isset($logo))
             {{ $logo }}
         @else
@@ -41,9 +41,9 @@
            class="block px-3 py-2 rounded-lg text-white/90 text-sm
                   {{ request()->routeIs('laporan.penanganan-balai') ? 'bg-white/10 font-bold text-white' : 'hover:bg-white/5' }}">
             Laporan Penanganan Balai
-        </a>
+        </a> --}}
 
-        <a href="{{ route('data.pic-balai') }}"
+        {{-- <a href="{{ route('data.pic-balai') }}"
            class="block px-3 py-2 rounded-lg text-white/90 text-sm
                   {{ request()->routeIs('data.pic-balai') ? 'bg-white/10 font-bold text-white' : 'hover:bg-white/5' }}">
             Data PIC Balai

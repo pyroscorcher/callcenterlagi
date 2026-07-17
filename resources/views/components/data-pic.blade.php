@@ -9,7 +9,7 @@
                 <th class="px-6 py-4 font-bold text-gray-900">Waktu Pelaporan</th>
                 <th class="px-6 py-4 font-bold text-gray-900">Waktu Kejadian</th>
                 <th class="px-6 py-4 font-bold text-gray-900">Jenis Bencana</th>
-                <th class="px-6 py-4 font-bold text-gray-900">Nama Bencana</th>
+                <th class="px-6 py-4 font-bold text-gray-900">Jenis Kejadian Bencana</th>
                 <th class="px-6 py-4 font-bold text-gray-900">Lokasi Bencana</th>
                 <th class="px-6 py-4 font-bold text-gray-900">Detail Status</th>
                 <th class="px-6 py-4 font-bold text-gray-900">Pelapor</th>
@@ -19,18 +19,18 @@
         <tbody>
             @forelse ($laporans as $index => $laporan)
                 <tr class="{{ $index % 2 === 0 ? 'bg-white' : 'bg-gray-50' }} border-t border-gray-100">
-                    <td class="px-6 py-4 text-gray-800">{{ $laporan->created_at?->translatedFormat('d F Y \p\u\k\u\l H.i') }}</td>
+                    <td class="px-6 py-4 text-gray-800">{{ $laporan->waktu_pelaporan }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->waktu_kejadian }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->jenis_bencana }}</td>
-                    <td class="px-6 py-4 text-gray-800">{{ $laporan->nama_bencana }}</td>
-                    <td class="px-6 py-4 text-gray-800">{{ $laporan->lokasi }}</td>
+                    <td class="px-6 py-4 text-gray-800">{{ $laporan->jenis_kejadian_bencana }}</td>
+                    <td class="px-6 py-4 text-gray-800">{{ $laporan->lokasi_bencana }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->status }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->pelapor }}</td>
                     <td class="px-6 py-4">
-                        <a href="{{ route('laporan.show', $laporan->id) }}"
+                        {{-- <a href="{{ route('laporan.show', $laporan->id ?? '#') }}"
                            class="text-[#3B39C4] hover:underline font-medium">
                             Detail
-                        </a>
+                        </a> --}}
                     </td>
                 </tr>
             @empty
