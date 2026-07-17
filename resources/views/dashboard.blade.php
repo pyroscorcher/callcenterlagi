@@ -16,9 +16,6 @@
         <main class="flex-1 p-8">
 
             <div class="flex items-center justify-between mb-6 gap-4">
-                <h1 class="text-xl font-bold text-white whitespace-nowrap">
-                    Laporan Masuk Bencana
-                </h1>
 
                 <div class="flex items-center gap-3 flex-1 justify-end">
                     <div class="relative w-full max-w-xs">

@@ -25,4 +25,27 @@ class DashboardController extends Controller
             'laporans' => $laporans,
         ]);
     }
+
+    public function show(LaporanMasyarakat $laporan)
+    {
+        return view('show', [
+            'laporan' => $laporan,
+        ]);
+    }
+
+    public function destroy(LaporanMasyarakat $laporan)
+    {
+        // If a photo was attached, clean up the stored file too.
+        if ($laporan->foto) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($laporan->foto);
+        }
+ 
+        $laporan->delete();
+ 
+        return redirect()
+            ->route('laporan.masuk-bencana')
+            ->with('status', 'Laporan berhasil dihapus.');
+    }
+
+
 }

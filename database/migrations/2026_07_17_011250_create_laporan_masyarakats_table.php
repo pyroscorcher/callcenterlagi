@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('waktu_kejadian', 255);
             $table->string('wilayah_waktu', 255);
             $table->string('lokasi', 255);
-            $table->string('lintang', 255);
-            $table->string('bujur', 255);
+            $table->string('lintang', 255)->nullable();
+            $table->string('bujur', 255)->nullable();
             $table->string('deskripsi', 255);
             $table->string('infrastruktur_terdampak', 255);
             $table->string('status', 255);

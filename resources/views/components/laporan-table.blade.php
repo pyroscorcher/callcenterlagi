@@ -3,6 +3,7 @@
 ])
 
 <div class="overflow-x-auto rounded-xl border border-gray-200">
+
     <table class="min-w-full bg-white">
         <thead>
             <tr class="bg-[#B9C6F3] text-left">
@@ -27,10 +28,20 @@
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->status }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->pelapor }}</td>
                     <td class="px-6 py-4">
-                        {{-- <a href="{{ route('laporan.show', $laporan->id) }}"
-                           class="text-[#3B39C4] hover:underline font-medium">
-                            Detail
-                        </a> --}}
+                        <div class="flex items-center gap-3">
+                            <a href="{{ route('laporan.show', $laporan->id) }}"
+                               class="text-[#3B39C4] hover:underline font-medium">
+                                Detail
+                            </a>
+                            <form action="{{ route('laporan.destroy', $laporan->id) }}" method="POST"
+                                  onsubmit="return confirm('Yakin ingin menghapus laporan ini?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline font-medium">
+                                    Hapus
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             @empty
