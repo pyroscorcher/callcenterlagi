@@ -18,6 +18,8 @@ class LaporanMasyarakat extends Model
         'waktu_kejadian',
         'wilayah_waktu',
         'lokasi',
+        'lintang',
+        'bujur',
         'deskripsi',
         'infrastruktur_terdampak',
         'status',
