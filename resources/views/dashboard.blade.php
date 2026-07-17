@@ -6,7 +6,7 @@
     <title>Laporan Masuk Bencana - SITABA</title>
     @vite('resources/css/app.css')
 </head>
-<body class="bg-[#F4F5F9]">
+<body class="bg-[#161446]">
 
     <div class="flex min-h-screen">
 
@@ -17,7 +17,7 @@
         <main class="flex-1 p-8">
 
             <div class="flex items-center justify-between mb-6 gap-4">
-                <h1 class="text-xl font-bold text-gray-900 whitespace-nowrap">
+                <h1 class="text-xl font-bold text-white whitespace-nowrap">
                     Laporan Masuk Bencana
                 </h1>
 
