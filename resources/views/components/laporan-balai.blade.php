@@ -12,6 +12,7 @@
                 <th class="px-6 py-4 font-bold text-gray-900">Jenis Bencana</th>
                 <th class="px-6 py-4 font-bold text-gray-900">Nama Bencana</th>
                 <th class="px-6 py-4 font-bold text-gray-900">Lokasi Bencana</th>
+                <th class="px-6 py-4 font-bold text-gray-900">Detail Status</th>
                 <th class="px-6 py-4 font-bold text-gray-900">Pelapor</th>
                 <th class="px-6 py-4 font-bold text-gray-900">Aksi</th>
             </tr>
@@ -24,6 +25,7 @@
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->jenis_bencana }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->nama_bencana }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->lokasi }}</td>
+                    <td class="px-6 py-4 text-gray-800">{{ $laporan->status }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->pelapor }}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
