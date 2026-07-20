@@ -47,5 +47,28 @@ class DashboardController extends Controller
             ->with('status', 'Laporan berhasil dihapus.');
     }
 
+    public function laporanPenangananBalai(Request $request)
+    {
+        $laporans = LaporanMasyarakat::query()
+            ->when($request->search, function ($query, $search) {
+                $query->where('lokasi', 'like', "%{$search}%")
+                    ->orWhere('alamat', 'like', "%{$search}%")
+                    ->orWhere('jenis_bencana', 'like', "%{$search}%")
+                    ->orWhere('nama_bencana', 'like', "%{$search}%")
+                    ->orWhere('pelapor', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
 
+        return view('laporan.penanganan-balai', [
+            'laporans' => $laporans,
+        ]);
+    }
+ 
+    public function dataPicBalai()
+    {
+        // TODO: swap for real data once the ERD/model for this exists.
+        return view('data-pic-balai', ['items' => []]);
+    } 
 }
