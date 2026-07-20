@@ -31,12 +31,6 @@
             <span class="font-semibold">Laporan</span>
         </div>
 
-        <a href="{{ route('laporan.masuk-bencana') }}"
-           class="block px-3 py-2 rounded-lg text-white text-sm
-                  {{ request()->routeIs('laporan.masuk-bencana') ? 'bg-white/10 font-bold text-white' : 'hover:bg-white/5' }}">
-            Laporan Masuk Bencana
-        </a>
-
         <a href="{{ route('laporan.penanganan-balai') }}"
            class="block px-3 py-2 rounded-lg text-white/90 text-sm
                   {{ request()->routeIs('laporan.penanganan-balai') ? 'bg-white/10 font-bold text-white' : 'hover:bg-white/5' }}">

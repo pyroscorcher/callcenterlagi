@@ -4,9 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\LaporanMasyarakat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class WhatsappWebhookController extends Controller
 {
+    // Hours ahead of UTC for each Indonesian time zone the reporter can pick.
+    private const WILAYAH_OFFSETS = [
+        'WIB' => 7,
+        'WITA' => 8,
+        'WIT' => 9,
+    ];
+
     public function store(Request $request)
     {
         if ($request->input('token') !== config('services.whatsapp_bot.secret')) {
@@ -25,17 +33,40 @@ class WhatsappWebhookController extends Controller
             'deskripsi' => ['required', 'string', 'max:255'],
             'infrastruktur_terdampak' => ['required', 'string', 'max:255'],
             'kebutuhan_mendesak' => ['nullable', 'string', 'max:255'],
+            // Optional — the bot only sends this when the reporter attaches a photo.
             'foto' => ['nullable', 'image', 'max:5120'], // 5MB
         ]);
 
         if ($request->hasFile('foto')) {
+            // Stored under storage/app/public/laporan-foto — make sure you've run
+            // `php artisan storage:link` so this is reachable at /storage/laporan-foto/...
             $validated['foto'] = $request->file('foto')->store('laporan-foto', 'public');
         }
 
-        $laporan = LaporanMasyarakat::create([
+        // The bot's server clock isn't necessarily in Indonesian time, so
+        // rather than trust the server's own "now", we build the timestamp
+        // from the reporter's chosen wilayah_waktu (WIB/WITA/WIT).
+        //
+        // Caveat: this stores a "wall clock" local time as created_at rather
+        // than a true UTC instant — fine for display purposes on this
+        // dashboard, but if you ever need to reliably sort/compare reports
+        // chronologically across different wilayah_waktu values, a true UTC
+        // timestamp plus a separate display-timezone conversion would be more
+        // correct. This matches what was asked for, just flagging the tradeoff.
+        $offset = self::WILAYAH_OFFSETS[$validated['wilayah_waktu']] ?? self::WILAYAH_OFFSETS['WIB'];
+        $localTimestamp = Carbon::now('UTC')->addHours($offset);
+
+        $laporan = new LaporanMasyarakat([
             ...$validated,
             'status' => 'Baru',
         ]);
+
+        // Prevent Eloquent's own timestamp auto-touch from overwriting the
+        // values we're about to set manually.
+        $laporan->timestamps = false;
+        $laporan->created_at = $localTimestamp;
+        $laporan->updated_at = $localTimestamp;
+        $laporan->save();
 
         return response()->json([
             'message' => 'Laporan berhasil disimpan',

@@ -4,27 +4,26 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 
-
-
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Authentication routes
+// Authentication routes — must stay outside the auth middleware,
+// otherwise a logged-out user could never reach /login.
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('login.authenticate');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// OPPS
-// Laporan Masuk Bencana
-Route::get('/dashboard', [DashboardController::class, 'laporanMasukBencana'])->name('laporan.masuk-bencana');
-Route::get('/laporan/{laporan}', [DashboardController::class, 'show'])->name('laporan.show');
-Route::delete('/laporan/{laporan}', [DashboardController::class, 'destroy'])->name('laporan.destroy');
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Laporan Penanganan Balai
-Route::get('/laporan-penanganan-balai', [DashboardController::class, 'laporanPenangananBalai'])->name('laporan.penanganan-balai');
+    // Laporan Masuk Bencana
+    Route::get('/dashboard', [DashboardController::class, 'laporanMasukBencana'])->name('laporan.masuk-bencana');
+    Route::get('/laporan/{laporan}', [DashboardController::class, 'show'])->name('laporan.show');
+    Route::delete('/laporan/{laporan}', [DashboardController::class, 'destroy'])->name('laporan.destroy');
 
+    // Laporan Penanganan Balai
+    Route::get('/laporan-penanganan-balai', [DashboardController::class, 'laporanPenangananBalai'])->name('laporan.penanganan-balai');
 
-// Data PIC Balai
-Route::get('/data-pic-balai', [DashboardController::class, 'dataPicBalai'])->name('data.pic-balai');
-
+    // Data PIC Balai
+    Route::get('/data-pic-balai', [DashboardController::class, 'dataPicBalai'])->name('data.pic-balai');
+});
