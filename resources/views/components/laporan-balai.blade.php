@@ -25,7 +25,7 @@
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->jenis_bencana }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->nama_bencana }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->lokasi }}</td>
-                    <td class="px-6 py-4 text-gray-800">{{ $laporan->status }}</td>
+                    <td class="px-6 py-4 text-gray-800">{{ $laporan->detail_status }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->pelapor }}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
