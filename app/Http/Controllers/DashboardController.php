@@ -61,14 +61,14 @@ class DashboardController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('laporan.penanganan-balai', [
+        return view('laporanpenangananbalai', [
             'laporans' => $laporans,
         ]);
     }
  
-    public function dataPicBalai()
-    {
-        // TODO: swap for real data once the ERD/model for this exists.
-        return view('data-pic-balai', ['items' => []]);
-    } 
+    // public function dataPicBalai()
+    // {
+    //     // TODO: swap for real data once the ERD/model for this exists.
+    //     return view('data-pic-balai', ['items' => []]);
+    // } 
 }
