@@ -1,31 +1,21 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data PIC Balai - SITABA</title>
-    @vite('resources/css/app.css')
-</head>
-<body class="bg-[#161446]">
+@props([
+    'items' => [],
+])
 
-    <div class="flex min-h-screen">
-
-        <x-sidebar :logo-url="asset('logositaba.png')" />
-
-        <main class="flex-1 p-8">
-            <h1 class="text-xl font-bold text-white mb-6">Data PIC Balai</h1>
-
-            <div class="bg-[#F4F5F9] rounded-2xl p-8 text-gray-600">
-                {{--
-                    TODO: this page is waiting on the data model / ERD for
-                    Data PIC Balai. This is also the data the "Kirim Pesan
-                    Kepada PIC" button on the Laporan detail page needs, so
-                    building this out unblocks that too.
-                --}}
-                Halaman ini masih menunggu model data PIC Balai.
-            </div>
-        </main>
-    </div>
-
-</body>
-</html>
+<div class="bg-[#F4F5F9] rounded-2xl p-8 text-gray-600">
+    {{--
+        TODO: this component is waiting on the data model / ERD for
+        Data PIC Balai. This is also the data the "Kirim Pesan Kepada PIC"
+        button on the Laporan detail page needs, so building this out
+        unblocks that too. Once it exists, pass real data in via the $items
+        prop from the controller (same pattern as <x-laporan-table>
+        receiving :laporans="$laporans"), and swap this placeholder text
+        for a real table/list.
+    --}}
+    @forelse ($items as $item)
+        {{-- placeholder row --}}
+        <div class="border-b border-gray-200 py-3">{{ $item }}</div>
+    @empty
+        Halaman ini masih menunggu model data PIC Balai.
+    @endforelse
+</div>

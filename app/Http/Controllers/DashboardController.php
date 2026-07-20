@@ -66,9 +66,9 @@ class DashboardController extends Controller
         ]);
     }
  
-    // public function dataPicBalai()
-    // {
-    //     // TODO: swap for real data once the ERD/model for this exists.
-    //     return view('data-pic-balai', ['items' => []]);
-    // } 
+    public function dataPicBalai()
+    {
+        // TODO: swap for real data once the ERD/model for this exists.
+        return view('datapicbalai', ['items' => []]);
+    } 
 }

@@ -43,10 +43,10 @@
             Laporan Penanganan Balai
         </a>
 
-        {{-- <a href="{{ route('data.pic-balai') }}"
+        <a href="{{ route('data.pic-balai') }}"
            class="block px-3 py-2 rounded-lg text-white/90 text-sm
-                  {{ request()->routeIs('data.pic-balai') ? 'bg-white/10 font-bold text-white' : 'hover:bg-white/5' }}">
+                  {{ request()->routeIs('data.pic-balai') ? 'bg-white/10 font-bold font-bold text-white' : 'hover:bg-white/5' }}">
             Data PIC Balai
-        </a> --}}
+        </a>
     </nav>
 </aside>

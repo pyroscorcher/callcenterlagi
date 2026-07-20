@@ -24,3 +24,7 @@ Route::delete('/laporan/{laporan}', [DashboardController::class, 'destroy'])->na
 // Laporan Penanganan Balai
 Route::get('/laporan-penanganan-balai', [DashboardController::class, 'laporanPenangananBalai'])->name('laporan.penanganan-balai');
 
+
+// Data PIC Balai
+Route::get('/data-pic-balai', [DashboardController::class, 'dataPicBalai'])->name('data.pic-balai');
+

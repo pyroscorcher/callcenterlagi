@@ -13,9 +13,8 @@
         <x-sidebar :logo-url="asset('logositaba.png')" />
 
         <main class="flex-1 p-8">
-            <h1 class="text-xl font-bold text-white mb-6">Data PIC Balai</h1>
 
-            <x-data-pic-balai :items="$items ?? []" />
+            <x-data-pic :items="$items ?? []" />
         </main>
     </div>
 
