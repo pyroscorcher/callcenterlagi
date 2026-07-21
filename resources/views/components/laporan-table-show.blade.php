@@ -47,21 +47,21 @@
                 <dd class="text-gray-900">{{ $laporan->lokasi ?: '-' }}</dd>
             </div>
 
-            {{--
-                Titik Kejadian (lat/lng) isn't in the current migration yet.
+            
+                {{-- Titik Kejadian (lat/lng) isn't in the current migration yet.
                 Once a latitude/longitude column pair exists on
-                laporan_masyarakats, swap the line below back in:
+                laporan_masyarakats, swap the line below back in: --}}
 
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
                     <dt class="text-gray-700">Titik Kejadian</dt>
                     <dd class="text-gray-900 flex items-center justify-between">
-                        <span>{{ $laporan->latitude ?? '-' }} , {{ $laporan->longitude ?? '-' }}</span>
+                        <span>{{ $laporan->lintang ?? '-' }} , {{ $laporan->bujur ?? '-' }}</span>
                         <a href="#" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700">
                             Edit Titik Lokasi
                         </a>
                     </dd>
                 </div>
-            --}}
+           
 
             <div class="grid grid-cols-[220px_1fr] gap-4">
                 <dt class="text-gray-700">Dampak Bencana</dt>
@@ -77,14 +77,7 @@
                     <img
                         src="{{ Storage::disk('public')->url($laporan->foto) }}"
                         alt="Foto Bencana"
-                        class="w-full h-40 object-cover rounded-lg"
-                    />
-                    {{--
-                        No dedicated caption column exists yet (the migration
-                        only stores the file path). If you want a caption like
-                        "Bangunan aula gedung hancur..." per photo, that needs
-                        a `keterangan_foto` column added to laporan_masyarakats.
-                    --}}
+                        class="w-full h-40 object-cover rounded-lg"/>
                 </div>
             @else
                 <div class="w-64 h-40 rounded-xl border border-dashed border-gray-300 bg-white flex items-center justify-center text-gray-400">
