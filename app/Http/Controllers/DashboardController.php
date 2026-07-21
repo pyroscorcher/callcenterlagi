@@ -72,11 +72,22 @@ class DashboardController extends Controller
         return view('datapicbalai', ['items' => []]);
     }
 
-    public function balaiDashboard()
+    public function balaiDashboard(Request $request)
     {
-        // TODO: separate dashboard for the "balai" role — fill in with
-        // whatever Balai users are meant to see (likely tied to
-        // laporanPenangananBalai data above, or its own scoped query).
-        return view('components2.dashboardbalai');
+        $laporans = LaporanMasyarakat::query()
+            ->when($request->search, function ($query, $search) {
+                $query->where('lokasi', 'like', "%{$search}%")
+                    ->orWhere('alamat', 'like', "%{$search}%")
+                    ->orWhere('jenis_bencana', 'like', "%{$search}%")
+                    ->orWhere('nama_bencana', 'like', "%{$search}%")
+                    ->orWhere('pelapor', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('dashboardbalai', [
+            'laporans' => $laporans,
+        ]);
     }
 }
