@@ -8,7 +8,6 @@ use Illuminate\Support\Carbon;
 
 class WhatsappWebhookController extends Controller
 {
-    // Hours ahead of UTC for each Indonesian time zone the reporter can pick.
     private const WILAYAH_OFFSETS = [
         'WIB' => 7,
         'WITA' => 8,
@@ -33,13 +32,10 @@ class WhatsappWebhookController extends Controller
             'deskripsi' => ['required', 'string', 'max:255'],
             'infrastruktur_terdampak' => ['required', 'string', 'max:255'],
             'kebutuhan_mendesak' => ['nullable', 'string', 'max:255'],
-            // Optional — the bot only sends this when the reporter attaches a photo.
             'foto' => ['nullable', 'image', 'max:5120'], // 5MB
         ]);
 
         if ($request->hasFile('foto')) {
-            // Stored under storage/app/public/laporan-foto — make sure you've run
-            // `php artisan storage:link` so this is reachable at /storage/laporan-foto/...
             $validated['foto'] = $request->file('foto')->store('laporan-foto', 'public');
         }
 
@@ -61,8 +57,6 @@ class WhatsappWebhookController extends Controller
             'status' => 'Baru',
         ]);
 
-        // Prevent Eloquent's own timestamp auto-touch from overwriting the
-        // values we're about to set manually.
         $laporan->timestamps = false;
         $laporan->created_at = $localTimestamp;
         $laporan->updated_at = $localTimestamp;

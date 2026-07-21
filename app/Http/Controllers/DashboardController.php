@@ -39,9 +39,9 @@ class DashboardController extends Controller
         if ($laporan->foto) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($laporan->foto);
         }
- 
+
         $laporan->delete();
- 
+
         return redirect()
             ->route('laporan.masuk-bencana')
             ->with('status', 'Laporan berhasil dihapus.');
@@ -65,10 +65,18 @@ class DashboardController extends Controller
             'laporans' => $laporans,
         ]);
     }
- 
+
     public function dataPicBalai()
     {
         // TODO: swap for real data once the ERD/model for this exists.
         return view('datapicbalai', ['items' => []]);
-    } 
+    }
+
+    public function balaiDashboard()
+    {
+        // TODO: separate dashboard for the "balai" role — fill in with
+        // whatever Balai users are meant to see (likely tied to
+        // laporanPenangananBalai data above, or its own scoped query).
+        return view('components2.dashboardbalai');
+    }
 }

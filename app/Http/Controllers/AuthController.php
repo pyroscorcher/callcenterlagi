@@ -34,7 +34,10 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/dashboard');
+        return match ($request->user()->role) {
+            'balai' => redirect()->intended(route('balai.dashboard')),
+            default => redirect()->intended(route('laporan.masuk-bencana')),
+        };
     }
 
     /**
