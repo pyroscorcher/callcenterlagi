@@ -10,11 +10,11 @@
 
     <div class="flex min-h-screen">
 
-        <x-sidebar :logo-url="asset('logositaba.png')" />
+        <x-opps.sidebar :logo-url="asset('logositaba.png')" />
 
         <main class="flex-1 p-8">
 
-            <x-data-pic :items="$items ?? []" />
+            <x-opps.data-pic :items="$items ?? []" />
         </main>
     </div>
 

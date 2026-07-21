@@ -10,12 +10,12 @@
 
     <div class="flex min-h-screen">
 
-        <x-sidebar :logo-url="asset('logositaba.png')" />
+        <x-opps.sidebar :logo-url="asset('logositaba.png')" />
 
         {{-- Main content --}}
         <main class="flex-1 p-8">
 
-        <x-laporan-table-show :laporan="$laporan" />
+        <x-opps.laporan-table-show :laporan="$laporan" />
 
         </main>
     </div>

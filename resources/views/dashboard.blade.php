@@ -10,7 +10,7 @@
 
     <div class="flex min-h-screen">
 
-        <x-sidebar :logo-url="asset('logositaba.png')" />
+        <x-opps.sidebar :logo-url="asset('logositaba.png')" />
 
         {{-- Main content --}}
         <main class="flex-1 p-8">
@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            <x-laporan-table :laporans="$laporans" />
+            <x-opps.laporan-table :laporans="$laporans" />
 
         </main>
     </div>
