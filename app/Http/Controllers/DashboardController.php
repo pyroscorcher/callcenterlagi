@@ -90,4 +90,11 @@ class DashboardController extends Controller
             'laporans' => $laporans,
         ]);
     }
+
+    public function balaiShow(LaporanMasyarakat $laporan)
+    {
+        return view('balai-show', [
+            'laporan' => $laporan,
+        ]);
+    }
 }

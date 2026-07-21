@@ -33,5 +33,6 @@ Route::middleware('auth')->group(function () {
     // Balai-only routes
     Route::middleware('role:balai')->group(function () {
         Route::get('/balai/dashboard', [DashboardController::class, 'balaiDashboard'])->name('balai.dashboard');
+        Route::get('/balai/show', [DashboardController::class, 'balaiShow'])->name('balai.laporan-penanganan-balai');
     });
 });

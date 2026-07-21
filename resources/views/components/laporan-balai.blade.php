@@ -29,7 +29,7 @@
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->pelapor }}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
-                            <a href="{{ route('laporan.show', $laporan->id) }}"
+                            <a href="{{ route('balai.laporan-penanganan-balai', $laporan->id) }}"
                                class="text-[#3B39C4] hover:underline font-medium">
                                 Detail
                             </a>
