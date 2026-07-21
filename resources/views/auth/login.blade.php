@@ -70,6 +70,14 @@
                 >
                     Submit
                 </button>
+
+                <a
+                    href="{{ route('balai.login') }}"
+                    class="block w-full text-center rounded-lg bg-[#1E1B5E] hover:bg-[#161446] transition-colors
+                           text-white font-semibold text-lg py-3.5"
+                >
+                    Login sebagai Balai
+                </a>
             </form>
         </div>
     </div>
