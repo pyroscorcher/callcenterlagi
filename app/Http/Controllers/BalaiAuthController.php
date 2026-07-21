@@ -6,12 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
-class AuthController extends Controller
+class BalaiAuthController extends Controller
 {
-    public function login()
-    {
-        return view('auth.login');
-    }
 
     public function authenticate(Request $request)
     {
@@ -20,7 +16,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! Auth::guard('balai')->attempt($credentials)) {
             throw ValidationException::withMessages([
                 'username' => 'Username atau password yang Anda masukkan salah.',
             ]);
@@ -28,16 +24,16 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('laporan.masuk-bencana'));
+        return redirect()->intended(route('balai.dashboard'));
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('balai')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        return redirect()->route('balai.login');
     }
 }

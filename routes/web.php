@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\BalaiAuthController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -31,9 +32,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/data-pic-balai', [DashboardController::class, 'dataPicBalai'])->name('data.pic-balai');
     });
 
-    // Balai-only routes
-    // Route::middleware('role:balai')->group(function () {
-    //     Route::get('/balai/dashboard', [DashboardController::class, 'balaiDashboard'])->name('balai.dashboard');
-    //     Route::get('/balai/show', [DashboardController::class, 'balaiShow'])->name('balai.laporan-penanganan-balai');
-    // });
+Route::get('/balai/login', [BalaiAuthController::class, 'login'])->name('balai.login');
+Route::post('/balai/login', [BalaiAuthController::class, 'authenticate'])->name('balai.login.authenticate');
+ 
+Route::middleware('auth:balai')->group(function () {
+    Route::post('/balai/logout', [BalaiAuthController::class, 'logout'])->name('balai.logout');
+    Route::get('/balai/dashboard', [BalaiAuthController::class, 'balaiDashboard'])->name('balai.dashboard');
+});
+
 });
