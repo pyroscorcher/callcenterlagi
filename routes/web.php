@@ -36,8 +36,7 @@ Route::get('/balai/login', [BalaiAuthController::class, 'login'])->name('balai.l
 Route::post('/balai/login', [BalaiAuthController::class, 'authenticate'])->name('balai.login.authenticate');
  
 Route::middleware('auth:balai')->group(function () {
-    Route::post('/balai/logout', [BalaiAuthController::class, 'logout'])->name('balai.logout');
-    Route::get('/balai/dashboard', [BalaiAuthController::class, 'balaiDashboard'])->name('balai.dashboard');
-});
-
+        Route::post('/balai/logout', [BalaiAuthController::class, 'logout'])->name('balai.logout');
+        Route::get('/balai/dashboard', [BalaiAuthController::class, 'balaiDashboard'])->name('balai.dashboard');
+    });
 });
