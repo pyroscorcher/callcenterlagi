@@ -24,15 +24,16 @@ Route::middleware('auth')->group(function () {
         Route::delete('/laporan/{laporan}', [DashboardController::class, 'destroy'])->name('laporan.destroy');
 
         // Laporan Penanganan Balai
-        Route::get('/laporan-penanganan-balai', [DashboardController::class, 'laporanPenangananBalai'])->name('laporan.penanganan-balai');
+        Route::get('/laporan-penanganan-balai', [DashboardController::class, 'laporanPenangananBalai'])->name('laporan-penanganan-balai');
+        Route::get('/laporan-penanganan-balai/{laporan}', [DashboardController::class, 'lpbshow'])->name('laporan-penanganan-balai.show');
 
         // Data PIC Balai
         Route::get('/data-pic-balai', [DashboardController::class, 'dataPicBalai'])->name('data.pic-balai');
     });
 
     // Balai-only routes
-    Route::middleware('role:balai')->group(function () {
-        Route::get('/balai/dashboard', [DashboardController::class, 'balaiDashboard'])->name('balai.dashboard');
-        Route::get('/balai/show', [DashboardController::class, 'balaiShow'])->name('balai.laporan-penanganan-balai');
-    });
+    // Route::middleware('role:balai')->group(function () {
+    //     Route::get('/balai/dashboard', [DashboardController::class, 'balaiDashboard'])->name('balai.dashboard');
+    //     Route::get('/balai/show', [DashboardController::class, 'balaiShow'])->name('balai.laporan-penanganan-balai');
+    // });
 });

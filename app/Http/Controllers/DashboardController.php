@@ -1,4 +1,5 @@
 <?php
+// Also known as OppsController but i cba to alter the routes
 
 namespace App\Http\Controllers;
 
@@ -66,35 +67,16 @@ class DashboardController extends Controller
         ]);
     }
 
+        public function lpbshow(LaporanMasyarakat $laporan)
+    {
+        return view('laporanpenangananbalai-show', [
+            'laporan' => $laporan,
+        ]);
+    }
+
     public function dataPicBalai()
     {
         // TODO: swap for real data once the ERD/model for this exists.
         return view('datapicbalai', ['items' => []]);
-    }
-
-    public function balaiDashboard(Request $request)
-    {
-        $laporans = LaporanMasyarakat::query()
-            ->when($request->search, function ($query, $search) {
-                $query->where('lokasi', 'like', "%{$search}%")
-                    ->orWhere('alamat', 'like', "%{$search}%")
-                    ->orWhere('jenis_bencana', 'like', "%{$search}%")
-                    ->orWhere('nama_bencana', 'like', "%{$search}%")
-                    ->orWhere('pelapor', 'like', "%{$search}%");
-            })
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
-
-        return view('dashboardbalai', [
-            'laporans' => $laporans,
-        ]);
-    }
-
-    public function balaiShow(LaporanMasyarakat $laporan)
-    {
-        return view('balai-show', [
-            'laporan' => $laporan,
-        ]);
     }
 }

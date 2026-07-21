@@ -28,16 +28,21 @@
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->detail_status }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ $laporan->pelapor }}</td>
                     <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <a href="{{ route('laporan.penanganan-balai', $laporan->id) }}"
-                               class="text-[#3B39C4] hover:underline font-medium">
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('laporan-penanganan-balai.show', $laporan->id) }}"
+                            class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
                                 Detail
                             </a>
-                            <form action="{{ route('laporan.destroy', $laporan->id) }}" method="POST"
-                                  onsubmit="return confirm('Yakin ingin menghapus laporan ini?');">
+
+                            <form action="{{ route('laporan.destroy', $laporan->id) }}"
+                                method="POST"
+                                onsubmit="return confirm('Yakin ingin menghapus laporan ini?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:underline font-medium">
+
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700">
                                     Hapus
                                 </button>
                             </form>
