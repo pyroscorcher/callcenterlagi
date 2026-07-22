@@ -10,8 +10,7 @@
     <div class="min-h-screen flex flex-col items-center justify-center bg-[#161446] px-4 py-12">
 
         <div class="flex items-center gap-3 mb-8">
-            <img src="{{ asset('logositaba.png') }}" alt="Logo" class="w-12 h-12 object-contain">
-            <span class="text-white text-2xl font-bold tracking-wide">SITABA</span>
+            <img src="{{ asset('logositaba.png') }}" alt="Logo SITABA" class="w-fit h-fit max-h-12">
         </div>
 
         <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">

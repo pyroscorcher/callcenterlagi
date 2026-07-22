@@ -18,7 +18,7 @@
         <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
 
             <h1 class="text-center text-xl font-bold text-gray-900 mb-6">
-                Login Ke SITABA
+                Login ke SITABA
             </h1>
 
             @if ($errors->any())

@@ -8,6 +8,10 @@ use Illuminate\Validation\ValidationException;
 
 class BalaiAuthController extends Controller
 {
+    public function login()
+    {
+            return view('auth.balai-login');
+    }
 
     public function authenticate(Request $request)
     {

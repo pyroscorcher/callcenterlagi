@@ -31,12 +31,14 @@ Route::middleware('auth')->group(function () {
         // Data PIC Balai
         Route::get('/data-pic-balai', [DashboardController::class, 'dataPicBalai'])->name('data.pic-balai');
     });
+});
 
+// --- Balai auth — outside the admin 'auth' group, so it's reachable
+// while logged out (or logged in only as an admin). ---
 Route::get('/balai/login', [BalaiAuthController::class, 'login'])->name('balai.login');
 Route::post('/balai/login', [BalaiAuthController::class, 'authenticate'])->name('balai.login.authenticate');
- 
+
 Route::middleware('auth:balai')->group(function () {
-        Route::post('/balai/logout', [BalaiAuthController::class, 'logout'])->name('balai.logout');
-        Route::get('/balai/dashboard', [BalaiAuthController::class, 'balaiDashboard'])->name('balai.dashboard');
-    });
+    Route::post('/balai/logout', [BalaiAuthController::class, 'logout'])->name('balai.logout');
+    Route::get('/balai/dashboard', [DashboardController::class, 'balaiDashboard'])->name('balai.dashboard');
 });
