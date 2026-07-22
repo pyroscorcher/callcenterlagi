@@ -19,7 +19,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'laporanMasukBencana'])->name('laporan.masuk-bencana');
         Route::get('/laporan/{laporan}', [DashboardController::class, 'show'])->name('laporan.show');
         Route::delete('/laporan/{laporan}', [DashboardController::class, 'destroy'])->name('laporan.destroy');
-        Route::put('/laporan/{laporan}', [DashboardController::class, 'edit'])->name('laporan.edit');
+        Route::get('/laporan/{laporan}/edit', [DashboardController::class, 'edit'])->name('laporan.edit');
+        Route::put('/laporan/{laporan}',[DashboardController::class, 'update'])->name('laporan.update');
+        Route::get('/laporan/{id}/edit-lokasi', [DashboardController::class, 'editLokasi'])->name('laporan.edit-lokasi');
+        Route::put('/laporan/{id}/update-lokasi', [DashboardController::class, 'updateLokasi'])->name('laporan.update-lokasi');
+
 
         Route::get('/laporan-penanganan-balai', [DashboardController::class, 'laporanPenangananBalai'])->name('laporan-penanganan-balai');
         Route::get('/laporan-penanganan-balai/{laporan}', [DashboardController::class, 'lpbshow'])->name('laporan-penanganan-balai.show');

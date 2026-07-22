@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 
 use App\Models\LaporanMasyarakat;
 use Illuminate\Http\Request;
+use App\Models\Foto;
+use Illuminate\Support\Facades\Storage;
 
 class DashboardController extends Controller
 {
@@ -27,11 +29,103 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function edit($id)
+    {
+        $laporan = LaporanMasyarakat::with('fotos')->findOrFail($id);
+        
+        // Sesuaikan dengan nama folder view Anda (contoh: laporan.edit)
+        return view('edit', compact('laporan'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $laporan = LaporanMasyarakat::with('fotos')->findOrFail($id);
+
+        // 1. Validasi Input
+        $request->validate([
+            'jenis_bencana' => 'required|string|max:255',
+            'nama_bencana' => 'required|string|max:255',
+            'waktu_kejadian' => 'required|string|max:255',
+            'telepon' => 'required|string|max:50',
+            'lokasi' => 'required|string',
+            'lintang' => 'nullable|string',
+            'bujur' => 'nullable|string',
+            'dampak_bencana' => 'nullable|string',
+            'deskripsi' => 'nullable|string',
+            'kebutuhan_mendesak' => 'nullable|string',
+            'hapus_foto' => 'nullable|array',
+            'hapus_foto.*' => 'exists:fotos,id',
+            'fotos' => 'nullable|array',
+            'fotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        // 2. Update Informasi Teks Laporan
+        $laporan->update($request->except(['fotos', 'hapus_foto']));
+
+        // 3. Proses Penghapusan Foto yang dicentang oleh admin
+        if ($request->has('hapus_foto')) {
+            $fotosDihapus = Foto::whereIn('id', $request->hapus_foto)->get();
+            foreach ($fotosDihapus as $foto) {
+                // Hapus file fisik dari storage disk public
+                if (Storage::disk('public')->exists($foto->file_path)) {
+                    Storage::disk('public')->delete($foto->file_path);
+                }
+                // Hapus record dari database
+                $foto->delete();
+            }
+        }
+
+        // 4. Proses Penambahan Foto Baru (Jika ada yang di-upload)
+        if ($request->hasFile('fotos')) {
+            foreach ($request->file('fotos') as $file) {
+                $path = $file->store('laporan_fotos', 'public');
+
+                $laporan->fotos()->create([
+                    'file_path' => $path
+                ]);
+            }
+        }
+
+        return redirect()->route('laporan.show', $laporan->id)
+                        ->with('success', 'Laporan berhasil diperbarui!');
+    }
+
     public function show(LaporanMasyarakat $laporan)
     {
         return view('show', [
             'laporan' => $laporan,
         ]);
+    }
+
+    public function editLokasi($id)
+    {
+        // Mengambil data spesifik berdasarkan ID
+        $laporan = LaporanMasyarakat::findOrFail($id);
+        
+        // Asumsi file pembungkusnya ada di resources/views/laporan/edit-lokasi.blade.php
+        // yang memanggil component @props di atas
+        return view('edit-lokasi', compact('laporan'));
+    }
+
+    public function updateLokasi(Request $request, $id)
+    {
+        $laporan = LaporanMasyarakat::findOrFail($id);
+
+        // 1. Validasi nilai koordinat
+        $request->validate([
+            'lintang' => 'required|string|max:100',
+            'bujur' => 'required|string|max:100',
+        ]);
+
+        // 2. Update koordinat Lintang dan Bujur ke dalam tabel laporan_masyarakats
+        $laporan->update([
+            'lintang' => $request->lintang,
+            'bujur' => $request->bujur,
+        ]);
+
+        // 3. Mengarahkan kembali ke halaman detail laporan dengan notifikasi sukses
+        return redirect()->route('laporan.show', $laporan->id)
+                        ->with('success', 'Koordinat titik lokasi berhasil diperbarui!');
     }
 
     public function destroy(LaporanMasyarakat $laporan)

@@ -64,7 +64,8 @@
                 <dt class="text-gray-700">Titik Kejadian</dt>
                 <dd class="text-gray-900 flex items-center justify-between">
                     <span>{{ $laporan->lintang ?? '-' }} , {{ $laporan->bujur ?? '-' }}</span>
-                    <a href="#" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                    <a href="{{ route('laporan.edit-lokasi', $laporan->id) }}" 
+                    class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
                         Edit Titik Lokasi
                     </a>
                 </dd>
