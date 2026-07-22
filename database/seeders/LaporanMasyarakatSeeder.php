@@ -45,6 +45,13 @@ class LaporanMasyarakatSeeder extends Seeder
             'updated_at' => '2026-07-22 01:22:49',
         ]);
 
+        DB::table('fotos')->insert([
+            'laporan_masyarakat_id' => $laporan1Id,
+            'file_path' => 'laporan-foto/pIzGSb2cNbktDPpehW9Jeq152XlBRuLUT68cMVqj.jpg',
+            'created_at' => '2026-07-22 01:29:29',
+            'updated_at' => '2026-07-22 01:29:29',
+        ]);
+
 
         // --- LAPORAN 2 ---
         $laporan2Id = DB::table('laporan_masyarakats')->insertGetId([

@@ -14,7 +14,19 @@
     {{-- Card --}}
     <div class="bg-[#F4F5F9] rounded-2xl p-8 shadow-sm">
 
-        <h1 class="text-lg font-bold text-gray-900 mb-6">Detail Laporan</h1>
+        {{-- Header Card (Judul & Tombol Edit) --}}
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-lg font-bold text-gray-900">Detail Laporan</h1>
+            
+            {{-- Tombol Edit Laporan --}}
+            <a href="{{ route('laporan.edit', $laporan->id) }}" 
+               class="flex items-center gap-2 rounded-lg bg-[#161446] px-4 py-2 text-sm font-medium text-white hover:bg-[#110e36] transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Laporan
+            </a>
+        </div>
 
         <dl class="space-y-5">
             <div class="grid grid-cols-[220px_1fr] gap-4">
@@ -141,7 +153,7 @@
             button.classList.toggle('bg-[#161446]', checkbox.checked);
             button.classList.toggle('text-white', checkbox.checked);
             button.classList.toggle('cursor-pointer', checkbox.checked);
-            button.classList.toggle('hover:bg-[#110e36]', checkbox.checked); // Tambahan efek hover jika valid
+            button.classList.toggle('hover:bg-[#110e36]', checkbox.checked);
         });
     });
 </script>
