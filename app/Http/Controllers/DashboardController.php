@@ -79,4 +79,25 @@ class DashboardController extends Controller
         // TODO: swap for real data once the ERD/model for this exists.
         return view('datapicbalai', ['items' => []]);
     }
+
+    // Balai Functions
+    public function balaiDashboard(Request $request)
+    {
+        $laporans = LaporanMasyarakat::query()
+            ->when($request->search, function ($query, $search) {
+                $query->where('lokasi', 'like', "%{$search}%")
+                    ->orWhere('alamat', 'like', "%{$search}%")
+                    ->orWhere('jenis_bencana', 'like', "%{$search}%")
+                    ->orWhere('nama_bencana', 'like', "%{$search}%")
+                    ->orWhere('pelapor', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('balai-dashboard', [
+            'laporans' => $laporans,
+        ]);
+    }
+
 }
