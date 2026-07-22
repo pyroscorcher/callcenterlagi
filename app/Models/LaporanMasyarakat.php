@@ -25,6 +25,11 @@ class LaporanMasyarakat extends Model
         'status',
         'detail_status',
         'kebutuhan_mendesak',
-        'foto',
     ];
+
+
+    public function fotos()
+    {
+        return $this->hasMany(Foto::class);
+    }
 }

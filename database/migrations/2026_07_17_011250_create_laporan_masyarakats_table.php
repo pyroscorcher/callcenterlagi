@@ -29,7 +29,6 @@ return new class extends Migration
             $table->string('status', 255);
             $table->string('detail_status', 255)->nullable();
             $table->string('kebutuhan_mendesak', 255)->nullable();
-            $table->string('foto', 255)->nullable();
         });
     }
 

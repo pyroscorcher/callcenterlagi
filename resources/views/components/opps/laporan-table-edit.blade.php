@@ -12,7 +12,7 @@
     </div>
 
     {{-- Card --}}
-    <div class="bg-[#F4F5F9] rounded-2xl p-8 shadow-sm">
+    <div class="bg-[#F4F5F9] rounded-2xl p-8">
 
         <h1 class="text-lg font-bold text-gray-900 mb-6">Detail Laporan</h1>
 
@@ -47,16 +47,21 @@
                 <dd class="text-gray-900">{{ $laporan->lokasi ?: '-' }}</dd>
             </div>
 
-            {{-- Titik Kejadian --}}
-            <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
-                <dt class="text-gray-700">Titik Kejadian</dt>
-                <dd class="text-gray-900 flex items-center justify-between">
-                    <span>{{ $laporan->lintang ?? '-' }} , {{ $laporan->bujur ?? '-' }}</span>
-                    <a href="#" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
-                        Edit Titik Lokasi
-                    </a>
-                </dd>
-            </div>
+            
+                {{-- Titik Kejadian (lat/lng) isn't in the current migration yet.
+                Once a latitude/longitude column pair exists on
+                laporan_masyarakats, swap the line below back in: --}}
+
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
+                    <dt class="text-gray-700">Titik Kejadian</dt>
+                    <dd class="text-gray-900 flex items-center justify-between">
+                        <span>{{ $laporan->lintang ?? '-' }} , {{ $laporan->bujur ?? '-' }}</span>
+                        <a href="#" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700">
+                            Edit Titik Lokasi
+                        </a>
+                    </dd>
+                </div>
+           
 
             <div class="grid grid-cols-[220px_1fr] gap-4">
                 <dt class="text-gray-700">Dampak Bencana</dt>
@@ -64,25 +69,19 @@
             </div>
         </dl>
 
-        {{-- Foto Bencana — Menampilkan multiple foto dari tabel fotos --}}
+        {{-- Foto Bencana — always shown, with a placeholder when none was attached --}}
         <div class="mt-8">
-            <h2 class="text-gray-900 mb-3 font-semibold">Foto Bencana</h2>
-            
-            @if ($laporan->fotos && $laporan->fotos->count() > 0)
-                <div class="flex flex-wrap gap-4">
-                    @foreach ($laporan->fotos as $foto)
-                        <div class="w-64 rounded-xl border border-gray-200 bg-white p-3">
-                            <img
-                                src="{{ Storage::disk('public')->url($foto->file_path) }}"
-                                alt="Foto Bencana"
-                                class="w-full h-40 object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
-                            />
-                        </div>
-                    @endforeach
+            <h2 class="text-gray-900 mb-3">Foto Bencana</h2>
+            @if ($laporan->foto)
+                <div class="w-64 rounded-xl border border-gray-200 bg-white p-3">
+                    <img
+                        src="{{ Storage::disk('public')->url($laporan->foto) }}"
+                        alt="Foto Bencana"
+                        class="w-full h-40 object-cover rounded-lg"/>
                 </div>
             @else
                 <div class="w-64 h-40 rounded-xl border border-dashed border-gray-300 bg-white flex items-center justify-center text-gray-400">
-                    Tidak ada foto
+                    -
                 </div>
             @endif
         </div>
@@ -102,7 +101,7 @@
         {{-- Footer actions --}}
         <div class="flex items-center justify-between mt-10">
             <a href="{{ route('laporan.masuk-bencana') }}"
-               class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-gray-800 font-medium hover:bg-gray-50 transition">
+               class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-gray-800 font-medium">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -110,16 +109,22 @@
             </a>
 
             <div class="flex items-center gap-3">
-                <label class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-800 cursor-pointer hover:bg-gray-50 transition">
+                <label class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-800 cursor-pointer">
                     Laporan Valid?
-                    <input type="checkbox" id="laporanValidCheckbox" class="w-4 h-4 rounded border-gray-400 text-[#161446] focus:ring-[#161446]">
+                    <input type="checkbox" id="laporanValidCheckbox" class="w-4 h-4 rounded border-gray-400">
                 </label>
 
+                {{--
+                    Sending to a PIC needs PIC/Balai data, which — like
+                    latitude/longitude above — isn't modeled yet. This button
+                    is wired to enable only once "Laporan Valid?" is checked;
+                    the actual send action is a TODO for when Data PIC Balai exists.
+                --}}
                 <button
                     type="button"
                     id="kirimPicButton"
                     disabled
-                    class="rounded-lg bg-gray-300 px-5 py-2.5 text-gray-500 font-medium cursor-not-allowed transition-colors"
+                    class="rounded-lg bg-gray-300 px-5 py-2.5 text-gray-500 font-medium cursor-not-allowed"
                 >
                     Kirim Pesan Kepada PIC
                 </button>
@@ -141,7 +146,6 @@
             button.classList.toggle('bg-[#161446]', checkbox.checked);
             button.classList.toggle('text-white', checkbox.checked);
             button.classList.toggle('cursor-pointer', checkbox.checked);
-            button.classList.toggle('hover:bg-[#110e36]', checkbox.checked); // Tambahan efek hover jika valid
         });
     });
 </script>

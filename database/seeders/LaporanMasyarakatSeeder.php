@@ -37,7 +37,7 @@ class LaporanMasyarakatSeeder extends Seeder
                 'status' => 'Baru',
                 'detail_status' => null,
                 'kebutuhan_mendesak' => 'Perbaikan Jalan secepatnya, atau Marka untuk menandakan adanya jalan yg rusak',
-                'foto' => 'laporan-foto/WdzFQLuswBOlhMeHcd18MTmCQsl6EjG5spYH8N9y.jpg',
+                // 'foto' => 'laporan-foto/WdzFQLuswBOlhMeHcd18MTmCQsl6EjG5spYH8N9y.jpg',
             ],
             [
                 'created_at' => '2026-07-22 01:29:29',
@@ -57,7 +57,7 @@ class LaporanMasyarakatSeeder extends Seeder
                 'status' => 'Baru',
                 'detail_status' => null,
                 'kebutuhan_mendesak' => 'pembersihan jalan',
-                'foto' => 'laporan-foto/pIzGSb2cNbktDPpehW9Jeq152XlBRuLUT68cMVqj.jpg',
+                // 'foto' => 'laporan-foto/pIzGSb2cNbktDPpehW9Jeq152XlBRuLUT68cMVqj.jpg',
             ],
         ]);
     }
