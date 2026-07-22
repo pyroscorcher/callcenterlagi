@@ -35,7 +35,7 @@
                 </div>
             </div>
 
-            <x-opps.laporan-balai :laporans="$laporans" />
+            <x-balai.laporan-balai :laporans="$laporans" />
 
         </main>
     </div>
