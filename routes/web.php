@@ -25,8 +25,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/laporan/{id}/update-lokasi', [DashboardController::class, 'updateLokasi'])->name('laporan.update-lokasi');
 
 
-        Route::get('/laporan-penanganan-balai', [DashboardController::class, 'laporanPenangananBalai'])->name('laporan-penanganan-balai');
-        Route::get('/laporan-penanganan-balai/{laporan}', [DashboardController::class, 'lpbshow'])->name('laporan-penanganan-balai.show');
+        Route::get('/laporan-penanganan-balai', [DashboardController::class, 'LPB'])->name('laporan-penanganan-balai');
+        Route::get('/laporan-penanganan-balai/{laporan}', [DashboardController::class, 'LPBShow'])->name('laporan-penanganan-balai.show');
 
         Route::get('/data-pic-balai/create', [DashboardController::class, 'createBalai'])->name('balai.create');
         Route::get('/data-pic-balai', [DashboardController::class, 'databalai'])->name('data.pic-balai');

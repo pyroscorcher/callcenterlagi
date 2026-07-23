@@ -4,12 +4,10 @@
 
 <div class="max-w-6xl mx-auto px-8 py-8">
 
-    {{-- Breadcrumb
+    {{-- Breadcrumb --}}
     <div class="mb-6 text-white">
-        <a href="#" class="hover:underline">Dashboard</a>
-        <span class="mx-2 text-white/50">/</span>
         <span class="font-bold">Data PIC Balai</span>
-    </div> --}}
+    </div>
 
     {{-- Main Container Card --}}
     <div class="bg-[#F4F5F9] rounded-2xl p-8 shadow-sm">

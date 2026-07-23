@@ -144,7 +144,7 @@ class DashboardController extends Controller
             ->with('status', 'Laporan berhasil dihapus.');
     }
 
-    public function laporanPenangananBalai(Request $request)
+    public function LPB(Request $request)
     {
         $laporans = LaporanMasyarakat::query()
             ->when($request->search, function ($query, $search) {
@@ -158,12 +158,12 @@ class DashboardController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('laporanpenangananbalai', [
+        return view('dashboards.penangananbalai', [
             'laporans' => $laporans,
         ]);
     }
 
-        public function lpbshow(LaporanMasyarakat $laporan)
+        public function LPBShow(LaporanMasyarakat $laporan)
     {
         return view('laporanpenangananbalai-show', [
             'laporan' => $laporan,
@@ -174,7 +174,6 @@ class DashboardController extends Controller
     {
         $balais = Balai::all();
 
-        // Memanggil master layout tunggal, tapi menyuruhnya memuat komponen 'opps.data-pic'
         return view('dashboards.datapicbalai', [
             'title' => 'Data PIC Balai - SITABA',
             'componentName' => 'opps.data-pic', // Nama komponen Blade
@@ -185,7 +184,6 @@ class DashboardController extends Controller
     public function createBalai()
     {
         $balais = Balai::all();
-        // Memanggil master layout dinamis untuk menampilkan form tambah data
         return view('layouts.datapicbalai-show', [
             'title' => 'Tambah Data Balai - SITABA',
             'componentName' => 'opps.data-pic-create',
@@ -195,7 +193,6 @@ class DashboardController extends Controller
 
         public function storeBalai(Request $request)
     {
-        // 1. Validasi input dari form
         $validatedData = $request->validate([
             'nama_balai' => 'required|string|max:255',
             'username'   => 'required|string|max:255|unique:balais,username',
@@ -208,20 +205,16 @@ class DashboardController extends Controller
             'kontak'     => 'nullable|string|max:50',
         ]);
 
-        // 2. Hash password sebelum disimpan (mengikuti pengaturan casts() di model Balai Anda)
         $validatedData['password'] = Hash::make($request->password);
 
-        // 3. Simpan data baru ke dalam database
         Balai::create($validatedData);
 
-        // 4. Redirect kembali dengan pesan sukses (sesuaikan rute tujuannya)
         return redirect()->route('data.pic-balai') // Ganti dengan rute halaman daftar balai Anda
                         ->with('success', 'Data Balai Bencana berhasil ditambahkan!');
     }
 
     public function balaiShow(Balai $balai)
     {
-        // Memanggil master layout yang sama, tapi mengubah komponennya menjadi 'opps.balai-detail'
         return view('layouts.datapicbalai-show', [
             'title' => 'Detail PIC Balai - SITABA',
             'componentName' => 'opps.data-pic-show', // Nama komponen Blade detail
@@ -231,7 +224,6 @@ class DashboardController extends Controller
 
     public function editBalai(Balai $balai)
     {
-        // Memanggil master layout dinamis untuk form edit
         return view('layouts.datapicbalai-show', [
             'title' => 'Edit Data Balai - SITABA',
             'componentName' => 'opps.data-pic-edit', // Komponen edit yang akan kita buat
