@@ -25,7 +25,7 @@ class DashboardController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('dashboard', [
+        return view('dashboards.dashboard', [
             'laporans' => $laporans,
         ]);
     }
@@ -93,7 +93,7 @@ class DashboardController extends Controller
 
     public function show(LaporanMasyarakat $laporan)
     {
-        return view('show', [
+        return view('layouts.show', [
             'laporan' => $laporan,
         ]);
     }
@@ -171,18 +171,24 @@ class DashboardController extends Controller
 
     public function databalai()
     {
-        // Cukup panggil model Balai
-        $balais = Balai::all(); 
+        $balais = Balai::all();
 
-        // Return view datapicbalai HANYA dengan compact('balais')
-        return view('datapicbalai', compact('balais'));
+        // Memanggil master layout tunggal, tapi menyuruhnya memuat komponen 'opps.data-pic'
+        return view('dashboards.datapicbalai', [
+            'title' => 'Data PIC Balai - SITABA',
+            'componentName' => 'opps.data-pic', // Nama komponen Blade
+            'balais' => $balais                 // Data yang dibawa ke komponen
+        ]);
     }
 
     public function balaiShow(Balai $balai)
-        {
-            // $balai sudah otomatis berisi data spesifik yang di-klik
-            // Lempar data tersebut ke view induk
-            return view('datapicbalai-show', compact('balai'));
+    {
+        // Memanggil master layout yang sama, tapi mengubah komponennya menjadi 'opps.balai-detail'
+        return view('layouts.datapicbalai-show', [
+            'title' => 'Detail PIC Balai - SITABA',
+            'componentName' => 'opps.balai-detail', // Nama komponen Blade detail
+            'balai' => $balai                       // Data spesifik balai
+        ]);
     }
 
     public function destroyBalai(Balai $balai)
