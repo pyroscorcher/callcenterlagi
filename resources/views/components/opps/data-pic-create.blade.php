@@ -53,9 +53,30 @@
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Unit Organisasi (Unor)</label>
-                            <input type="text" name="unor" placeholder="Masukkan Unor"
-                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Unit Organisasi (Unor)</label>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                {{-- Opsi 1 --}}
+                                <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-white cursor-pointer hover:border-[#161446] transition">
+                                    <input type="radio" name="unor" value="SDA" required
+                                        class="w-4 h-4 text-[#161446] border-gray-300 focus:ring-[#161446]" />
+                                    <span class="text-sm font-medium text-gray-800">Sumber Daya Air (SDA)</span>
+                                </label>
+
+                                {{-- Opsi 2 --}}
+                                <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-white cursor-pointer hover:border-[#161446] transition">
+                                    <input type="radio" name="unor" value="Binamarga" 
+                                        class="w-4 h-4 text-[#161446] border-gray-300 focus:ring-[#161446]" />
+                                    <span class="text-sm font-medium text-gray-800">Bina Marga</span>
+                                </label>
+
+                                {{-- Opsi 3 --}}
+                                <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-white cursor-pointer hover:border-[#161446] transition">
+                                    <input type="radio" name="unor" value="Ciptakarya" 
+                                        class="w-4 h-4 text-[#161446] border-gray-300 focus:ring-[#161446]" />
+                                    <span class="text-sm font-medium text-gray-800">Cipta Karya</span>
+                                </label>
+                            </div>
                         </div>
 
                     </div>

@@ -1,5 +1,5 @@
 <?php
-// Also known as OppsController but i cba to alter the routes
+// Also known as EverythingController
 
 namespace App\Http\Controllers;
 
