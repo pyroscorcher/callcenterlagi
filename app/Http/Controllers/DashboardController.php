@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Foto;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Balai;
+use Illuminate\Support\Facades\Hash;
 
 class DashboardController extends Controller
 {
@@ -181,12 +182,49 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function createBalai()
+    {
+        $balais = Balai::all();
+        // Memanggil master layout dinamis untuk menampilkan form tambah data
+        return view('layouts.datapicbalai-show', [
+            'title' => 'Tambah Data Balai - SITABA',
+            'componentName' => 'opps.data-pic-create',
+            'balais' => $balais // Komponen form tambah
+        ]);
+    }
+
+        public function storeBalai(Request $request)
+    {
+        // 1. Validasi input dari form
+        $validatedData = $request->validate([
+            'nama_balai' => 'required|string|max:255',
+            'username'   => 'required|string|max:255|unique:balais,username',
+            'password'   => 'required|string|min:6',
+            'unker'      => 'nullable|string|max:255',
+            'unor'       => 'nullable|string|max:255',
+            'provinsi'   => 'nullable|string|max:255',
+            'pulau'      => 'nullable|string|max:255',
+            'kepala'     => 'nullable|string|max:255',
+            'kontak'     => 'nullable|string|max:50',
+        ]);
+
+        // 2. Hash password sebelum disimpan (mengikuti pengaturan casts() di model Balai Anda)
+        $validatedData['password'] = Hash::make($request->password);
+
+        // 3. Simpan data baru ke dalam database
+        Balai::create($validatedData);
+
+        // 4. Redirect kembali dengan pesan sukses (sesuaikan rute tujuannya)
+        return redirect()->route('data.pic-balai') // Ganti dengan rute halaman daftar balai Anda
+                        ->with('success', 'Data Balai Bencana berhasil ditambahkan!');
+    }
+
     public function balaiShow(Balai $balai)
     {
         // Memanggil master layout yang sama, tapi mengubah komponennya menjadi 'opps.balai-detail'
         return view('layouts.datapicbalai-show', [
             'title' => 'Detail PIC Balai - SITABA',
-            'componentName' => 'opps.balai-detail', // Nama komponen Blade detail
+            'componentName' => 'opps.data-pic-show', // Nama komponen Blade detail
             'balai' => $balai                       // Data spesifik balai
         ]);
     }
