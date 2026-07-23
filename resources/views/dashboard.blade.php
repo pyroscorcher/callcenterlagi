@@ -16,7 +16,6 @@
         <main class="flex-1 p-8">
 
             <div class="flex items-center justify-between mb-6 gap-4">
-
                 <div class="flex items-center gap-3 flex-1 justify-end">
                     <div class="relative w-full max-w-xs">
                         <input

@@ -12,8 +12,9 @@ class BalaiSeeder extends Seeder
         Balai::create([
             'username' => 'balai1',
             'password' => bcrypt('password123'),
-            'unitkerja' => 'Balai Contoh',
-            'unor' => 'Contoh Unor',
+            'nama_balai' => 'Balai Sungai Contoh',
+            'unker' => 'Balai Sungai Contoh',
+            'unor' => 'Sumber Daya Air',
             'provinsi' => 'Sumatera Utara',
             'pulau' => 'Sumatera',
             'kepala' => 'Nama Kepala Balai',

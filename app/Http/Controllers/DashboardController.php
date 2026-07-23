@@ -7,6 +7,7 @@ use App\Models\LaporanMasyarakat;
 use Illuminate\Http\Request;
 use App\Models\Foto;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Balai;
 
 class DashboardController extends Controller
 {
@@ -128,7 +129,7 @@ class DashboardController extends Controller
                         ->with('success', 'Koordinat titik lokasi berhasil diperbarui!');
     }
 
-    public function destroy(LaporanMasyarakat $laporan)
+    public function destroyLaporan(LaporanMasyarakat $laporan)
     {
         // If a photo was attached, clean up the stored file too.
         if ($laporan->foto) {
@@ -168,30 +169,28 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function dataPicBalai()
+    public function databalai()
     {
-        // TODO: swap for real data once the ERD/model for this exists.
-        return view('datapicbalai', ['items' => []]);
+        // Cukup panggil model Balai
+        $balais = Balai::all(); 
+
+        // Return view datapicbalai HANYA dengan compact('balais')
+        return view('datapicbalai', compact('balais'));
     }
 
-    // Balai Functions
-    public function balaiDashboard(Request $request)
-    {
-        $laporans = LaporanMasyarakat::query()
-            ->when($request->search, function ($query, $search) {
-                $query->where('lokasi', 'like', "%{$search}%")
-                    ->orWhere('alamat', 'like', "%{$search}%")
-                    ->orWhere('jenis_bencana', 'like', "%{$search}%")
-                    ->orWhere('nama_bencana', 'like', "%{$search}%")
-                    ->orWhere('pelapor', 'like', "%{$search}%");
-            })
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
-
-        return view('balai-dashboard', [
-            'laporans' => $laporans,
-        ]);
+    public function balaiShow(Balai $balai)
+        {
+            // $balai sudah otomatis berisi data spesifik yang di-klik
+            // Lempar data tersebut ke view induk
+            return view('balai-show', compact('balai'));
     }
 
+    public function destroyBalai(Balai $balai)
+    {
+        $balai->delete();
+
+        return redirect()
+            ->route('data.pic-balai')
+            ->with('status', 'Data Balai berhasil dihapus.');
+    }
 }

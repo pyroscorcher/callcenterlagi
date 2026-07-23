@@ -12,7 +12,8 @@ class Balai extends Authenticatable
     protected $fillable = [
         'username',
         'password',
-        'unitkerja',
+        'nama_balai',
+        'unker',
         'unor',
         'provinsi',
         'pulau',

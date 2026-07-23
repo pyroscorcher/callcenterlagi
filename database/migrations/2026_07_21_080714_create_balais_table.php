@@ -16,7 +16,8 @@ return new class extends Migration
             $table->timestamps();
             $table->string('username');
             $table->string('password');
-            $table->string('unitkerja');
+            $table->string('nama_balai');
+            $table->string('unker');
             $table->string('unor');
             $table->string('provinsi');
             $table->string('pulau');

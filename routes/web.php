@@ -18,7 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'laporanMasukBencana'])->name('laporan.masuk-bencana');
         Route::get('/laporan/{laporan}', [DashboardController::class, 'show'])->name('laporan.show');
-        Route::delete('/laporan/{laporan}', [DashboardController::class, 'destroy'])->name('laporan.destroy');
+        Route::delete('/laporan/{laporan}', [DashboardController::class, 'destroyLaporan'])->name('laporan.destroy');
         Route::get('/laporan/{laporan}/edit', [DashboardController::class, 'edit'])->name('laporan.edit');
         Route::put('/laporan/{laporan}',[DashboardController::class, 'update'])->name('laporan.update');
         Route::get('/laporan/{id}/edit-lokasi', [DashboardController::class, 'editLokasi'])->name('laporan.edit-lokasi');
@@ -28,7 +28,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/laporan-penanganan-balai', [DashboardController::class, 'laporanPenangananBalai'])->name('laporan-penanganan-balai');
         Route::get('/laporan-penanganan-balai/{laporan}', [DashboardController::class, 'lpbshow'])->name('laporan-penanganan-balai.show');
 
-        Route::get('/data-pic-balai', [DashboardController::class, 'dataPicBalai'])->name('data.pic-balai');
+        Route::get('/data-pic-balai', [DashboardController::class, 'databalai'])->name('data.pic-balai');
+        Route::get('/data-pic-balai/{balai}', [DashboardController::class, 'balaiShow'])->name('data.pic-balai-show');
+        Route::delete('/data-pic-balai/{balai}', [DashboardController::class, 'destroyBalai'])->name('balai.destroy');
     });
 });
 
