@@ -70,7 +70,7 @@
 
                 {{-- Kolom Peta Kanan (Visualisasi & Interaktif) --}}
                 <div class="lg:col-span-2">
-                    <div class="block text-sm font-medium text-gray-700 mb-1">Peta Penentuan Lokasi (Leaflet / OpenStreetMap)</div>
+                    <div class="block text-sm font-medium text-gray-700 mb-1">Pindahkan pin lokasi ke lokasi bencana</div>
                     {{-- Container Peta Interaktif Leaflet --}}
                     {{-- Z-index di-set kecil agar tidak menimpa elemen dropdown/navigasi website Anda --}}
                     <div id="map" class="w-full h-80 lg:h-96 bg-gray-200 rounded-xl border border-gray-300 shadow-sm relative overflow-hidden z-0"></div>

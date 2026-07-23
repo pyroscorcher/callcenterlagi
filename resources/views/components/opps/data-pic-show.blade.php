@@ -2,16 +2,13 @@
     'balai'
 ])
 
-<div class="max-w-4xl mx-auto px-4 py-2">
+<div class="max-w-6xl mx-auto px-8 py-8">
 
-    {{-- Breadcrumb --}}
+    Breadcrumb
     <div class="mb-6 text-white">
-        <a href="#" class="hover:underline text-gray-500">Dashboard</a>
-        <span class="mx-2 text-gray-400">/</span>
-        {{-- Ganti URL di bawah dengan route ke daftar balai Anda jika ada --}}
-        <a href="javascript:history.back()" class="hover:underline text-gray-500">Data PIC Balai</a>
-        <span class="mx-2 text-gray-400">/</span>
-        <span class="font-bold text-gray-800">Detail Balai</span>
+        <a href="{{ route('data.pic-balai') }}" class="hover:underline">Data PIC Balai</a>
+        <span class="mx-2 text-white/50">/</span>
+        <span class="font-bold">Detail Balai</span>
     </div>
 
     {{-- Card Container --}}
@@ -31,30 +28,56 @@
 
         {{-- Detail List --}}
         <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <dl class="space-y-4">
-                
-                <div class="grid grid-cols-[200px_1fr] gap-4 py-3 border-b border-gray-100">
+            
+            {{-- Bagian Identitas & Organisasi --}}
+            <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Identitas & Organisasi</h2>
+            <dl class="space-y-4 mb-8">
+                <div class="grid grid-cols-[200px_1fr] gap-4 py-2 border-b border-gray-100 items-center">
                     <dt class="text-gray-600 font-medium">Nama Balai</dt>
-                    <dd class="text-gray-900 font-bold">{{ $balai->nama_balai }}</dd>
+                    <dd class="text-gray-900 font-bold">{{ $balai->nama_balai ?? '-' }}</dd>
                 </div>
 
-                <div class="grid grid-cols-[200px_1fr] gap-4 py-3 border-b border-gray-100">
-                    <dt class="text-gray-600 font-medium">Wilayah Kerja</dt>
-                    <dd class="text-gray-900 leading-relaxed">{{ $balai->wilayah_kerja ?? '-' }}</dd>
+                <div class="grid grid-cols-[200px_1fr] gap-4 py-2 border-b border-gray-100 items-center">
+                    <dt class="text-gray-600 font-medium">Username Akun</dt>
+                    <dd class="text-gray-900">{{ $balai->username ?? '-' }}</dd>
                 </div>
 
-                <div class="grid grid-cols-[200px_1fr] gap-4 py-3 border-b border-gray-100">
-                    <dt class="text-gray-600 font-medium">Nama PIC</dt>
-                    <dd class="text-gray-900">{{ $balai->nama_pic ?? '-' }}</dd>
+                <div class="grid grid-cols-[200px_1fr] gap-4 py-2 border-b border-gray-100 items-center">
+                    <dt class="text-gray-600 font-medium">Unit Kerja</dt>
+                    <dd class="text-gray-900">{{ $balai->unker ?? '-' }}</dd>
                 </div>
 
-                <div class="grid grid-cols-[200px_1fr] gap-4 py-3">
-                    <dt class="text-gray-600 font-medium">Kontak PIC (WhatsApp)</dt>
+                <div class="grid grid-cols-[200px_1fr] gap-4 py-2 border-b border-gray-100 items-center">
+                    <dt class="text-gray-600 font-medium">Unit Organisasi</dt>
+                    <dd class="text-gray-900">{{ $balai->unor ?? '-' }}</dd>
+                </div>
+            </dl>
+
+            {{-- Bagian Wilayah & Kontak --}}
+            <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Wilayah & Kontak</h2>
+            <dl class="space-y-4">
+                <div class="grid grid-cols-[200px_1fr] gap-4 py-2 border-b border-gray-100 items-center">
+                    <dt class="text-gray-600 font-medium">Provinsi</dt>
+                    <dd class="text-gray-900">{{ $balai->provinsi ?? '-' }}</dd>
+                </div>
+
+                <div class="grid grid-cols-[200px_1fr] gap-4 py-2 border-b border-gray-100 items-center">
+                    <dt class="text-gray-600 font-medium">Pulau</dt>
+                    <dd class="text-gray-900">{{ $balai->pulau ?? '-' }}</dd>
+                </div>
+
+                <div class="grid grid-cols-[200px_1fr] gap-4 py-2 border-b border-gray-100 items-center">
+                    <dt class="text-gray-600 font-medium">Kepala Balai</dt>
+                    <dd class="text-gray-900 font-medium">{{ $balai->kepala ?? '-' }}</dd>
+                </div>
+
+                <div class="grid grid-cols-[200px_1fr] gap-4 py-2 items-center">
+                    <dt class="text-gray-600 font-medium">Kontak Kepala Balai (WhatsApp)</dt>
                     <dd class="text-gray-900 flex items-center gap-2">
-                        <span>{{ $balai->kontak_pic ?? '-' }}</span>
-                        @if($balai->kontak_pic)
+                        <span>{{ $balai->kontak ?? '-' }}</span>
+                        @if($balai->kontak)
                             {{-- Tombol cepat untuk membuka chat WA --}}
-                            <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $balai->kontak_pic) }}" target="_blank" class="text-green-600 hover:text-green-700">
+                            <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $balai->kontak) }}" target="_blank" class="text-green-600 hover:text-green-700 transition" title="Chat via WhatsApp">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.125-.339-.154-1.229-.452-2.344-1.455-1.026-.924-1.718-2.067-1.918-2.408-.2-.341-.021-.527.15-.696.155-.153.342-.4.512-.6.171-.2.228-.34.341-.568.114-.227.057-.426-.028-.596-.085-.17-1.192-2.87-1.632-3.929-.429-1.033-.865-.893-1.189-.91l-.81-.018c-.284 0-.746.107-1.137.531-.391.424-1.493 1.458-1.493 3.555 0 2.097 1.528 4.126 1.741 4.41.213.283 2.977 4.544 7.214 6.375 1.009.435 1.796.696 2.408.891 1.013.323 1.936.277 2.66.168.81-.122 2.492-1.018 2.842-2.001.35-1.002.35-1.848.245-2.001-.105-.152-.391-.243-.733-.414z"/>
                                 </svg>
@@ -62,7 +85,6 @@
                         @endif
                     </dd>
                 </div>
-
             </dl>
         </div>
 

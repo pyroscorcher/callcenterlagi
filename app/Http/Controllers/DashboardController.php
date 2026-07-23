@@ -182,7 +182,7 @@ class DashboardController extends Controller
         {
             // $balai sudah otomatis berisi data spesifik yang di-klik
             // Lempar data tersebut ke view induk
-            return view('balai-show', compact('balai'));
+            return view('datapicbalai-show', compact('balai'));
     }
 
     public function destroyBalai(Balai $balai)
