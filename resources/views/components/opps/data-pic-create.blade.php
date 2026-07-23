@@ -2,9 +2,7 @@
 
     {{-- Breadcrumb --}}
     <div class="mb-6 text-white">
-        <a href="#" class="hover:underline text-gray-400">Dashboard</a>
-        <span class="mx-2 text-gray-500">/</span>
-        <a href="javascript:history.back()" class="hover:underline text-gray-400">Data PIC Balai</a>
+        <a href="{{ route('data.pic-balai') }}" class="hover:underline text-gray-400">Data PIC Balai</a>
         <span class="mx-2 text-gray-500">/</span>
         <span class="font-bold text-white">Tambah Balai Baru</span>
     </div>

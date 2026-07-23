@@ -31,8 +31,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/data-pic-balai/create', [DashboardController::class, 'createBalai'])->name('balai.create');
         Route::get('/data-pic-balai', [DashboardController::class, 'databalai'])->name('data.pic-balai');
         Route::get('/data-pic-balai/{balai}', [DashboardController::class, 'balaiShow'])->name('data.pic-balai-show');
-        Route::delete('/data-pic-balai/{balai}', [DashboardController::class, 'destroyBalai'])->name('balai.destroy');
         Route::post('/data-pic-balai', [DashboardController::class, 'storeBalai'])->name('balai.store');
+        Route::get('/data-pic-balai/{balai}/edit', [DashboardController::class, 'editBalai'])->name('balai.edit');
+        Route::put('/data-pic-balai/{balai}', [DashboardController::class, 'updateBalai'])->name('balai.update');
+        Route::delete('/data-pic-balai/{balai}', [DashboardController::class, 'destroyBalai'])->name('balai.destroy');
     });
 });
 

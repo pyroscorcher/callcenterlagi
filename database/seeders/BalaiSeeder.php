@@ -17,7 +17,7 @@ class BalaiSeeder extends Seeder
             'unor' => 'Sumber Daya Air',
             'provinsi' => 'Sumatera Utara',
             'pulau' => 'Sumatera',
-            'kepala' => 'Nama Kepala Balai',
+            'kepala' => 'Bina Marga',
             'kontak' => '081234567890',
         ]);
     }
