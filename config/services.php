@@ -39,4 +39,9 @@ return [
         'secret' => env('WHATSAPP_BOT_SECRET', 'SITABA_PROTOTYPE_SECRET_2026'),
     ],
 
+    'sigi' => [
+        'email' => env('SIGI_API_EMAIL'),
+        'token' => env('SIGI_API_TOKEN'),
+    ],
+
 ];
