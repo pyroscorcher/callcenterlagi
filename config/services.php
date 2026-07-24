@@ -37,6 +37,7 @@ return [
 
     'whatsapp_bot' => [
         'secret' => env('WHATSAPP_BOT_SECRET', 'SITABA_PROTOTYPE_SECRET_2026'),
+        'url' => env('WHATSAPP_BOT_URL')
     ],
 
     'sigi' => [

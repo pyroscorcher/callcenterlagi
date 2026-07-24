@@ -72,6 +72,7 @@ class LaporanMasyarakatSeeder extends Seeder
             'status' => 'Baru',
             'detail_status' => null,
             'kebutuhan_mendesak' => 'pembersihan jalan',
+            'validasi' => 'Belum Valid',
         ]);
 
         // Insert foto untuk laporan 2
