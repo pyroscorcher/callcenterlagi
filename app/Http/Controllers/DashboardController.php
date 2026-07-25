@@ -163,13 +163,6 @@ class DashboardController extends Controller
         ]);
     }
 
-        public function LPBShow(LaporanMasyarakat $laporan)
-    {
-        return view('laporanpenangananbalai-show', [
-            'laporan' => $laporan,
-        ]);
-    }
-
     public function databalai()
     {
         $balais = Balai::all();

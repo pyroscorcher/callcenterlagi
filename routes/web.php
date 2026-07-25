@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BalaiAuthController;
+use App\Http\Controllers\BalaiController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -43,5 +44,6 @@ Route::post('/balai/login', [BalaiAuthController::class, 'authenticate'])->name(
 
 Route::middleware('auth:balai')->group(function () {
     Route::post('/balai/logout', [BalaiAuthController::class, 'logout'])->name('balai.logout');
-    Route::get('/balai/dashboard', [DashboardController::class, 'balaiDashboard'])->name('balai.dashboard');
+    Route::get('/balai/dashboard', [BalaiController::class, 'balaiDashboard'])->name('balai.dashboard');
+    Route::get('/balai/dashboard', [BalaiController::class, 'balaiDashboard'])->name('balai.dashboard');
 });
