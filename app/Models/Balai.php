@@ -32,4 +32,9 @@ class Balai extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function provinsis()
+    {
+        return $this->hasMany(Provinsi::class, 'balai_id');
+    }
 }
