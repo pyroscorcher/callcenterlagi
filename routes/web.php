@@ -24,6 +24,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/laporan/{laporan}',[DashboardController::class, 'update'])->name('laporan.update');
         Route::get('/laporan/{id}/edit-lokasi', [DashboardController::class, 'editLokasi'])->name('laporan.edit-lokasi');
         Route::put('/laporan/{id}/update-lokasi', [DashboardController::class, 'updateLokasi'])->name('laporan.update-lokasi');
+        Route::get('/ajax/kabupaten/{provinsi}', [DashboardController::class, 'getKabupaten']);
+        Route::get('/ajax/kecamatan/{kabupaten}', [DashboardController::class, 'getKecamatan']);
+        Route::get('/ajax/kelurahan/{kecamatan}', [DashboardController::class, 'getKelurahan']);
 
 
         Route::get('/laporan-penanganan-balai', [DashboardController::class, 'LPB'])->name('laporan-penanganan-balai');

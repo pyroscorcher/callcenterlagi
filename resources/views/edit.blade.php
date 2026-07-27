@@ -15,7 +15,13 @@
         {{-- Main content --}}
         <main class="flex-1 p-8">
 
-        <x-opps.laporan-table-edit :laporan="$laporan" />
+            <x-opps.laporan-table-edit
+                :laporan="$laporan"
+                :provinsis="$provinsis"
+                :kabupatenkotas="$kabupatenkotas"
+                :kecamatans="$kecamatans"
+                :kelurahans="$kelurahans"
+            />
 
         </main>
     </div>

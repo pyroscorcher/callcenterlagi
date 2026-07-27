@@ -6,6 +6,10 @@ namespace App\Http\Controllers;
 use App\Models\LaporanMasyarakat;
 use Illuminate\Http\Request;
 use App\Models\Foto;
+use App\Models\Provinsi;
+use App\Models\Kabupatenkota;
+use App\Models\Kecamatan;
+use App\Models\Kelurahan;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Balai;
 use Illuminate\Support\Facades\Hash;
@@ -33,10 +37,35 @@ class DashboardController extends Controller
 
     public function edit($id)
     {
-        $laporan = LaporanMasyarakat::with('fotos')->findOrFail($id);
-        
-        // Sesuaikan dengan nama folder view Anda (contoh: laporan.edit)
-        return view('edit', compact('laporan'));
+        $laporan = LaporanMasyarakat::with([
+            'fotos',
+            'provinsi',
+            'kabupatenKota',
+            'kecamatan',
+            'kelurahan',
+        ])->findOrFail($id);
+
+        $provinsis = Provinsi::orderBy('nama')->get();
+
+        $kabupatenkotas = $laporan->provinsi_id 
+            ? KabupatenKota::where('provinsi_id', $laporan->provinsi_id)->orderBy('nama')->get() 
+            : collect();
+
+        $kecamatans = $laporan->kabupaten_kota_id 
+            ? Kecamatan::where('kabupaten_kota_id', $laporan->kabupaten_kota_id)->orderBy('nama')->get() 
+            : collect();
+
+        $kelurahans = $laporan->kecamatan_id 
+            ? Kelurahan::where('kecamatan_id', $laporan->kecamatan_id)->orderBy('nama')->get() 
+            : collect();
+            
+        return view('edit', [
+            'laporan' => $laporan,
+            'provinsis' => $provinsis,
+            'kabupatenkotas' => $kabupatenkotas,
+            'kecamatans' => $kecamatans,
+            'kelurahans' => $kelurahans,
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -90,6 +119,27 @@ class DashboardController extends Controller
 
         return redirect()->route('laporan.show', $laporan->id)
                         ->with('success', 'Laporan berhasil diperbarui!');
+    }
+
+    public function getKabupaten($provinsi)
+    {
+        return KabupatenKota::where('provinsi_id', $provinsi)
+            ->orderBy('nama')
+            ->get(['id', 'nama']);
+    }
+
+    public function getKecamatan($kabupaten)
+    {
+        return Kecamatan::where('kabupaten_kota_id', $kabupaten)
+            ->orderBy('nama')
+            ->get(['id', 'nama']);
+    }
+
+    public function getKelurahan($kecamatan)
+    {
+        return Kelurahan::where('kecamatan_id', $kecamatan)
+            ->orderBy('nama')
+            ->get(['id', 'nama']);
     }
 
     public function show(LaporanMasyarakat $laporan)

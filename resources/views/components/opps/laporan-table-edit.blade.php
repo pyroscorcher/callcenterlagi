@@ -1,5 +1,9 @@
 @props([
     'laporan',
+    'provinsis',
+    'kabupatenKotas',
+    'kecamatans',
+    'kelurahans',
 ])
 
 <div class="max-w-6xl mx-auto px-8 py-8">
@@ -81,6 +85,60 @@
 
                 {{-- Lokasi Kejadian --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
+                    <label for="lokasi" class="text-gray-700 font-medium">Lokasi Kejadian</label>
+                    <div>
+                        <input type="text" name="lokasi" id="lokasi" 
+                               value="{{ old('lokasi', $laporan->lokasi) }}"w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]" 
+                               class="/>
+                        @error('lokasi')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- Provinsi --}}
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
+                    <label for="provinsi_id" class="text-gray-700 font-medium">Provinsi</label>
+                        <select id="provinsi" name="provinsi_id">
+                            <option value="">Pilih Provinsi</option>
+
+                            @foreach($provinsis as $provinsi)
+                                <option
+                                    value="{{ $provinsi->id }}"
+                                    @selected($laporan->provinsi_id == $provinsi->id)
+                                >
+                                    {{ $provinsi->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                </div>
+
+                {{-- Kabupaten --}}
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
+                    <label for="kabupaten_kota_id" class="text-gray-700 font-medium">Kabupaten/Kota</label>
+                    <select id="kabupaten" name="kabupaten_kota_id">
+                        <option>Pilih Kabupaten/Kota</option>
+                    </select>
+                </div>
+
+                {{-- Kecamatan --}}
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
+                    <label for="kecamatan_id" class="text-gray-700 font-medium">Kecamatan</label>
+                    <select id="kecamatan" name="kecamatan_id">
+                        <option>Pilih Kecamatan</option>
+                    </select>
+                </div>
+
+                {{-- Kelurahan --}}
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
+                    <label for="kelurahan_id" class="text-gray-700 font-medium">Kelurahan</label>
+                    <select id="kelurahan" name="kelurahan_id">
+                        <option>Pilih Kelurahan</option>
+                    </select>
+                </div>
+
+                {{-- Titik Kejadian (Lintang & Bujur) --}}
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
                     <dt class="text-gray-700">Titik Kejadian</dt>
                     <dd class="text-gray-900 flex items-center justify-between">
                         <span>{{ $laporan->lintang ?? '-' }} , {{ $laporan->bujur ?? '-' }}</span>
@@ -90,19 +148,7 @@
                         </a>
                     </dd>
                 </div>
-
-                {{-- Titik Kejadian (Lintang & Bujur) --}}
-                <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
-                    <span class="text-gray-700 font-medium">Titik Kejadian (Lintang, Bujur)</span>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" name="lintang" placeholder="Lintang (Latitude)" 
-                               value="{{ old('lintang', $laporan->lintang) }}"
-                               class="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]" />
-                        <input type="text" name="bujur" placeholder="Bujur (Longitude)" 
-                               value="{{ old('bujur', $laporan->bujur) }}"
-                               class="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]" />
-                    </div>
-                </div>
+                
 
                 {{-- Dampak Bencana --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
@@ -192,3 +238,71 @@
         </form>
     </div>
 </div>
+
+
+<script>
+const provinsi = document.getElementById('provinsi');
+const kabupaten = document.getElementById('kabupaten');
+const kecamatan = document.getElementById('kecamatan');
+const kelurahan = document.getElementById('kelurahan');
+
+provinsi.addEventListener('change', async function () {
+
+    kabupaten.innerHTML = '<option>Loading...</option>';
+    kecamatan.innerHTML = '<option>Pilih Kecamatan</option>';
+    kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
+
+    const response = await fetch('/ajax/kabupaten/' + this.value);
+    const data = await response.json();
+
+    kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
+
+    data.forEach(item => {
+        kabupaten.innerHTML += `
+            <option value="${item.id}">
+                ${item.nama}
+            </option>
+        `;
+    });
+
+});
+
+kabupaten.addEventListener('change', async function () {
+
+    kecamatan.innerHTML = '<option>Loading...</option>';
+    kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
+
+    const response = await fetch('/ajax/kecamatan/' + this.value);
+    const data = await response.json();
+
+    kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
+
+    data.forEach(item => {
+        kecamatan.innerHTML += `
+            <option value="${item.id}">
+                ${item.nama}
+            </option>
+        `;
+    });
+
+});
+
+kecamatan.addEventListener('change', async function () {
+
+    kelurahan.innerHTML = '<option>Loading...</option>';
+
+    const response = await fetch('/ajax/kelurahan/' + this.value);
+    const data = await response.json();
+
+    kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+
+    data.forEach(item => {
+        kelurahan.innerHTML += `
+            <option value="${item.id}">
+                ${item.nama}
+            </option>
+        `;
+    });
+
+});
+</script>
