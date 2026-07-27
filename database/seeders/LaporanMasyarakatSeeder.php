@@ -2,85 +2,115 @@
 
 namespace Database\Seeders;
 
+use App\Models\Kelurahan;
+use App\Models\LaporanMasyarakat;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class LaporanMasyarakatSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * Uses DB::table()->insertGetId() to preserve exact timestamps
-     * while also retrieving the generated ID to link with the new 
-     * 'fotos' table relation.
-     */
     public function run(): void
     {
-        // --- LAPORAN 1 ---
-        $laporan1Id = DB::table('laporan_masyarakats')->insertGetId([
-            'created_at' => '2026-07-22 01:22:49',
-            'updated_at' => '2026-07-22 01:22:49',
-            'pelapor' => 'Adinda',
-            'telepon' => '08960146284',
-            'jenis_bencana' => 'Tanah Longsor',
-            'nama_bencana' => 'Longsor',
-            'dampak_bencana' => 'Kerusakan Jalanan dan Jembatan',
-            'waktu_kejadian' => '16.00 12 Maret 2025',
-            'wilayah_waktu' => 'WIB',
-            'lokasi' => 'JAWA BARAT DEPOK SAWANGAN PENGASINAN',
-            'lintang' => null,
-            'bujur' => null,
-            'deskripsi' => 'terjadi longsor di pinggir kali yg membuat jalan hancur setengah',
-            'infrastruktur_terdampak' => 'Jalan Umum Sawangan Raya',
-            'status' => 'Baru',
-            'detail_status' => null,
-            'kebutuhan_mendesak' => 'Perbaikan Jalan secepatnya, atau Marka untuk menandakan adanya jalan yg rusak',
-        ]);
+        $jenisBencana = [
+            'Banjir',
+            'Longsor',
+            'Gempa Bumi',
+            'Puting Beliung',
+            'Kebakaran Hutan',
+        ];
 
-        // Insert foto untuk laporan 1
-        DB::table('fotos')->insert([
-            'laporan_masyarakat_id' => $laporan1Id,
-            'file_path' => 'laporan-foto/WdzFQLuswBOlhMeHcd18MTmCQsl6EjG5spYH8N9y.jpg',
-            'created_at' => '2026-07-22 01:22:49',
-            'updated_at' => '2026-07-22 01:22:49',
-        ]);
+        $status = [
+            'Menunggu Verifikasi',
+            'Sedang Diproses',
+            'Selesai',
+        ];
 
-        DB::table('fotos')->insert([
-            'laporan_masyarakat_id' => $laporan1Id,
-            'file_path' => 'laporan-foto/pIzGSb2cNbktDPpehW9Jeq152XlBRuLUT68cMVqj.jpg',
-            'created_at' => '2026-07-22 01:29:29',
-            'updated_at' => '2026-07-22 01:29:29',
-        ]);
+        $dampak = [
+            'Rumah Rusak',
+            'Jalan Terputus',
+            'Jembatan Rusak',
+            'Sawah Terendam',
+            'Listrik Padam',
+        ];
 
+        $infrastruktur = [
+            'Jalan',
+            'Jembatan',
+            'Sekolah',
+            'Puskesmas',
+            'Irigasi',
+        ];
 
-        // --- LAPORAN 2 ---
-        $laporan2Id = DB::table('laporan_masyarakats')->insertGetId([
-            'created_at' => '2026-07-22 01:29:29',
-            'updated_at' => '2026-07-22 01:29:29',
-            'pelapor' => 'Rumyah',
-            'telepon' => '089606278191',
-            'jenis_bencana' => 'Gagal Teknologi',
-            'nama_bencana' => 'Kegagalan Industri',
-            'dampak_bencana' => 'Kerusakan SDA, Kerusakan Pemukiman, Kerusakan Jalanan dan Jembatan',
-            'waktu_kejadian' => '16.00 15 April 2026',
-            'wilayah_waktu' => 'WIB',
-            'lokasi' => 'TANGGERANG SELATAN PAMULANG SUKARAJA',
-            'lintang' => null,
-            'bujur' => null,
-            'deskripsi' => 'ada bangunan yang kepingan hancurannya berserakan dijalan',
-            'infrastruktur_terdampak' => 'Jalan Umum',
-            'status' => 'Baru',
-            'detail_status' => null,
-            'kebutuhan_mendesak' => 'pembersihan jalan',
-            'validasi' => 'Belum Valid',
-        ]);
+        for ($i = 1; $i <= 20; $i++) {
 
-        // Insert foto untuk laporan 2
-        DB::table('fotos')->insert([
-            'laporan_masyarakat_id' => $laporan2Id,
-            'file_path' => 'laporan-foto/pIzGSb2cNbktDPpehW9Jeq152XlBRuLUT68cMVqj.jpg',
-            'created_at' => '2026-07-22 01:29:29',
-            'updated_at' => '2026-07-22 01:29:29',
-        ]);
+            $kelurahan = Kelurahan::with(
+                'kecamatan.kabupatenKota.provinsi'
+            )->inRandomOrder()->first();
+
+            if (!$kelurahan) {
+                $this->command->warn('Kelurahan table is empty.');
+                return;
+            }
+
+            $kecamatan = $kelurahan->kecamatan;
+            $kabupaten = $kecamatan->kabupatenKota;
+            $provinsi = $kabupaten->provinsi;
+
+            LaporanMasyarakat::create([
+                'pelapor' => "Pelapor {$i}",
+                'telepon' => '0812345678' . str_pad($i, 2, '0', STR_PAD_LEFT),
+
+                'jenis_bencana' => fake()->randomElement($jenisBencana),
+
+                'nama_bencana' => fake()->randomElement([
+                    'Banjir Bandang',
+                    'Longsor Tebing',
+                    'Gempa Dangkal',
+                    'Angin Kencang',
+                    'Luapan Sungai',
+                ]),
+
+                'dampak_bencana' => fake()->randomElement($dampak),
+
+                'waktu_kejadian' => Carbon::now()
+                    ->subDays(rand(1, 30))
+                    ->format('Y-m-d H:i:s'),
+
+                'wilayah_waktu' => 'WIB',
+
+                'lokasi' => fake()->streetAddress(),
+
+                'provinsi_id' => $provinsi->id,
+                'kabupaten_kota_id' => $kabupaten->id,
+                'kecamatan_id' => $kecamatan->id,
+                'kelurahan_id' => $kelurahan->id,
+
+                'lintang' => fake()->latitude(-11, 6),
+                'bujur' => fake()->longitude(95, 141),
+
+                'deskripsi' => fake()->paragraph(3),
+
+                'infrastruktur_terdampak' => fake()->randomElement($infrastruktur),
+
+                'status' => fake()->randomElement($status),
+
+                'detail_status' => fake()->sentence(),
+
+                'kebutuhan_mendesak' => fake()->randomElement([
+                    'Logistik',
+                    'Air Bersih',
+                    'Tenda',
+                    'Obat-obatan',
+                    'Evakuasi',
+                ]),
+
+                'validasi' => fake()->boolean(70)
+                    ? 'Valid'
+                    : 'Belum Valid',
+
+                'created_at' => Carbon::now()->subDays(rand(0, 15)),
+                'updated_at' => now(),
+            ]);
+        }
     }
 }

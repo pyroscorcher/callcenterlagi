@@ -18,6 +18,10 @@ class LaporanMasyarakat extends Model
         'waktu_kejadian',
         'wilayah_waktu',
         'lokasi',
+        'provinsi_id',
+        'kabupaten_kota_id',
+        'kecamatan_id',
+        'kelurahan_id',
         'lintang',
         'bujur',
         'deskripsi',
@@ -25,6 +29,7 @@ class LaporanMasyarakat extends Model
         'status',
         'detail_status',
         'kebutuhan_mendesak',
+        'validasi',
     ];
 
 

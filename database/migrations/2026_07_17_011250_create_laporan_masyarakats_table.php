@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('lokasi', 255);
             $table->string('lintang', 255)->nullable();
             $table->string('bujur', 255)->nullable();
-            $table->string('deskripsi', 255);
+            $table->string('deskripsi');
             $table->string('infrastruktur_terdampak', 255);
             $table->string('status', 255);
             $table->string('detail_status', 255)->nullable();
