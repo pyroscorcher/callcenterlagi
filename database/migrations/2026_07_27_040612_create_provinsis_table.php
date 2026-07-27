@@ -10,16 +10,8 @@ return new class extends Migration
     {
         Schema::create('provinsis', function (Blueprint $table) {
             $table->id();
-            $table->string('kode', 13)->unique()->nullable(); // Kode Kemendagri jika diperlukan
+            $table->string('kode', 13)->unique()->nullable();
             $table->string('nama');
-            
-            // Relasi ke tabel balais. 
-            // Nullable agar provinsi yang belum punya balai tidak error.
-            $table->foreignId('balai_id')
-                  ->nullable()
-                  ->constrained('balais')
-                  ->nullOnDelete(); 
-                  
             $table->timestamps();
         });
     }

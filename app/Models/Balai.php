@@ -10,31 +10,20 @@ class Balai extends Authenticatable
     use Notifiable;
 
     protected $fillable = [
-        'username',
-        'password',
-        'nama_balai',
-        'unker',
-        'unor',
-        'provinsi',
-        'pulau',
-        'kepala',
-        'kontak',
+        'username', 'password', 'nama_balai', 'unker', 'unor', 
+        'provinsi', 'pulau', 'kepala', 'kontak',
     ];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
-        return [
-            'password' => 'hashed',
-        ];
+        return ['password' => 'hashed'];
     }
 
+    // RELASI MANY-TO-MANY KE PROVINSI
     public function provinsis()
     {
-        return $this->hasMany(Provinsi::class, 'balai_id');
+        return $this->belongsToMany(Provinsi::class, 'wilayah_balai', 'balai_id', 'provinsi_id');
     }
 }

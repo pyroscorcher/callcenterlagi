@@ -10,59 +10,58 @@ class BalaiProvinsiSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Daftar seluruh provinsi di Indonesia (Bisa Anda sesuaikan/tambahkan)
+        // 1. Masukkan data Master Provinsi
         $daftarProvinsi = [
-            'ACEH', 'SUMATERA UTARA', 'SUMATERA BARAT', 'RIAU', 'JAMBI', 
-            'SUMATERA SELATAN', 'BENGKULU', 'LAMPUNG', 'KEPULAUAN BANGKA BELITUNG', 'KEPULAUAN RIAU', 
-            'DKI JAKARTA', 'JAWA BARAT', 'JAWA TENGAH', 'DI YOGYAKARTA', 'JAWA TIMUR', 'BANTEN'
+            'DKI JAKARTA', 'JAWA BARAT', 'JAWA TENGAH', 'BANTEN'
         ];
 
-        // Memasukkan data provinsi ke tabel provinsis
         foreach ($daftarProvinsi as $namaProv) {
             Provinsi::firstOrCreate(['nama' => $namaProv]);
         }
 
-        // 2. Data lengkap Balai beserta provinsi yang dinaunginya (naungan)
+        // 2. Data Master Balai beserta naungan provinsinya
         $dataBalai = [
+            // Balai SDA (Air)
             'BBWS Citarum' => [
                 'unker'    => 'Ditjen SDA',
                 'unor'     => 'SDA',
-                'provinsi' => 'JAWA BARAT',        // Lokasi kantor Balai
+                'provinsi' => 'JAWA BARAT',
                 'pulau'    => 'Jawa',
-                'kepala'   => 'Bapak Ir. Fulan',
-                'kontak'   => '081200001111',
-                'naungan'  => ['JAWA BARAT']       // Provinsi yang dipegang
+                'kepala'   => 'Bapak Fulan (SDA)',
+                'kontak'   => '081111',
+                'naungan'  => ['JAWA BARAT'] // Citarum pegang Jabar
             ],
-            'BWS Sumatera II' => [
-                'unker'    => 'Ditjen SDA',
-                'unor'     => 'SDA',
-                'provinsi' => 'SUMATERA UTARA',
-                'pulau'    => 'Sumatera',
-                'kepala'   => 'Ibu Ir. Fulani',
-                'kontak'   => '081200002222',
-                'naungan'  => ['SUMATERA UTARA', 'RIAU'] // Memegang 2 provinsi
+            // Balai Bina Marga (Jalan & Jembatan)
+            'BPJN Jawa Barat' => [
+                'unker'    => 'Ditjen Bina Marga',
+                'unor'     => 'Bina Marga',
+                'provinsi' => 'JAWA BARAT',
+                'pulau'    => 'Jawa',
+                'kepala'   => 'Ibu Fulani (BM)',
+                'kontak'   => '082222',
+                'naungan'  => ['JAWA BARAT'] // BPJN juga pegang Jabar
             ],
+            // Balai Lintas Provinsi
             'BBWS Ciliwung Cisadane' => [
                 'unker'    => 'Ditjen SDA',
                 'unor'     => 'SDA',
                 'provinsi' => 'DKI JAKARTA',
                 'pulau'    => 'Jawa',
-                'kepala'   => 'Bapak Dr. Budi',
-                'kontak'   => '081200003333',
-                'naungan'  => ['DKI JAKARTA', 'BANTEN']
+                'kepala'   => 'Bapak Budi',
+                'kontak'   => '083333',
+                'naungan'  => ['DKI JAKARTA', 'BANTEN', 'JAWA BARAT'] // Pegang 3 Provinsi
             ],
         ];
 
-        // 3. Proses pembuatan data dan relasi
+        // 3. Proses Insert & Sync (Menghubungkan Balai dan Provinsi)
         foreach ($dataBalai as $namaBalai => $detail) {
             
-            // A. Buat record Balai sesuai struktur fillable model Anda
+            // A. Buat record Balai
             $balai = Balai::firstOrCreate(
                 ['nama_balai' => $namaBalai],
                 [
-                    // Username dibuat otomatis: misal 'BBWS Citarum' -> 'bbws_citarum'
                     'username' => strtolower(str_replace(' ', '_', $namaBalai)),
-                    'password' => Hash::make('password123'), // Default password
+                    'password' => Hash::make('password123'),
                     'unker'    => $detail['unker'],
                     'unor'     => $detail['unor'],
                     'provinsi' => $detail['provinsi'],
@@ -72,14 +71,16 @@ class BalaiProvinsiSeeder extends Seeder
                 ]
             );
 
-            // B. Cari provinsi yang ada di dalam array 'naungan' lalu set balai_id nya
-            if (isset($detail['naungan']) && count($detail['naungan']) > 0) {
-                Provinsi::whereIn('nama', $detail['naungan'])->update([
-                    'balai_id' => $balai->id
-                ]);
+            // B. Cari ID provinsi berdasarkan nama di array 'naungan'
+            $provinsiIds = Provinsi::whereIn('nama', $detail['naungan'])->pluck('id')->toArray();
+
+            // C. Pasangkan Balai dengan Provinsi menggunakan Sync 
+            // (Sync menghindari data ganda di tabel pivot jika seeder dijalankan 2x)
+            if (!empty($provinsiIds)) {
+                $balai->provinsis()->sync($provinsiIds);
             }
         }
         
-        $this->command->info('Data Balai dan pemetaan Provinsi berhasil di-seed!');
+        $this->command->info('Skenario 2: Data Balai & Pivot Provinsi berhasil dibuat!');
     }
 }

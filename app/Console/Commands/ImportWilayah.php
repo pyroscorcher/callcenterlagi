@@ -8,32 +8,34 @@ use Illuminate\Support\Facades\File;
 
 class ImportWilayah extends Command
 {
-    protected $signature = 'wilayah:import
-        {path=database/data/wilayah.sql : Path to the wilayah.sql dump}
-        {--keep-raw : Keep the staging "wilayah" table after import instead of dropping it}';
-
-    protected $description = 'Import wilayah.sql (flat Kemendagri code dump) and split it into provinsis, kabupaten_kotas, kecamatans, and kelurahans';
+    protected $signature = 'wilayah:import {path=database/data/wilayah.sql} {--keep-raw}';
+    protected $description = 'Import data wilayah Kemendagri dan pecah menjadi relasi hierarkis';
 
     public function handle(): int
     {
         $path = base_path($this->argument('path'));
 
-        if (! File::exists($path)) {
-            $this->error("File not found: {$path}");
+        if (!File::exists($path)) {
+            $this->error("File tidak ditemukan: {$path}");
             return self::FAILURE;
         }
 
-        $this->info('Loading raw dump into staging table "wilayah"...');
-
-        $this->info('Normalizing staging table collation to match Laravel...');
-        DB::statement('ALTER TABLE wilayah CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;');
-
-        // The dump defines its own DROP TABLE IF EXISTS / CREATE TABLE for
-        // "wilayah", so running it as-is creates and populates the staging
-        // table in one shot — no need for a separate migration for it.
+        $this->info('1. Memuat raw dump ke tabel staging "wilayah"...');
         DB::unprepared(File::get($path));
 
-        $this->info('Splitting into provinsis...');
+        // FIX COLLATION ERROR DI SINI
+        $this->info('2. Menyesuaikan Collation tabel staging dengan Laravel...');
+        DB::statement('ALTER TABLE wilayah CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;');
+
+        $this->info('3. Memecah dan memasukkan data ke tabel provinsis...');
+        // Hapus data lama agar tidak duplikat jika command dijalankan ulang
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('kelurahans')->truncate();
+        DB::table('kecamatans')->truncate();
+        DB::table('kabupaten_kotas')->truncate();
+        DB::table('provinsis')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         DB::statement("
             INSERT INTO provinsis (kode, nama, created_at, updated_at)
             SELECT kode, nama, NOW(), NOW()
@@ -41,7 +43,7 @@ class ImportWilayah extends Command
             WHERE kode NOT LIKE '%.%'
         ");
 
-        $this->info('Splitting into kabupaten_kotas...');
+        $this->info('4. Memecah ke tabel kabupaten_kotas (Relasi ke Provinsi)...');
         DB::statement("
             INSERT INTO kabupaten_kotas (kode, nama, provinsi_id, created_at, updated_at)
             SELECT w.kode, w.nama, p.id, NOW(), NOW()
@@ -50,7 +52,7 @@ class ImportWilayah extends Command
             WHERE (LENGTH(w.kode) - LENGTH(REPLACE(w.kode, '.', ''))) = 1
         ");
 
-        $this->info('Splitting into kecamatans...');
+        $this->info('5. Memecah ke tabel kecamatans (Relasi ke Kabupaten)...');
         DB::statement("
             INSERT INTO kecamatans (kode, nama, kabupaten_kota_id, created_at, updated_at)
             SELECT w.kode, w.nama, k.id, NOW(), NOW()
@@ -59,7 +61,7 @@ class ImportWilayah extends Command
             WHERE (LENGTH(w.kode) - LENGTH(REPLACE(w.kode, '.', ''))) = 2
         ");
 
-        $this->info('Splitting into kelurahans...');
+        $this->info('6. Memecah ke tabel kelurahans (Relasi ke Kecamatan)...');
         DB::statement("
             INSERT INTO kelurahans (kode, nama, kecamatan_id, created_at, updated_at)
             SELECT w.kode, w.nama, kc.id, NOW(), NOW()
@@ -68,19 +70,19 @@ class ImportWilayah extends Command
             WHERE (LENGTH(w.kode) - LENGTH(REPLACE(w.kode, '.', ''))) = 3
         ");
 
-        if (! $this->option('keep-raw')) {
-            $this->info('Dropping staging table "wilayah"...');
+        if (!$this->option('keep-raw')) {
+            $this->info('7. Menghapus tabel staging "wilayah"...');
             DB::statement('DROP TABLE IF EXISTS wilayah');
         }
 
-        $this->info('Done. Row counts:');
+        $this->info('Selesai! Jumlah data yang berhasil dipetakan:');
         $this->table(
-            ['Table', 'Rows'],
+            ['Tabel', 'Jumlah Baris'],
             [
-                ['provinsis', DB::table('provinsis')->count()],
-                ['kabupaten_kotas', DB::table('kabupaten_kotas')->count()],
-                ['kecamatans', DB::table('kecamatans')->count()],
-                ['kelurahans', DB::table('kelurahans')->count()],
+                ['Provinsi', DB::table('provinsis')->count()],
+                ['Kabupaten/Kota', DB::table('kabupaten_kotas')->count()],
+                ['Kecamatan', DB::table('kecamatans')->count()],
+                ['Kelurahan/Desa', DB::table('kelurahans')->count()],
             ]
         );
 
