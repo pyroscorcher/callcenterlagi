@@ -14,4 +14,9 @@ class Provinsi extends Model
     {
         return $this->belongsToMany(Balai::class, 'wilayah_balai', 'provinsi_id', 'balai_id');
     }
+
+    public function laporanMasyarakats()
+    {
+        return $this->hasMany(LaporanMasyarakat::class);
+    }
 }

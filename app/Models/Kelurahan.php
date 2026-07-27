@@ -12,4 +12,9 @@ class Kelurahan extends Model
     {
         return $this->belongsTo(Kecamatan::class);
     }
+
+    public function laporanMasyarakats()
+    {
+        return $this->hasMany(LaporanMasyarakat::class);
+    }
 }

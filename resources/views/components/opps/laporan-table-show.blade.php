@@ -59,6 +59,34 @@
                 <dd class="text-gray-900">{{ $laporan->lokasi ?: '-' }}</dd>
             </div>
 
+            <div class="grid grid-cols-[220px_1fr] gap-4">
+                <dt class="text-gray-700">Provinsi</dt>
+                <dd class="text-gray-900">
+                    {{ $laporan->provinsi?->nama ?? '-' }}
+                </dd>
+            </div>
+
+            <div class="grid grid-cols-[220px_1fr] gap-4">
+                <dt class="text-gray-700">Kabupaten / Kota</dt>
+                <dd class="text-gray-900">
+                    {{ $laporan->kabupatenKota?->nama ?? '-' }}
+                </dd>
+            </div>
+
+            <div class="grid grid-cols-[220px_1fr] gap-4">
+                <dt class="text-gray-700">Kecamatan</dt>
+                <dd class="text-gray-900">
+                    {{ $laporan->kecamatan?->nama ?? '-' }}
+                </dd>
+            </div>
+
+            <div class="grid grid-cols-[220px_1fr] gap-4">
+                <dt class="text-gray-700">Kelurahan</dt>
+                <dd class="text-gray-900">
+                    {{ $laporan->kelurahan?->nama ?? '-' }}
+                </dd>
+            </div>
+
             {{-- Titik Kejadian --}}
             <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
                 <dt class="text-gray-700">Titik Kejadian</dt>

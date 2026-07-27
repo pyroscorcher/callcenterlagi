@@ -40,17 +40,10 @@ return new class extends Migration
     {
         Schema::table('laporan_masyarakats', function (Blueprint $table) {
 
-            $table->dropForeign(['provinsi_id']);
-            $table->dropForeign(['kabupaten_kota_id']);
-            $table->dropForeign(['kecamatan_id']);
-            $table->dropForeign(['kelurahan_id']);
-
-            $table->dropColumn([
-                'provinsi_id',
-                'kabupaten_kota_id',
-                'kecamatan_id',
-                'kelurahan_id',
-            ]);
+            $table->dropConstrainedForeignId('provinsi_id');
+            $table->dropConstrainedForeignId('kabupaten_kota_id');
+            $table->dropConstrainedForeignId('kecamatan_id');
+            $table->dropConstrainedForeignId('kelurahan_id');
         });
     }
 };

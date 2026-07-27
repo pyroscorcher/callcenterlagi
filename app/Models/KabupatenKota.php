@@ -17,4 +17,8 @@ class KabupatenKota extends Model
     {
         return $this->hasMany(Kecamatan::class);
     }
+    public function laporanMasyarakats()
+    {
+        return $this->hasMany(LaporanMasyarakat::class);
+    }
 }
