@@ -81,15 +81,14 @@
 
                 {{-- Lokasi Kejadian --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
-                    <label for="lokasi" class="text-gray-700 font-medium">Lokasi Kejadian</label>
-                    <div>
-                        <input type="text" name="lokasi" id="lokasi" 
-                               value="{{ old('lokasi', $laporan->lokasi) }}"
-                               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]" />
-                        @error('lokasi')
-                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-                        @enderror
-                    </div>
+                    <dt class="text-gray-700">Titik Kejadian</dt>
+                    <dd class="text-gray-900 flex items-center justify-between">
+                        <span>{{ $laporan->lintang ?? '-' }} , {{ $laporan->bujur ?? '-' }}</span>
+                        <a href="{{ route('laporan.edit-lokasi', $laporan->id) }}" 
+                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                            Edit Titik Lokasi
+                        </a>
+                    </dd>
                 </div>
 
                 {{-- Titik Kejadian (Lintang & Bujur) --}}

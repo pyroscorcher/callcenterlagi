@@ -32,4 +32,24 @@ class LaporanMasyarakat extends Model
     {
         return $this->hasMany(Foto::class);
     }
+
+    public function provinsi()
+    {
+        return $this->belongsTo(Provinsi::class);
+    }
+
+    public function kabupatenKota()
+    {
+        return $this->belongsTo(KabupatenKota::class);
+    }
+
+    public function kecamatan()
+    {
+        return $this->belongsTo(Kecamatan::class);
+    }
+
+    public function kelurahan()
+    {
+        return $this->belongsTo(Kelurahan::class);
+    }
 }
