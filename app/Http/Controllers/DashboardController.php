@@ -43,6 +43,7 @@ class DashboardController extends Controller
             'kabupatenKota',
             'kecamatan',
             'kelurahan',
+            'balais', // <-- 1. Added 'balais' relationship here
         ])->findOrFail($id);
 
         $provinsis = Provinsi::orderBy('nama')->get();
@@ -58,13 +59,24 @@ class DashboardController extends Controller
         $kelurahans = $laporan->kecamatan_id 
             ? Kelurahan::where('kecamatan_id', $laporan->kecamatan_id)->orderBy('nama')->get() 
             : collect();
+
+        $balais = $laporan->provinsi_id 
+            ? Balai::whereHas('wilayah_balais', function($q) use ($laporan) {
+                $q->where('provinsi_id', $laporan->provinsi_id);
+            })->get()
+            : collect(); // <-- Safely returns empty collection if province isn't set yet
             
+        // 2. Get an array of currently assigned Balai IDs for the Blade component
+        $assignedBalais = $laporan->balais->pluck('id')->toArray();
+
         return view('edit', [
             'laporan' => $laporan,
             'provinsis' => $provinsis,
             'kabupatenkotas' => $kabupatenkotas,
             'kecamatans' => $kecamatans,
             'kelurahans' => $kelurahans,
+            'balais' => $balais,
+            'assignedBalais' => $assignedBalais, // <-- Pass this to your view
         ]);
     }
 
@@ -79,6 +91,12 @@ class DashboardController extends Controller
             'waktu_kejadian' => 'required|string|max:255',
             'telepon' => 'required|string|max:50',
             'lokasi' => 'required|string',
+            'provinsi_id' => 'nullable|exists:provinsis,id', // Make sure provincial id is validated
+            'balais' => 'nullable|array',                     // <-- Validate balais array
+            'balais.*' => 'exists:balais,id',                 // <-- Ensure each selected balai exists
+            'kabupaten_kota_id' => 'nullable|exists:kabupaten_kotas,id',
+            'kecamatan_id' => 'nullable|exists:kecamatans,id',
+            'kelurahan_id' => 'nullable|exists:kelurahans,id',
             'lintang' => 'nullable|string',
             'bujur' => 'nullable|string',
             'dampak_bencana' => 'nullable|string',
@@ -90,8 +108,15 @@ class DashboardController extends Controller
             'fotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // 2. Update Informasi Teks Laporan
-        $laporan->update($request->except(['fotos', 'hapus_foto']));
+        // 2. Update Informasi Teks Laporan (Exclude balais and files from direct table update)
+        $laporan->update($request->except(['fotos', 'hapus_foto', 'balais']));
+
+        // 2.1 Sync the multiple Balais via the many-to-many relationship
+        if ($request->has('balais')) {
+            $laporan->balais()->sync($request->balais);
+        } else {
+            $laporan->balais()->detach(); // If all checkboxes are unchecked
+        }
 
         // 3. Proses Penghapusan Foto yang dicentang oleh admin
         if ($request->has('hapus_foto')) {
@@ -120,7 +145,6 @@ class DashboardController extends Controller
         return redirect()->route('laporan.show', $laporan->id)
                         ->with('success', 'Laporan berhasil diperbarui!');
     }
-
     public function getKabupaten($provinsi)
     {
         return KabupatenKota::where('provinsi_id', $provinsi)
@@ -140,6 +164,14 @@ class DashboardController extends Controller
         return Kelurahan::where('kecamatan_id', $kecamatan)
             ->orderBy('nama')
             ->get(['id', 'nama']);
+    }
+
+    public function getBalaiByProvinsi($provinsi_id) {
+        $balais = Balai::whereHas('wilayah_balais', function($query) use ($provinsi_id) {
+            $query->where('provinsi_id', $provinsi_id);
+        })->get(['id', 'nama']); // Adjust 'nama' to your Balai's name column
+
+        return response()->json($balais);
     }
 
     public function show(LaporanMasyarakat $laporan)
@@ -192,127 +224,5 @@ class DashboardController extends Controller
         return redirect()
             ->route('laporan.masuk-bencana')
             ->with('status', 'Laporan berhasil dihapus.');
-    }
-
-    public function LPB(Request $request)
-    {
-        $laporans = LaporanMasyarakat::query()
-            ->when($request->search, function ($query, $search) {
-                $query->where('lokasi', 'like', "%{$search}%")
-                    ->orWhere('alamat', 'like', "%{$search}%")
-                    ->orWhere('jenis_bencana', 'like', "%{$search}%")
-                    ->orWhere('nama_bencana', 'like', "%{$search}%")
-                    ->orWhere('pelapor', 'like', "%{$search}%");
-            })
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
-
-        return view('dashboards.penangananbalai', [
-            'laporans' => $laporans,
-        ]);
-    }
-
-    public function databalai()
-    {
-        $balais = Balai::all();
-
-        return view('dashboards.datapicbalai', [
-            'title' => 'Data PIC Balai - SITABA',
-            'componentName' => 'opps.data-pic', // Nama komponen Blade
-            'balais' => $balais                 // Data yang dibawa ke komponen
-        ]);
-    }
-
-    public function createBalai()
-    {
-        $balais = Balai::all();
-        return view('layouts.datapicbalai-show', [
-            'title' => 'Tambah Data Balai - SITABA',
-            'componentName' => 'opps.data-pic-create',
-            'balais' => $balais // Komponen form tambah
-        ]);
-    }
-
-        public function storeBalai(Request $request)
-    {
-        $validatedData = $request->validate([
-            'nama_balai' => 'required|string|max:255',
-            'username'   => 'required|string|max:255|unique:balais,username',
-            'password'   => 'required|string|min:6',
-            'unker'      => 'nullable|string|max:255',
-            'unor'       => 'nullable|string|max:255',
-            'provinsi'   => 'nullable|string|max:255',
-            'pulau'      => 'nullable|string|max:255',
-            'kepala'     => 'nullable|string|max:255',
-            'kontak'     => 'nullable|string|max:50',
-        ]);
-
-        $validatedData['password'] = Hash::make($request->password);
-
-        Balai::create($validatedData);
-
-        return redirect()->route('data.pic-balai') // Ganti dengan rute halaman daftar balai Anda
-                        ->with('success', 'Data Balai Bencana berhasil ditambahkan!');
-    }
-
-    public function balaiShow(Balai $balai)
-    {
-        return view('layouts.datapicbalai-show', [
-            'title' => 'Detail PIC Balai - SITABA',
-            'componentName' => 'opps.data-pic-show', // Nama komponen Blade detail
-            'balai' => $balai                       // Data spesifik balai
-        ]);
-    }
-
-    public function editBalai(Balai $balai)
-    {
-        return view('layouts.datapicbalai-show', [
-            'title' => 'Edit Data Balai - SITABA',
-            'componentName' => 'opps.data-pic-edit', // Komponen edit yang akan kita buat
-            'balai' => $balai                        // Bawa data spesifik balai
-        ]);
-    }
-
-    public function updateBalai(Request $request, Balai $balai)
-    {
-        // 1. Validasi input
-        $validatedData = $request->validate([
-            'nama_balai' => 'required|string|max:255',
-            // Kecualikan ID balai saat ini agar username bisa tetap sama
-            'username'   => 'required|string|max:255|unique:balais,username,' . $balai->id,
-            // Password dibuat nullable (opsional saat edit)
-            'password'   => 'nullable|string|min:6',
-            'unker'      => 'nullable|string|max:255',
-            'unor'       => 'nullable|string|max:255',
-            'provinsi'   => 'nullable|string|max:255',
-            'pulau'      => 'nullable|string|max:255',
-            'kepala'     => 'nullable|string|max:255',
-            'kontak'     => 'nullable|string|max:50',
-        ]);
-
-        // 2. Cek apakah admin mengisi password baru
-        if ($request->filled('password')) {
-            $validatedData['password'] = Hash::make($request->password);
-        } else {
-            // Jika kosong, hapus dari array agar password lama tidak tertimpa string kosong
-            unset($validatedData['password']);
-        }
-
-        // 3. Update data ke database
-        $balai->update($validatedData);
-
-        // 4. Redirect kembali dengan pesan sukses
-        return redirect()->route('data.pic-balai-show') // Sesuaikan dengan route list balai Anda
-                        ->with('success', 'Data Balai Bencana berhasil diperbarui!');
-    }
-
-    public function destroyBalai(Balai $balai)
-    {
-        $balai->delete();
-
-        return redirect()
-            ->route('data.pic-balai')
-            ->with('status', 'Data Balai berhasil dihapus.');
     }
 }

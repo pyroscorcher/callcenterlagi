@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/ajax/kabupaten/{provinsi}', [DashboardController::class, 'getKabupaten']);
         Route::get('/ajax/kecamatan/{kabupaten}', [DashboardController::class, 'getKecamatan']);
         Route::get('/ajax/kelurahan/{kecamatan}', [DashboardController::class, 'getKelurahan']);
+        Route::get('/ajax/balai/{provinsi_id}', [DashboardController::class, 'getBalaiByProvinsi']);
 
 
         Route::get('/laporan-penanganan-balai', [DashboardController::class, 'LPB'])->name('laporan-penanganan-balai');

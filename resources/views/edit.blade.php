@@ -21,7 +21,8 @@
                 :kabupatenkotas="$kabupatenkotas"
                 :kecamatans="$kecamatans"
                 :kelurahans="$kelurahans"
-            />
+                :balais="$balais"
+                :assignedBalais="$assignedBalais" />
 
         </main>
     </div>

@@ -26,4 +26,8 @@ class Balai extends Authenticatable
     {
         return $this->belongsToMany(Provinsi::class, 'wilayah_balai', 'balai_id', 'provinsi_id');
     }
+    public function laporanMasyarakats()
+    {
+        return $this->belongsToMany(LaporanMasyarakat::class, 'laporan_balai')->withTimestamps();
+    }
 }

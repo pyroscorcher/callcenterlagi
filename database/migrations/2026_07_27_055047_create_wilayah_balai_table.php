@@ -21,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('balai_provinsi');
+        Schema::dropIfExists('wilayah_balai');
     }
 };

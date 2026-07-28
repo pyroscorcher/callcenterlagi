@@ -4,6 +4,8 @@
     'kabupatenkotas',
     'kecamatans',
     'kelurahans',
+    'balais',         // List of balais for the currently saved province
+    'assignedBalais', // Array of currently assigned Balai IDs, e.g., [1, 4, 5]
 ])
 
 <div class="max-w-6xl mx-auto px-8 py-8">
@@ -24,7 +26,6 @@
             <h1 class="text-lg font-bold text-gray-900">Edit Laporan Bencana</h1>
         </div>
 
-        {{-- Pastikan enctype bernilai multipart/form-data karena ada upload file/foto --}}
         <form action="{{ route('laporan.update', $laporan->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
@@ -83,7 +84,7 @@
                     </div>
                 </div>
 
-                {{-- Lokasi Kejadian (Telah diperbaiki error HTML-nya) --}}
+                {{-- Lokasi Kejadian --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
                     <label for="lokasi" class="text-gray-700 font-medium">Lokasi Kejadian</label>
                     <div>
@@ -97,8 +98,8 @@
                 </div>
 
                 {{-- Provinsi --}}
-                <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
-                    <label for="provinsi" class="text-gray-700 font-medium">Provinsi</label>
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-start">
+                    <label for="provinsi" class="text-gray-700 font-medium mt-3">Provinsi</label>
                     <div>
                         <select id="provinsi" name="provinsi_id" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]">
                             <option value="">Pilih Provinsi</option>
@@ -109,6 +110,32 @@
                             @endforeach
                         </select>
                         @error('provinsi_id')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- Balai Penugasan (MULTIPLE CHECKBOXES) --}}
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-start">
+                    <label class="text-gray-700 font-medium mt-3">Balai Penugasan</label>
+                    <div>
+                        <div id="balai_container" class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border border-gray-300 rounded-lg bg-white max-h-48 overflow-y-auto">
+                            @if(isset($balais) && $balais->count() > 0)
+                                @foreach($balais as $balai)
+                                    <label class="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                                        {{-- Note: name is balais[] to send an array to the backend --}}
+                                        <input type="checkbox" name="balais[]" value="{{ $balai->id }}" 
+                                               @checked(in_array($balai->id, old('balais', $assignedBalais ?? [])))
+                                               class="w-4 h-4 rounded border-gray-300 text-[#161446] focus:ring-[#161446]">
+                                        <span>{{ $balai->nama }}</span>
+                                    </label>
+                                @endforeach
+                            @else
+                                <p class="text-sm text-gray-500 italic col-span-full">Pilih provinsi untuk melihat daftar Balai.</p>
+                            @endif
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Anda dapat memilih lebih dari satu Balai. Daftar akan menyesuaikan dengan Provinsi.</p>
+                        @error('balais')
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
                     </div>
@@ -199,7 +226,7 @@
                     </div>
                 </div>
 
-                {{-- Manajemen Foto Bencana (Multiple Foto) --}}
+                {{-- Manajemen Foto Bencana --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 pt-4 border-t border-gray-200">
                     <span class="text-gray-700 font-medium">Foto Bencana Saat Ini</span>
                     <div>
@@ -211,7 +238,6 @@
                                              alt="Foto Bencana" 
                                              class="w-full h-32 object-cover rounded-lg mb-2" />
                                         
-                                        {{-- Checkbox untuk menghapus foto tertentu --}}
                                         <label class="flex items-center gap-2 text-xs text-red-600 cursor-pointer mt-1 font-medium">
                                             <input type="checkbox" name="hapus_foto[]" value="{{ $foto->id }}" class="rounded border-red-300 text-red-600 focus:ring-red-500">
                                             Hapus foto ini
@@ -223,7 +249,6 @@
                             <p class="text-sm text-gray-500 mb-3">Belum ada foto yang diunggah.</p>
                         @endif
 
-                        {{-- Input Tambah Foto Baru --}}
                         <label class="block text-sm font-medium text-gray-700 mb-1">Tambah Foto Baru (Bisa pilih lebih dari satu)</label>
                         <input type="file" name="fotos[]" multiple accept="image/*"
                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#161446] file:text-white hover:file:bg-[#110e36] cursor-pointer" />
@@ -233,7 +258,7 @@
                     </div>
                 </div>
 
-                {{-- Kronologi Bencana (Deskripsi) --}}
+                {{-- Kronologi Bencana --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-start pt-4 border-t border-gray-200">
                     <label for="deskripsi" class="text-gray-700 font-medium pt-2">Kronologi Bencana</label>
                     <div>
@@ -277,25 +302,68 @@
 
 <script>
     const provinsi = document.getElementById('provinsi');
+    const balaiContainer = document.getElementById('balai_container'); // Changed to container
     const kabupaten = document.getElementById('kabupaten');
     const kecamatan = document.getElementById('kecamatan');
     const kelurahan = document.getElementById('kelurahan');
 
     provinsi.addEventListener('change', async function () {
+        // Show loading states
+        balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Loading data Balai...</p>';
         kabupaten.innerHTML = '<option>Loading...</option>';
         kecamatan.innerHTML = '<option>Pilih Kecamatan</option>';
         kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
 
-        const response = await fetch('/ajax/kabupaten/' + this.value);
-        const data = await response.json();
+        if (!this.value) {
+            balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Pilih provinsi untuk melihat daftar Balai.</p>';
+            kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
+            return;
+        }
 
-        kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
-        data.forEach(item => {
-            kabupaten.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
-        });
+        // Fetch Balai and Kabupaten concurrently
+        try {
+            const [responseBalai, responseKabupaten] = await Promise.all([
+                fetch('/ajax/balai/' + this.value),
+                fetch('/ajax/kabupaten/' + this.value)
+            ]);
+
+            const dataBalai = await responseBalai.json();
+            const dataKabupaten = await responseKabupaten.json();
+
+            // Populate Balai Checkboxes dynamically
+            balaiContainer.innerHTML = '';
+            if (dataBalai.length === 0) {
+                balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Tidak ada Balai yang ditugaskan untuk provinsi ini.</p>';
+            } else {
+                dataBalai.forEach(item => {
+                    balaiContainer.innerHTML += `
+                        <label class="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                            <input type="checkbox" name="balais[]" value="${item.id}" class="w-4 h-4 rounded border-gray-300 text-[#161446] focus:ring-[#161446]">
+                            <span>${item.nama}</span>
+                        </label>
+                    `;
+                });
+            }
+
+            // Populate Kabupaten dropdown
+            kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
+            dataKabupaten.forEach(item => {
+                kabupaten.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+            });
+
+        } catch (error) {
+            console.error("Gagal mengambil data:", error);
+            balaiContainer.innerHTML = '<p class="text-sm text-red-500 italic col-span-full">Terjadi kesalahan saat memuat data.</p>';
+        }
     });
 
     kabupaten.addEventListener('change', async function () {
+        if (!this.value) {
+            kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
+            kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+            return;
+        }
+
         kecamatan.innerHTML = '<option>Loading...</option>';
         kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
 
@@ -309,6 +377,11 @@
     });
 
     kecamatan.addEventListener('change', async function () {
+        if (!this.value) {
+            kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+            return;
+        }
+
         kelurahan.innerHTML = '<option>Loading...</option>';
 
         const response = await fetch('/ajax/kelurahan/' + this.value);

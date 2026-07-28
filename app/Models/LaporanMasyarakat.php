@@ -57,4 +57,9 @@ class LaporanMasyarakat extends Model
     {
         return $this->belongsTo(Kelurahan::class);
     }
+
+    public function balais()
+    {
+        return $this->belongsToMany(Balai::class, 'balai_laporan', 'laporan_id', 'balai_id');
+    }
 }
