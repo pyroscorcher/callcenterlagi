@@ -1,7 +1,7 @@
 @props([
     'laporan',
     'provinsis',
-    'kabupatenKotas',
+    'kabupatenkotas',
     'kecamatans',
     'kelurahans',
 ])
@@ -83,13 +83,13 @@
                     </div>
                 </div>
 
-                {{-- Lokasi Kejadian --}}
+                {{-- Lokasi Kejadian (Telah diperbaiki error HTML-nya) --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
                     <label for="lokasi" class="text-gray-700 font-medium">Lokasi Kejadian</label>
                     <div>
                         <input type="text" name="lokasi" id="lokasi" 
-                               value="{{ old('lokasi', $laporan->lokasi) }}"w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]" 
-                               class="/>
+                               value="{{ old('lokasi', $laporan->lokasi) }}" 
+                               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]" />
                         @error('lokasi')
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
@@ -98,48 +98,85 @@
 
                 {{-- Provinsi --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
-                    <label for="provinsi_id" class="text-gray-700 font-medium">Provinsi</label>
-                        <select id="provinsi" name="provinsi_id">
+                    <label for="provinsi" class="text-gray-700 font-medium">Provinsi</label>
+                    <div>
+                        <select id="provinsi" name="provinsi_id" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]">
                             <option value="">Pilih Provinsi</option>
-
                             @foreach($provinsis as $provinsi)
-                                <option
-                                    value="{{ $provinsi->id }}"
-                                    @selected($laporan->provinsi_id == $provinsi->id)
-                                >
+                                <option value="{{ $provinsi->id }}" @selected($laporan->provinsi_id == $provinsi->id)>
                                     {{ $provinsi->nama }}
                                 </option>
                             @endforeach
                         </select>
+                        @error('provinsi_id')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
 
-                {{-- Kabupaten --}}
+                {{-- Kabupaten/Kota --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
-                    <label for="kabupaten_kota_id" class="text-gray-700 font-medium">Kabupaten/Kota</label>
-                    <select id="kabupaten" name="kabupaten_kota_id">
-                        <option>Pilih Kabupaten/Kota</option>
-                    </select>
+                    <label for="kabupaten" class="text-gray-700 font-medium">Kabupaten/Kota</label>
+                    <div>
+                        <select id="kabupaten" name="kabupaten_kota_id" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]">
+                            <option value="">Pilih Kabupaten/Kota</option>
+                            @if(isset($kabupatenkotas))
+                                @foreach($kabupatenkotas as $kabupaten)
+                                    <option value="{{ $kabupaten->id }}" @selected($laporan->kabupaten_kota_id == $kabupaten->id)>
+                                        {{ $kabupaten->nama }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        @error('kabupaten_kota_id')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
 
                 {{-- Kecamatan --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
-                    <label for="kecamatan_id" class="text-gray-700 font-medium">Kecamatan</label>
-                    <select id="kecamatan" name="kecamatan_id">
-                        <option>Pilih Kecamatan</option>
-                    </select>
+                    <label for="kecamatan" class="text-gray-700 font-medium">Kecamatan</label>
+                    <div>
+                        <select id="kecamatan" name="kecamatan_id" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]">
+                            <option value="">Pilih Kecamatan</option>
+                            @if(isset($kecamatans))
+                                @foreach($kecamatans as $kecamatan)
+                                    <option value="{{ $kecamatan->id }}" @selected($laporan->kecamatan_id == $kecamatan->id)>
+                                        {{ $kecamatan->nama }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        @error('kecamatan_id')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
 
                 {{-- Kelurahan --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
-                    <label for="kelurahan_id" class="text-gray-700 font-medium">Kelurahan</label>
-                    <select id="kelurahan" name="kelurahan_id">
-                        <option>Pilih Kelurahan</option>
-                    </select>
+                    <label for="kelurahan" class="text-gray-700 font-medium">Kelurahan</label>
+                    <div>
+                        <select id="kelurahan" name="kelurahan_id" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]">
+                            <option value="">Pilih Kelurahan</option>
+                            @if(isset($kelurahans))
+                                @foreach($kelurahans as $kelurahan)
+                                    <option value="{{ $kelurahan->id }}" @selected($laporan->kelurahan_id == $kelurahan->id)>
+                                        {{ $kelurahan->nama }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        @error('kelurahan_id')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
 
                 {{-- Titik Kejadian (Lintang & Bujur) --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
-                    <dt class="text-gray-700">Titik Kejadian</dt>
+                    <dt class="text-gray-700 font-medium">Titik Kejadian</dt>
                     <dd class="text-gray-900 flex items-center justify-between">
                         <span>{{ $laporan->lintang ?? '-' }} , {{ $laporan->bujur ?? '-' }}</span>
                         <a href="{{ route('laporan.edit-lokasi', $laporan->id) }}" 
@@ -149,7 +186,6 @@
                     </dd>
                 </div>
                 
-
                 {{-- Dampak Bencana --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
                     <label for="dampak_bencana" class="text-gray-700 font-medium">Dampak Bencana</label>
@@ -239,70 +275,48 @@
     </div>
 </div>
 
-
 <script>
-const provinsi = document.getElementById('provinsi');
-const kabupaten = document.getElementById('kabupaten');
-const kecamatan = document.getElementById('kecamatan');
-const kelurahan = document.getElementById('kelurahan');
+    const provinsi = document.getElementById('provinsi');
+    const kabupaten = document.getElementById('kabupaten');
+    const kecamatan = document.getElementById('kecamatan');
+    const kelurahan = document.getElementById('kelurahan');
 
-provinsi.addEventListener('change', async function () {
+    provinsi.addEventListener('change', async function () {
+        kabupaten.innerHTML = '<option>Loading...</option>';
+        kecamatan.innerHTML = '<option>Pilih Kecamatan</option>';
+        kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
 
-    kabupaten.innerHTML = '<option>Loading...</option>';
-    kecamatan.innerHTML = '<option>Pilih Kecamatan</option>';
-    kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
+        const response = await fetch('/ajax/kabupaten/' + this.value);
+        const data = await response.json();
 
-    const response = await fetch('/ajax/kabupaten/' + this.value);
-    const data = await response.json();
-
-    kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
-
-    data.forEach(item => {
-        kabupaten.innerHTML += `
-            <option value="${item.id}">
-                ${item.nama}
-            </option>
-        `;
+        kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
+        data.forEach(item => {
+            kabupaten.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+        });
     });
 
-});
+    kabupaten.addEventListener('change', async function () {
+        kecamatan.innerHTML = '<option>Loading...</option>';
+        kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
 
-kabupaten.addEventListener('change', async function () {
+        const response = await fetch('/ajax/kecamatan/' + this.value);
+        const data = await response.json();
 
-    kecamatan.innerHTML = '<option>Loading...</option>';
-    kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
-
-    const response = await fetch('/ajax/kecamatan/' + this.value);
-    const data = await response.json();
-
-    kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
-
-    data.forEach(item => {
-        kecamatan.innerHTML += `
-            <option value="${item.id}">
-                ${item.nama}
-            </option>
-        `;
+        kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
+        data.forEach(item => {
+            kecamatan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+        });
     });
 
-});
+    kecamatan.addEventListener('change', async function () {
+        kelurahan.innerHTML = '<option>Loading...</option>';
 
-kecamatan.addEventListener('change', async function () {
+        const response = await fetch('/ajax/kelurahan/' + this.value);
+        const data = await response.json();
 
-    kelurahan.innerHTML = '<option>Loading...</option>';
-
-    const response = await fetch('/ajax/kelurahan/' + this.value);
-    const data = await response.json();
-
-    kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
-
-    data.forEach(item => {
-        kelurahan.innerHTML += `
-            <option value="${item.id}">
-                ${item.nama}
-            </option>
-        `;
+        kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+        data.forEach(item => {
+            kelurahan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+        });
     });
-
-});
 </script>
