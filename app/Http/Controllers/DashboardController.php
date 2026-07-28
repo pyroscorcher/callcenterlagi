@@ -61,7 +61,7 @@ class DashboardController extends Controller
             : collect();
 
         $balais = $laporan->provinsi_id 
-            ? Balai::whereHas('wilayah_balais', function($q) use ($laporan) {
+            ? Balai::whereHas('provinsis', function($q) use ($laporan) {
                 $q->where('provinsi_id', $laporan->provinsi_id);
             })->get()
             : collect(); // <-- Safely returns empty collection if province isn't set yet
@@ -167,9 +167,10 @@ class DashboardController extends Controller
     }
 
     public function getBalaiByProvinsi($provinsi_id) {
-        $balais = Balai::whereHas('wilayah_balais', function($query) use ($provinsi_id) {
-            $query->where('provinsi_id', $provinsi_id);
-        })->get(['id', 'nama']); // Adjust 'nama' to your Balai's name column
+        // Ganti 'wilayah_balais' menjadi 'provinsis'
+        $balais = Balai::whereHas('provinsis', function($query) use ($provinsi_id) {
+            $query->where('provinsis.id', $provinsi_id);
+        })->get(['id', 'nama_balai']); 
 
         return response()->json($balais);
     }

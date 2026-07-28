@@ -115,32 +115,6 @@
                     </div>
                 </div>
 
-                {{-- Balai Penugasan (MULTIPLE CHECKBOXES) --}}
-                <div class="grid grid-cols-[220px_1fr] gap-4 items-start">
-                    <label class="text-gray-700 font-medium mt-3">Balai Penugasan</label>
-                    <div>
-                        <div id="balai_container" class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border border-gray-300 rounded-lg bg-white max-h-48 overflow-y-auto">
-                            @if(isset($balais) && $balais->count() > 0)
-                                @foreach($balais as $balai)
-                                    <label class="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded">
-                                        {{-- Note: name is balais[] to send an array to the backend --}}
-                                        <input type="checkbox" name="balais[]" value="{{ $balai->id }}" 
-                                               @checked(in_array($balai->id, old('balais', $assignedBalais ?? [])))
-                                               class="w-4 h-4 rounded border-gray-300 text-[#161446] focus:ring-[#161446]">
-                                        <span>{{ $balai->nama }}</span>
-                                    </label>
-                                @endforeach
-                            @else
-                                <p class="text-sm text-gray-500 italic col-span-full">Pilih provinsi untuk melihat daftar Balai.</p>
-                            @endif
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">Anda dapat memilih lebih dari satu Balai. Daftar akan menyesuaikan dengan Provinsi.</p>
-                        @error('balais')
-                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-                        @enderror
-                    </div>
-                </div>
-
                 {{-- Kabupaten/Kota --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
                     <label for="kabupaten" class="text-gray-700 font-medium">Kabupaten/Kota</label>
@@ -339,7 +313,7 @@
                     balaiContainer.innerHTML += `
                         <label class="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded">
                             <input type="checkbox" name="balais[]" value="${item.id}" class="w-4 h-4 rounded border-gray-300 text-[#161446] focus:ring-[#161446]">
-                            <span>${item.nama}</span>
+                            <span>${item.nama_balai}</span>
                         </label>
                     `;
                 });
