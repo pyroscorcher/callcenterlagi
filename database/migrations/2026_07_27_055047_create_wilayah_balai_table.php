@@ -10,13 +10,11 @@ return new class extends Migration
     {
         Schema::create('wilayah_balai', function (Blueprint $table) {
             $table->id();
-            
             // Relasi ke tabel balais
             $table->foreignId('balai_id')->constrained('balais')->cascadeOnDelete();
             
             // Relasi ke tabel provinsis
             $table->foreignId('provinsi_id')->constrained('provinsis')->cascadeOnDelete();
-            
             $table->timestamps();
         });
     }
