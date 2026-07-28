@@ -274,96 +274,83 @@
     </div>
 </div>
 
-<script>
+ <script>
+
     const provinsi = document.getElementById('provinsi');
-    const balaiContainer = document.getElementById('balai_container'); // Changed to container
+
     const kabupaten = document.getElementById('kabupaten');
+
     const kecamatan = document.getElementById('kecamatan');
+
     const kelurahan = document.getElementById('kelurahan');
 
+
     provinsi.addEventListener('change', async function () {
-        // Show loading states
-        balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Loading data Balai...</p>';
+
         kabupaten.innerHTML = '<option>Loading...</option>';
+
         kecamatan.innerHTML = '<option>Pilih Kecamatan</option>';
+
         kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
 
-        if (!this.value) {
-            balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Pilih provinsi untuk melihat daftar Balai.</p>';
-            kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
-            return;
-        }
 
-        // Fetch Balai and Kabupaten concurrently
-        try {
-            const [responseBalai, responseKabupaten] = await Promise.all([
-                fetch('/ajax/balai/' + this.value),
-                fetch('/ajax/kabupaten/' + this.value)
-            ]);
+        const response = await fetch('/ajax/kabupaten/' + this.value);
 
-            const dataBalai = await responseBalai.json();
-            const dataKabupaten = await responseKabupaten.json();
-
-            // Populate Balai Checkboxes dynamically
-            balaiContainer.innerHTML = '';
-            if (dataBalai.length === 0) {
-                balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic col-span-full">Tidak ada Balai yang ditugaskan untuk provinsi ini.</p>';
-            } else {
-                dataBalai.forEach(item => {
-                    balaiContainer.innerHTML += `
-                        <label class="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded">
-                            <input type="checkbox" name="balais[]" value="${item.id}" class="w-4 h-4 rounded border-gray-300 text-[#161446] focus:ring-[#161446]">
-                            <span>${item.nama_balai}</span>
-                        </label>
-                    `;
-                });
-            }
-
-            // Populate Kabupaten dropdown
-            kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
-            dataKabupaten.forEach(item => {
-                kabupaten.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
-            });
-
-        } catch (error) {
-            console.error("Gagal mengambil data:", error);
-            balaiContainer.innerHTML = '<p class="text-sm text-red-500 italic col-span-full">Terjadi kesalahan saat memuat data.</p>';
-        }
-    });
-
-    kabupaten.addEventListener('change', async function () {
-        if (!this.value) {
-            kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
-            kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
-            return;
-        }
-
-        kecamatan.innerHTML = '<option>Loading...</option>';
-        kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
-
-        const response = await fetch('/ajax/kecamatan/' + this.value);
         const data = await response.json();
 
-        kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
+
+        kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
+
         data.forEach(item => {
-            kecamatan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+
+            kabupaten.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+
         });
+
     });
 
+
+    kabupaten.addEventListener('change', async function () {
+
+        kecamatan.innerHTML = '<option>Loading...</option>';
+
+        kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
+
+
+        const response = await fetch('/ajax/kecamatan/' + this.value);
+
+        const data = await response.json();
+
+
+        kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
+
+        data.forEach(item => {
+
+            kecamatan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+
+        });
+
+    });
+
+
     kecamatan.addEventListener('change', async function () {
-        if (!this.value) {
-            kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
-            return;
-        }
 
         kelurahan.innerHTML = '<option>Loading...</option>';
 
+
         const response = await fetch('/ajax/kelurahan/' + this.value);
+
         const data = await response.json();
 
+
         kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+
         data.forEach(item => {
+
             kelurahan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+
         });
+
     });
-</script>
+
+</script> 
