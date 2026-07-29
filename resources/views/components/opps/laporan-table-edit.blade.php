@@ -31,14 +31,16 @@
             @method('PUT')
 
             <div class="space-y-6">
-                
+
                 {{-- Jenis Bencana --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
                     <label for="jenis_bencana" class="text-gray-700 font-medium">Jenis Bencana</label>
                     <div>
-                        <input type="text" name="jenis_bencana" id="jenis_bencana" 
-                               value="{{ old('jenis_bencana', $laporan->jenis_bencana) }}"
-                               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]" />
+                        <select name="jenis_bencana" id="jenis_bencana" 
+                                class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]">
+                            <option value="">-- Pilih Jenis Bencana --</option>
+                            {{-- Options will be populated automatically via JavaScript --}}
+                        </select>
                         @error('jenis_bencana')
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
@@ -46,12 +48,14 @@
                 </div>
 
                 {{-- Nama Kejadian --}}
-                <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-center mt-4">
                     <label for="nama_bencana" class="text-gray-700 font-medium">Nama Kejadian</label>
                     <div>
-                        <input type="text" name="nama_bencana" id="nama_bencana" 
-                               value="{{ old('nama_bencana', $laporan->nama_bencana) }}"
-                               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]" />
+                        <select name="nama_bencana" id="nama_bencana" 
+                                class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]">
+                            <option value="">-- Pilih Nama Kejadian --</option>
+                            {{-- Options will be populated automatically via JavaScript --}}
+                        </select>
                         @error('nama_bencana')
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
@@ -256,6 +260,47 @@
                     </div>
                 </div>
 
+                {{-- Balai Penugasan (MULTIPLE CHECKBOXES) --}}
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-start">
+                    <label class="text-gray-700 font-medium mt-3">Balai Penugasan</label>
+                    <div>
+                        {{-- Custom Dropdown Wrapper --}}
+                        <div class="relative w-full" id="balai_dropdown_wrapper">
+                            
+                            {{-- Dropdown Trigger Button --}}
+                            <button type="button" id="balai_dropdown_trigger" class="w-full flex items-center justify-between bg-white border border-gray-400 rounded-lg px-4 py-2 text-left text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#161446] focus:border-[#161446]">
+                                <span id="balai_dropdown_text" class="truncate block w-[90%]">Pilih Balai Penugasan...</span>
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+
+                            {{-- Dropdown Content (Hidden by default) --}}
+                            <div id="balai_dropdown_content" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden">
+                                <div id="balai_container" class="max-h-60 overflow-y-auto p-2 space-y-1">
+                                    @if(isset($balais) && $balais->count() > 0)
+                                        @foreach($balais as $balai)
+                                            <label class="flex items-start space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                                                {{-- Added data-name attribute so JS can read the text --}}
+                                                <input type="checkbox" name="balais[]" value="{{ $balai->id }}" data-name="{{ $balai->nama_balai ?? $balai->nama }}" 
+                                                    @checked(in_array($balai->id, old('balais', $assignedBalais ?? [])))
+                                                    class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                                                <span>{{ $balai->nama_balai ?? $balai->nama }}</span>
+                                            </label>
+                                        @endforeach
+                                    @else
+                                        <p class="text-sm text-gray-500 italic p-2 text-center">Pilih provinsi untuk melihat daftar Balai.</p>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                        </div>
+                        
+                        <p class="text-xs text-gray-500 mt-1">Anda dapat memilih lebih dari satu Balai. Daftar menyesuaikan Provinsi.</p>
+                        @error('balais')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+
             </div>
 
             {{-- Footer Action Buttons --}}
@@ -275,82 +320,245 @@
 </div>
 
  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const provinsi = document.getElementById('provinsi');
+        const balaiContainer = document.getElementById('balai_container');
+        const kabupaten = document.getElementById('kabupaten');
+        const kecamatan = document.getElementById('kecamatan');
+        const kelurahan = document.getElementById('kelurahan');
 
-    const provinsi = document.getElementById('provinsi');
+        // Dropdown specific elements
+        const dropdownTrigger = document.getElementById('balai_dropdown_trigger');
+        const dropdownContent = document.getElementById('balai_dropdown_content');
+        const dropdownText = document.getElementById('balai_dropdown_text');
 
-    const kabupaten = document.getElementById('kabupaten');
+        // --- 1. Dropdown UI Logic ---
 
-    const kecamatan = document.getElementById('kecamatan');
-
-    const kelurahan = document.getElementById('kelurahan');
-
-
-    provinsi.addEventListener('change', async function () {
-
-        kabupaten.innerHTML = '<option>Loading...</option>';
-
-        kecamatan.innerHTML = '<option>Pilih Kecamatan</option>';
-
-        kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
-
-
-        const response = await fetch('/ajax/kabupaten/' + this.value);
-
-        const data = await response.json();
-
-
-        kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
-
-        data.forEach(item => {
-
-            kabupaten.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
-
+        // Toggle Dropdown Visibility
+        dropdownTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownContent.classList.toggle('hidden');
         });
 
-    });
+        // Close Dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!dropdownTrigger.contains(e.target) && !dropdownContent.contains(e.target)) {
+                dropdownContent.classList.add('hidden');
+            }
+        });
 
+        // Function to update the text based on checked boxes
+        function updateBalaiText() {
+            const checkedBoxes = balaiContainer.querySelectorAll('input[type="checkbox"]:checked');
+            if (checkedBoxes.length === 0) {
+                dropdownText.textContent = "Pilih Balai Penugasan...";
+                return;
+            }
+            // Map over checked boxes to get their data-name attributes and join them with a comma
+            const names = Array.from(checkedBoxes).map(cb => cb.getAttribute('data-name'));
+            dropdownText.textContent = names.join(', ');
+        }
+
+        // Event Delegation: Listen for checkbox changes inside the container 
+        // (Works for both page-load checkboxes and AJAX-loaded checkboxes)
+        balaiContainer.addEventListener('change', function(e) {
+            if (e.target && e.target.type === 'checkbox') {
+                updateBalaiText();
+            }
+        });
+
+        // Run once on load to show previous data in Edit Mode
+        updateBalaiText();
+
+
+        // --- 2. AJAX Fetch Logic ---
+
+        provinsi.addEventListener('change', async function () {
+            balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic p-2 text-center">Loading data Balai...</p>';
+            dropdownText.textContent = "Loading...";
+            kabupaten.innerHTML = '<option>Loading...</option>';
+            kecamatan.innerHTML = '<option>Pilih Kecamatan</option>';
+            kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
+
+            if (!this.value) {
+                balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic p-2 text-center">Pilih provinsi untuk melihat daftar Balai.</p>';
+                dropdownText.textContent = "Pilih Balai Penugasan...";
+                kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
+                return;
+            }
+
+            try {
+                const [responseBalai, responseKabupaten] = await Promise.all([
+                    fetch('/ajax/balai/' + this.value),
+                    fetch('/ajax/kabupaten/' + this.value)
+                ]);
+
+                const dataBalai = await responseBalai.json();
+                const dataKabupaten = await responseKabupaten.json();
+
+                // Populate Balai Checkboxes dynamically
+                balaiContainer.innerHTML = '';
+                if (dataBalai.length === 0) {
+                    balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic p-2 text-center">Tidak ada Balai yang ditugaskan untuk provinsi ini.</p>';
+                } else {
+                    dataBalai.forEach(item => {
+                        // Added data-name attribute here as well
+                        balaiContainer.innerHTML += `
+                            <label class="flex items-start space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                                <input type="checkbox" name="balais[]" value="${item.id}" data-name="${item.nama_balai}" class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                                <span>${item.nama_balai}</span>
+                            </label>
+                        `;
+                    });
+                }
+                updateBalaiText(); // Reset text after fetching
+
+                // Populate Kabupaten dropdown
+                kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
+                dataKabupaten.forEach(item => {
+                    kabupaten.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+                });
+
+            } catch (error) {
+                console.error("Gagal mengambil data:", error);
+                balaiContainer.innerHTML = '<p class="text-sm text-red-500 italic p-2 text-center">Terjadi kesalahan saat memuat data.</p>';
+                dropdownText.textContent = "Error memuat data";
+            }
+        });
+
+        kabupaten.addEventListener('change', async function () {
+            if (!this.value) {
+                kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
+                kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+                return;
+            }
+            kecamatan.innerHTML = '<option>Loading...</option>';
+            kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
+            const response = await fetch('/ajax/kecamatan/' + this.value);
+            const data = await response.json();
+            kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
+            data.forEach(item => {
+                kecamatan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+            });
+        });
+
+        kecamatan.addEventListener('change', async function () {
+            if (!this.value) {
+                kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+                return;
+            }
+            kelurahan.innerHTML = '<option>Loading...</option>';
+            const response = await fetch('/ajax/kelurahan/' + this.value);
+            const data = await response.json();
+            kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+            data.forEach(item => {
+                kelurahan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+            });
+        });
+    });
 
     kabupaten.addEventListener('change', async function () {
+        if (!this.value) {
+            kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
+            kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+            return;
+        }
 
         kecamatan.innerHTML = '<option>Loading...</option>';
-
         kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
 
-
         const response = await fetch('/ajax/kecamatan/' + this.value);
-
         const data = await response.json();
 
-
         kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
-
         data.forEach(item => {
-
             kecamatan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
-
         });
-
     });
 
-
     kecamatan.addEventListener('change', async function () {
+        if (!this.value) {
+            kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+            return;
+        }
 
         kelurahan.innerHTML = '<option>Loading...</option>';
 
-
         const response = await fetch('/ajax/kelurahan/' + this.value);
-
         const data = await response.json();
 
-
         kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
-
         data.forEach(item => {
-
             kelurahan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
-
         });
-
     });
 
+
+    const bencanaRules = {
+        "Kebakaran Gedung dan Pemukiman": ["Kebakaran Gedung dan Pemukiman"],
+        "Gagal Teknologi": ["Kegagalan Industri", "Kecelakaan Industri"],
+        "Epidemi dan Wabah Penyakit": ["Epidemi", "Wabah Penyakit"],
+        "Kekeringan": ["Kekeringan Meteorologis", "Kekeringan Hidrologis", "Kekeringan Pertanian"],
+        "Tanah Longsor": ["Longsor", "Gerakan Tanah"],
+        "Gempabumi": ["Gempa Tektonik", "Gempa Vulkanik", "Gempabumi Runtuhan"],
+        "Banjir": ["Banjir dan Tanah Longsor", "Banjir Genangan", "Banjir Bandang", "Banjir Drainase & Selokan", "Banjir Waduk", "Tanggul Jebol"],
+        "Konflik Sosial": ["Teror", "Kerusakan Sosial", "Konflik Sosial"],
+        "Cuaca Ekstrim": ["Angin Topan", "Hujan Es", "Siklon Tropis", "Puting Beliung", "Angin Kencang", "Suhu Udara Ekstrem"],
+        "Erupsi Gunung Api": ["Banjir Lahar", "Hujan Abu Vulkanik", "Awan Panas Aliran Piroklastik Guguran", "Awan Panas Aliran Piroklastik", "Gas Vulkanik Beracun"],
+        "Gelombang Pasang dan Abrasi": ["Gelombang Pasang", "Abrasi"],
+        "Kebakaran Hutan dan Lahan": ["Kebakaran Hutan", "Kebakaran Lahan", "Kebakaran Lahan Gambut"],
+        "Tsunami": ["Mikrotsunami", "Tsunami Sesimogenik", "Tsunami Nonseismik", "Tsunami Lokal", "Tsunami Regional", "Tsunami Jarak", "Tsunami Meteorologi"]
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const jenisSelect = document.getElementById('jenis_bencana');
+        const namaSelect = document.getElementById('nama_bencana');
+
+        const selectedJenis = @json(old('jenis_bencana', $laporan->jenis_bencana ?? ''));
+        const selectedNama = @json(old('nama_bencana', $laporan->nama_bencana ?? ''));
+
+        // 1. Populate Jenis Bencana dropdown
+        for (const jenis in bencanaRules) {
+            let option = document.createElement('option');
+            option.value = jenis;
+            option.textContent = jenis;
+            
+            // Trim and case-insensitive check so minor spacing/casing differences don't break it
+            if (jenis.trim().toLowerCase() === selectedJenis.trim().toLowerCase()) {
+                option.selected = true;
+            }
+            jenisSelect.appendChild(option);
+        }
+
+        // 2. Function to populate Nama Kejadian based on selected Jenis
+        function populateNama(jenisValue, namaValueToSelect = '') {
+            namaSelect.innerHTML = '<option value="">-- Pilih Nama Kejadian --</option>';
+            
+            // Find the matching key safely
+            let matchedKey = Object.keys(bencanaRules).find(k => k.trim().toLowerCase() === jenisValue.trim().toLowerCase());
+
+            if (matchedKey && bencanaRules[matchedKey]) {
+                bencanaRules[matchedKey].forEach(function(nama) {
+                    let option = document.createElement('option');
+                    option.value = nama;
+                    option.textContent = nama;
+                    
+                    if (nama.trim().toLowerCase() === namaValueToSelect.trim().toLowerCase()) {
+                        option.selected = true;
+                    }
+                    namaSelect.appendChild(option);
+                });
+            }
+        }
+
+        // 3. Pre-load matching options on page load for Edit view
+        if (selectedJenis) {
+            populateNama(selectedJenis, selectedNama);
+        }
+
+        // 4. Update dropdown dynamically when user changes Jenis Bencana
+        jenisSelect.addEventListener('change', function() {
+            populateNama(this.value);
+        });
+    });
 </script> 
