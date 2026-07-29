@@ -52,6 +52,17 @@
                         <dt class="text-gray-600 font-medium">Unit Organisasi</dt>
                         <dd class="text-gray-900">{{ $balai->unor ?? '-' }}</dd>
                     </div>
+
+                    <div class="grid grid-cols-[200px_1fr] gap-4 py-2 items-center">
+                        <dt class="text-gray-600 font-medium">Kepala Balai</dt>
+                        <dd class="text-gray-900">{{ $balai->kepala ?? '-' }}</dd>
+                    </div>
+
+                    <div class="grid grid-cols-[200px_1fr] gap-4 py-2 items-center">
+                        <dt class="text-gray-600 font-medium">Kontak Kepala Balai</dt>
+                        <dd class="text-gray-900">{{ $balai->kontak ?? '-' }}</dd>
+                    </div>
+
                 </dl>
             </div>
 
@@ -75,37 +86,52 @@
 
             <hr class="border-gray-200">
 
-            {{-- Bagian Daftar Person In Charge (PIC) --}}
+            {{-- Bagian Daftar Person In Charge (PIC) (TABLE VIEW) --}}
             <div>
                 <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Daftar Person In Charge (PIC)</h2>
                 
-                @if(isset($balai->pics) && $balai->pics->count() > 0)
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        @foreach($balai->pics as $index => $pic)
-                            <div class="p-4 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-between">
-                                <div>
-                                    <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">PIC #{{ $index + 1 }}</p>
-                                    <h3 class="text-base font-bold text-gray-900">{{ $pic->nama }}</h3>
-                                    <p class="text-sm text-gray-600 mt-0.5">{{ $pic->kontak }}</p>
-                                </div>
-
-                                @if($pic->kontak)
-                                    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $pic->kontak) }}" 
-                                       target="_blank" 
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-medium transition shadow-sm" 
-                                       title="Chat {{ $pic->nama }} via WhatsApp">
-                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.125-.339-.154-1.229-.452-2.344-1.455-1.026-.924-1.718-2.067-1.918-2.408-.2-.341-.021-.527.15-.696.155-.153.342-.4.512-.6.171-.2.228-.34.341-.568.114-.227.057-.426-.028-.596-.085-.17-1.192-2.87-1.632-3.929-.429-1.033-.865-.893-1.189-.91l-.81-.018c-.284 0-.746.107-1.137.531-.391.424-1.493 1.458-1.493 3.555 0 2.097 1.528 4.126 1.741 4.41.213.283 2.977 4.544 7.214 6.375 1.009.435 1.796.696 2.408.891 1.013.323 1.936.277 2.66.168.81-.122 2.492-1.018 2.842-2.001.35-1.002.35-1.848.245-2.001-.105-.152-.391-.243-.733-.414z"/>
-                                        </svg>
-                                        WhatsApp
-                                    </a>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <p class="text-sm text-gray-500 italic">Belum ada PIC yang ditambahkan untuk Balai ini.</p>
-                @endif
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="w-full text-sm text-left text-gray-700">
+                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 font-medium w-16 text-center">No</th>
+                                <th scope="col" class="px-6 py-4 font-medium">Nama PIC</th>
+                                <th scope="col" class="px-6 py-4 font-medium">Kontak WhatsApp</th>
+                                <th scope="col" class="px-6 py-4 font-medium w-32 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white">
+                            @if(isset($balai->pics) && $balai->pics->count() > 0)
+                                @foreach($balai->pics as $index => $pic)
+                                    <tr class="hover:bg-gray-50/50 transition">
+                                        <td class="px-6 py-4 text-center">{{ $index + 1 }}</td>
+                                        <td class="px-6 py-4 font-bold text-gray-900">{{ $pic->nama }}</td>
+                                        <td class="px-6 py-4">{{ $pic->kontak }}</td>
+                                        <td class="px-6 py-4 text-center">
+                                            @if($pic->kontak)
+                                                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $pic->kontak) }}" 
+                                                   target="_blank" 
+                                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-medium transition shadow-sm whitespace-nowrap" 
+                                                   title="Chat {{ $pic->nama }} via WhatsApp">
+                                                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.125-.339-.154-1.229-.452-2.344-1.455-1.026-.924-1.718-2.067-1.918-2.408-.2-.341-.021-.527.15-.696.155-.153.342-.4.512-.6.171-.2.228-.34.341-.568.114-.227.057-.426-.028-.596-.085-.17-1.192-2.87-1.632-3.929-.429-1.033-.865-.893-1.189-.91l-.81-.018c-.284 0-.746.107-1.137.531-.391.424-1.493 1.458-1.493 3.555 0 2.097 1.528 4.126 1.741 4.41.213.283 2.977 4.544 7.214 6.375 1.009.435 1.796.696 2.408.891 1.013.323 1.936.277 2.66.168.81-.122 2.492-1.018 2.842-2.001.35-1.002.35-1.848.245-2.001-.105-.152-.391-.243-.733-.414z"/>
+                                                    </svg>
+                                                    WhatsApp
+                                                </a>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500 italic bg-white">
+                                        Belum ada PIC yang ditambahkan untuk Balai ini.
+                                    </td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div>

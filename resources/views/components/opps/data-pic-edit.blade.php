@@ -89,11 +89,11 @@
 
                 <hr class="border-gray-200">
 
-                {{-- Bagian Wilayah & Daftar PIC --}}
+                {{-- Bagian Wilayah & Kepala Balai --}}
                 <div>
-                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Wilayah & Kontak Penanggung Jawab (PIC)</h2>
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Wilayah & Kepala Balai</h2>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
                             <input type="text" name="provinsi" value="{{ old('provinsi', $balai->provinsi) }}" 
@@ -104,12 +104,27 @@
                             <input type="text" name="pulau" value="{{ old('pulau', $balai->pulau) }}" 
                                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Kepala Balai</label>
+                            <input type="text" name="kepala" value="{{ old('kepala', $balai->kepala) }}" 
+                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Kontak Kepala Balai (WhatsApp)</label>
+                            <input type="text" name="kontak" value="{{ old('kontak', $balai->kontak) }}" 
+                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+                        </div>
                     </div>
+                </div>
 
-                    {{-- Dynamic PIC Container --}}
+                <hr class="border-gray-200">
+
+                {{-- Bagian Daftar PIC (Banyak PIC) --}}
+                <div>
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Daftar Person In Charge (PIC) Tambahan</h2>
+                    
                     <div id="pic-container" class="space-y-4">
                         @php
-                            // Check if old input exists (validation fail), otherwise load from db, otherwise default 1 empty row
                             $pics = old('pics', $balai->pics->toArray());
                             if(empty($pics)) { $pics = [['id' => '', 'nama' => '', 'kontak' => '']]; }
                         @endphp
@@ -124,7 +139,7 @@
                                            class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp PIC</label>
                                     <input type="text" name="pics[{{ $index }}][kontak]" value="{{ $pic['kontak'] ?? '' }}" required
                                            class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
                                 </div>
@@ -183,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp PIC</label>
                 <input type="text" name="pics[${picIndex}][kontak]" required
                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
             </div>

@@ -6,6 +6,7 @@ use App\Models\LaporanMasyarakat;
 use Illuminate\Http\Request;
 use App\Models\Balai;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Arr;
 
 class DashboardPICBalai extends Controller{
     public function databalai()
@@ -71,6 +72,7 @@ class DashboardPICBalai extends Controller{
 
     public function updateBalai(Request $request, Balai $balai)
     {
+        // 1. Validasi input
         $validatedData = $request->validate([
             'nama_balai' => 'required|string|max:255',
             'username'   => 'required|string|max:255|unique:balais,username,' . $balai->id,
@@ -79,35 +81,40 @@ class DashboardPICBalai extends Controller{
             'unor'       => 'nullable|string|max:255',
             'provinsi'   => 'nullable|string|max:255',
             'pulau'      => 'nullable|string|max:255',
+            'kepala'     => 'nullable|string|max:255', // <-- Restored Kepala Balai
+            'kontak'     => 'nullable|string|max:50',  // <-- Restored Kontak Kepala Balai
             
-            // Validate array of PICs
+            // Validasi array untuk daftar PIC tambahan
             'pics'           => 'required|array|min:1',
             'pics.*.id'      => 'nullable|integer',
             'pics.*.nama'    => 'required|string|max:255',
             'pics.*.kontak'  => 'required|string|max:50',
         ]);
 
-        // 1. Password check
+        // 2. Cek apakah admin mengisi password baru
         if ($request->filled('password')) {
             $validatedData['password'] = Hash::make($request->password);
         } else {
             unset($validatedData['password']);
         }
 
-        // 2. Update Balai data
-        $balai->update($validatedData);
+        // 3. Pisahkan data 'pics' agar tidak error saat update model Balai
+        $balaiData = Arr::except($validatedData, ['pics']);
 
-        // 3. Process PICs dynamically
-        // Get all IDs that were submitted (ignore nulls)
+        // 4. Update data Balai ke database (termasuk kepala dan kontak)
+        $balai->update($balaiData);
+
+        // 5. Proses Daftar PIC Tambahan secara dinamis
+        // Ambil semua ID PIC yang dikirim dari form (buang yang null/kosong)
         $submittedPicIds = collect($request->pics)->pluck('id')->filter()->toArray();
 
-        // Delete any PICs in the database that were removed from the UI
+        // Hapus PIC di database yang tidak ada di form (karena dihapus oleh user via tombol remove)
         $balai->pics()->whereNotIn('id', $submittedPicIds)->delete();
 
-        // Loop through the submitted array and Create or Update each row
+        // Loop data dari form untuk Update (jika punya ID) atau Create (jika baru)
         foreach ($request->pics as $picData) {
             $balai->pics()->updateOrCreate(
-                ['id' => $picData['id'] ?? null], // If ID exists, update it. If not, create a new row.
+                ['id' => $picData['id'] ?? null], 
                 [
                     'nama' => $picData['nama'],
                     'kontak' => $picData['kontak']
@@ -115,7 +122,8 @@ class DashboardPICBalai extends Controller{
             );
         }
 
-        return redirect()->route('data.pic-balai-show', $balai) 
+        // 6. Redirect kembali dengan pesan sukses
+        return redirect()->route('data.pic-balai-show', $balai->id) 
                         ->with('success', 'Data Balai Bencana berhasil diperbarui!');
     }
 
