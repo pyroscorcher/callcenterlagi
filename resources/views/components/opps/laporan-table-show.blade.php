@@ -140,6 +140,32 @@
             <dd class="text-gray-900 leading-relaxed">{{ $laporan->kebutuhan_mendesak ?: '-' }}</dd>
         </div>
 
+        {{-- Unor yang Bertugas (Grouped by Unor) --}}
+        <div class="mt-8">
+            <h3 class="text-gray-900 font-bold mb-4">Balai yang Bertugas</h3>
+            
+            @if(isset($laporan->balais) && $laporan->balais->count() > 0)
+                <div class="flex flex-col gap-4">
+                    {{-- Group the balais by the 'unor' column --}}
+                    @foreach($laporan->balais->groupBy('unor') as $unor => $balaiGroup)
+                        <div class="grid grid-cols-[220px_1fr] gap-4 items-start">
+                            {{-- Left Column: Unor Name --}}
+                            <div class="text-gray-700">{{ $unor ?: 'Tidak Diketahui' }}</div>
+                            
+                            {{-- Right Column: List of Balai under this Unor --}}
+                            <div class="text-gray-900 leading-relaxed space-y-1">
+                                @foreach($balaiGroup as $balai)
+                                    <div>{{ $balai->nama_balai }}</div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-gray-500 italic text-sm">Belum ada balai yang ditugaskan pada laporan ini.</p>
+            @endif
+        </div>
+
         {{-- Footer actions --}}
         <div class="flex items-center justify-between mt-10">
             <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('laporan.masuk-bencana') }}"
