@@ -1,3 +1,20 @@
+<?php
+// Also known as EverythingController
+
+namespace App\Http\Controllers;
+
+use App\Models\LaporanMasyarakat;
+use Illuminate\Http\Request;
+use App\Models\Foto;
+use App\Models\Provinsi;
+use App\Models\Kabupatenkota;
+use App\Models\Kecamatan;
+use App\Models\Kelurahan;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Balai;
+use Illuminate\Support\Facades\Hash;
+
+class DashboardPelaksanaBalai extends Controller{
     public function LPB(Request $request)
     {
         $laporans = LaporanMasyarakat::query()
@@ -119,3 +136,4 @@
             ->route('data.pic-balai')
             ->with('status', 'Data Balai berhasil dihapus.');
     }
+}

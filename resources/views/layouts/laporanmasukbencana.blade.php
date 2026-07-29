@@ -6,6 +6,7 @@
     <title>Laporan Masuk Bencana - SITABA</title>
     @vite('resources/css/app.css')
 </head>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <body class="bg-[#161446]">
 
     <div class="flex min-h-screen">
@@ -29,5 +30,21 @@
         </main>
     </div>
 
+        @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Perubahan Disimpan!',
+                showConfirmButton: false,
+                timer: 2000, // Closes automatically after 2 seconds
+                iconColor: '#7C8B44', // Matches the olive green from your image
+                customClass: {
+                    title: 'text-xl font-medium text-gray-800'
+                }
+            });
+        });
+    </script>
+    @endif
 </body>
 </html>
