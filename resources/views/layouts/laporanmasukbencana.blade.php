@@ -15,7 +15,16 @@
         {{-- Main content --}}
         <main class="flex-1 p-8">
 
-        <x-opps.laporan-table-show :laporan="$laporan" />
+            <x-dynamic-component 
+                :component="$component" 
+                :laporan="$laporan ?? null" 
+                :provinsis="$provinsis ?? null" 
+                :kabupatenkotas="$kabupatenkotas ?? null" 
+                :kecamatans="$kecamatans ?? null" 
+                :kelurahans="$kelurahans ?? null" 
+                :balais="$balais ?? null" 
+                :assignedBalais="$assignedBalais ?? null"
+            />
 
         </main>
     </div>

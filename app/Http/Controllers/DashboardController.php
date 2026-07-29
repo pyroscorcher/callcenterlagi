@@ -35,6 +35,14 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function show(LaporanMasyarakat $laporan)
+    {
+        return view('layouts.laporanmasukbencana', [
+            'component'=> "opps.laporan-table-show",
+            'laporan' => $laporan,
+        ]);
+    }
+
     public function edit($id)
     {
         $laporan = LaporanMasyarakat::with([
@@ -69,14 +77,15 @@ class DashboardController extends Controller
         // 2. Get an array of currently assigned Balai IDs for the Blade component
         $assignedBalais = $laporan->balais->pluck('id')->toArray();
 
-        return view('edit', [
+        return view('layouts.laporanmasukbencana', [
+            'component'=> "opps.laporan-table-edit",            
             'laporan' => $laporan,
             'provinsis' => $provinsis,
             'kabupatenkotas' => $kabupatenkotas,
             'kecamatans' => $kecamatans,
             'kelurahans' => $kelurahans,
             'balais' => $balais,
-            'assignedBalais' => $assignedBalais, // <-- Pass this to your view
+            'assignedBalais' => $assignedBalais,
         ]);
     }
 
@@ -175,13 +184,6 @@ class DashboardController extends Controller
         return response()->json($balais);
     }
 
-    public function show(LaporanMasyarakat $laporan)
-    {
-        return view('layouts.show', [
-            'laporan' => $laporan,
-        ]);
-    }
-
     public function editLokasi($id)
     {
         // Mengambil data spesifik berdasarkan ID
@@ -189,7 +191,10 @@ class DashboardController extends Controller
         
         // Asumsi file pembungkusnya ada di resources/views/laporan/edit-lokasi.blade.php
         // yang memanggil component @props di atas
-        return view('edit-lokasi', compact('laporan'));
+        return view('layouts.laporanmasukbencana', [
+            'component'=> "opps.laporan-table-leaflet",
+            'laporan' => $laporan,
+        ]);
     }
 
     public function updateLokasi(Request $request, $id)
