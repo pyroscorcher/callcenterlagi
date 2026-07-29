@@ -6,7 +6,7 @@
 
     {{-- Breadcrumb --}}
     <div class="mb-6 text-white">
-        <span class="font-bold">Laporan Penanganan Balai</span>
+        <span class="font-bold">Laporan Bencana Unit Pelaksana</span>
     </div>
 
     {{-- Main Container Card (Desain dari referensi Balai) --}}

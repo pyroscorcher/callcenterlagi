@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            <x-opps.laporan-balai :laporans="$laporans" />
+            <x-opps.laporan-unit-pelaksana :laporans="$laporans" />
 
         </main>
     </div>

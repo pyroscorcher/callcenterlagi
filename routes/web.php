@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BalaiAuthController;
 use App\Http\Controllers\BalaiController;
+use App\Http\Controllers\DashboardLaporanPelaksanaController;
+use App\Http\Controllers\DashboardPICBalai;
 
 Route::get('/', function () {
     return view('welcome');
@@ -30,16 +32,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/ajax/balai/{provinsi_id}', [DashboardController::class, 'getBalaiByProvinsi']);
 
 
-        Route::get('/laporan-penanganan-balai', [DashboardController::class, 'LPB'])->name('laporan-penanganan-balai');
-        Route::get('/laporan-penanganan-balai/{laporan}', [DashboardController::class, 'LPBShow'])->name('laporan-penanganan-balai.show');
+        Route::get('/laporan-penanganan-balai', [DashboardLaporanPelaksanaController::class, 'LPB'])->name('laporan-penanganan-balai');
+        Route::get('/laporan-penanganan-balai/{laporan}', [DashboardLaporanPelaksanaController::class, 'LPBShow'])->name('laporan-penanganan-balai.show');
 
-        Route::get('/data-pic-balai/create', [DashboardController::class, 'createBalai'])->name('balai.create');
-        Route::get('/data-pic-balai', [DashboardController::class, 'databalai'])->name('data.pic-balai');
-        Route::get('/data-pic-balai/{balai}', [DashboardController::class, 'balaiShow'])->name('data.pic-balai-show');
-        Route::post('/data-pic-balai', [DashboardController::class, 'storeBalai'])->name('balai.store');
-        Route::get('/data-pic-balai/{balai}/edit', [DashboardController::class, 'editBalai'])->name('balai.edit');
-        Route::put('/data-pic-balai/{balai}', [DashboardController::class, 'updateBalai'])->name('balai.update');
-        Route::delete('/data-pic-balai/{balai}', [DashboardController::class, 'destroyBalai'])->name('balai.destroy');
+        Route::get('/data-pic-balai/create', [DashboardPICBalai::class, 'createBalai'])->name('balai.create');
+        Route::get('/data-pic-balai', [DashboardPICBalai::class, 'databalai'])->name('data.pic-balai');
+        Route::get('/data-pic-balai/{balai}', [DashboardPICBalai::class, 'balaiShow'])->name('data.pic-balai-show');
+        Route::post('/data-pic-balai', [DashboardPICBalai::class, 'storeBalai'])->name('balai.store');
+        Route::get('/data-pic-balai/{balai}/edit', [DashboardPICBalai::class, 'editBalai'])->name('balai.edit');
+        Route::put('/data-pic-balai/{balai}', [DashboardPICBalai::class, 'updateBalai'])->name('balai.update');
+        Route::delete('/data-pic-balai/{balai}', [DashboardPICBalai::class, 'destroyBalai'])->name('balai.destroy');
     });
 });
 
