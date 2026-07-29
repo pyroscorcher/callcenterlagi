@@ -30,4 +30,9 @@ class Balai extends Authenticatable
     {
         return $this->belongsToMany(LaporanMasyarakat::class, 'laporan_balai')->withTimestamps();
     }
+
+    public function pics()
+    {
+        return $this->hasMany(Pic::class);
+    }
 }

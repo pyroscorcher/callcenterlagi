@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail PIC Balai - SITABA</title>
     @vite('resources/css/app.css')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-[#161446]">
 
@@ -26,6 +27,24 @@
             />
         </main>
     </div>
+
+
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Perubahan Disimpan!',
+                showConfirmButton: false,
+                timer: 2000, // Closes automatically after 2 seconds
+                iconColor: '#7C8B44', // Matches the olive green from your image
+                customClass: {
+                    title: 'text-xl font-medium text-gray-800'
+                }
+            });
+        });
+    </script>
+    @endif
 
 </body>
 </html>

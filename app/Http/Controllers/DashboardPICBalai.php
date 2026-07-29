@@ -71,34 +71,51 @@ class DashboardPICBalai extends Controller{
 
     public function updateBalai(Request $request, Balai $balai)
     {
-        // 1. Validasi input
         $validatedData = $request->validate([
             'nama_balai' => 'required|string|max:255',
-            // Kecualikan ID balai saat ini agar username bisa tetap sama
             'username'   => 'required|string|max:255|unique:balais,username,' . $balai->id,
-            // Password dibuat nullable (opsional saat edit)
             'password'   => 'nullable|string|min:6',
             'unker'      => 'nullable|string|max:255',
             'unor'       => 'nullable|string|max:255',
             'provinsi'   => 'nullable|string|max:255',
             'pulau'      => 'nullable|string|max:255',
-            'kepala'     => 'nullable|string|max:255',
-            'kontak'     => 'nullable|string|max:50',
+            
+            // Validate array of PICs
+            'pics'           => 'required|array|min:1',
+            'pics.*.id'      => 'nullable|integer',
+            'pics.*.nama'    => 'required|string|max:255',
+            'pics.*.kontak'  => 'required|string|max:50',
         ]);
 
-        // 2. Cek apakah admin mengisi password baru
+        // 1. Password check
         if ($request->filled('password')) {
             $validatedData['password'] = Hash::make($request->password);
         } else {
-            // Jika kosong, hapus dari array agar password lama tidak tertimpa string kosong
             unset($validatedData['password']);
         }
 
-        // 3. Update data ke database
+        // 2. Update Balai data
         $balai->update($validatedData);
 
-        // 4. Redirect kembali dengan pesan sukses
-        return redirect()->route('data.pic-balai-show') // Sesuaikan dengan route list balai Anda
+        // 3. Process PICs dynamically
+        // Get all IDs that were submitted (ignore nulls)
+        $submittedPicIds = collect($request->pics)->pluck('id')->filter()->toArray();
+
+        // Delete any PICs in the database that were removed from the UI
+        $balai->pics()->whereNotIn('id', $submittedPicIds)->delete();
+
+        // Loop through the submitted array and Create or Update each row
+        foreach ($request->pics as $picData) {
+            $balai->pics()->updateOrCreate(
+                ['id' => $picData['id'] ?? null], // If ID exists, update it. If not, create a new row.
+                [
+                    'nama' => $picData['nama'],
+                    'kontak' => $picData['kontak']
+                ]
+            );
+        }
+
+        return redirect()->route('data.pic-balai-show', $balai) 
                         ->with('success', 'Data Balai Bencana berhasil diperbarui!');
     }
 

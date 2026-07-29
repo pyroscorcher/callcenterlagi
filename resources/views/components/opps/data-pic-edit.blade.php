@@ -89,36 +89,59 @@
 
                 <hr class="border-gray-200">
 
-                {{-- Bagian Wilayah & PIC --}}
+                {{-- Bagian Wilayah & Daftar PIC --}}
                 <div>
-                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Wilayah & Kontak Penanggung Jawab</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Wilayah & Kontak Penanggung Jawab (PIC)</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
                             <input type="text" name="provinsi" value="{{ old('provinsi', $balai->provinsi) }}" 
                                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
                         </div>
-
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Pulau</label>
                             <input type="text" name="pulau" value="{{ old('pulau', $balai->pulau) }}" 
                                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
                         </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Kepala Balai / Nama PIC</label>
-                            <input type="text" name="kepala" value="{{ old('kepala', $balai->kepala) }}" 
-                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp</label>
-                            <input type="text" name="kontak" value="{{ old('kontak', $balai->kontak) }}" 
-                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
-                        </div>
-
                     </div>
+
+                    {{-- Dynamic PIC Container --}}
+                    <div id="pic-container" class="space-y-4">
+                        @php
+                            // Check if old input exists (validation fail), otherwise load from db, otherwise default 1 empty row
+                            $pics = old('pics', $balai->pics->toArray());
+                            if(empty($pics)) { $pics = [['id' => '', 'nama' => '', 'kontak' => '']]; }
+                        @endphp
+
+                        @foreach($pics as $index => $pic)
+                            <div class="pic-row grid grid-cols-[1fr_1fr_auto] gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200 relative">
+                                <input type="hidden" name="pics[{{ $index }}][id]" value="{{ $pic['id'] ?? '' }}">
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama PIC</label>
+                                    <input type="text" name="pics[{{ $index }}][nama]" value="{{ $pic['nama'] ?? '' }}" required
+                                           class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp</label>
+                                    <input type="text" name="pics[{{ $index }}][kontak]" value="{{ $pic['kontak'] ?? '' }}" required
+                                           class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+                                </div>
+                                <div>
+                                    <button type="button" class="remove-pic text-red-500 bg-red-50 hover:bg-red-100 p-2.5 rounded-lg border border-red-200 transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <button type="button" id="add-pic" class="mt-4 text-[#161446] bg-[#161446]/10 hover:bg-[#161446]/20 px-4 py-2 rounded-lg text-sm font-medium transition inline-flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Tambah PIC Lainnya
+                    </button>
+
                 </div>
 
             </div>
@@ -139,3 +162,51 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('pic-container');
+    const addButton = document.getElementById('add-pic');
+    
+    // Counter to ensure unique array indexes
+    let picIndex = {{ count($pics) }};
+
+    // Add new row
+    addButton.addEventListener('click', function() {
+        const row = document.createElement('div');
+        row.className = 'pic-row grid grid-cols-[1fr_1fr_auto] gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200 relative';
+        row.innerHTML = `
+            <input type="hidden" name="pics[${picIndex}][id]" value="">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nama PIC</label>
+                <input type="text" name="pics[${picIndex}][nama]" required
+                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp</label>
+                <input type="text" name="pics[${picIndex}][kontak]" required
+                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+            </div>
+            <div>
+                <button type="button" class="remove-pic text-red-500 bg-red-50 hover:bg-red-100 p-2.5 rounded-lg border border-red-200 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+            </div>
+        `;
+        container.appendChild(row);
+        picIndex++;
+    });
+
+    // Remove row (Event Delegation)
+    container.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-pic')) {
+            const rows = container.querySelectorAll('.pic-row');
+            if(rows.length > 1) {
+                e.target.closest('.pic-row').remove();
+            } else {
+                alert('Minimal harus ada 1 PIC.');
+            }
+        }
+    });
+});
+</script>
