@@ -22,8 +22,9 @@
             <x-dynamic-component 
                 :component="$componentName" 
                 :balais="$balais ?? null" 
-                :balai="$balai ?? null" 
+                :balai="$balai ?? null"
                 :laporan="$laporan ?? null" 
+                :provinsis="$provinsis ?? []"
             />
         </main>
     </div>

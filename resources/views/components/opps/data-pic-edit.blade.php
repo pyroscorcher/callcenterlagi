@@ -1,5 +1,6 @@
 @props([
-    'balai'
+    'balai' => null,
+    'provinsis' => []
 ])
 
 <div class="max-w-6xl mx-auto px-8 py-8">
@@ -96,13 +97,44 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
-                            <input type="text" name="provinsi" value="{{ old('provinsi', $balai->provinsi) }}" 
-                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+                            <select name="provinsi" required
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none">
+                                <option value="">Pilih Provinsi...</option>
+                                @foreach($provinsis as $prov)
+                                    <option value="{{ $prov->nama }}" @selected(old('provinsi', $balai->provinsi) == $prov->nama)>
+                                        {{ $prov->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('provinsi') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Pulau</label>
-                            <input type="text" name="pulau" value="{{ old('pulau', $balai->pulau) }}" 
-                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+                            <select name="pulau" required
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none">
+                                <option value="">-- Pilih Pulau --</option>
+                                
+                                @php
+                                    $daftarPulau = [
+                                        'Sumatera',
+                                        'Jawa',
+                                        'Bali',
+                                        'Nusa Tenggara',
+                                        'Kalimantan',
+                                        'Sulawesi',
+                                        'Maluku',
+                                        'Papua'
+                                    ];
+                                @endphp
+
+                                @foreach($daftarPulau as $namaPulau)
+                                    {{-- The null coalescing operator (?? '') makes this safe for both Create and Edit views --}}
+                                    <option value="{{ $namaPulau }}" @selected(old('pulau', $balai->pulau ?? '') == $namaPulau)>
+                                        {{ $namaPulau }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('pulau') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kepala Balai</label>

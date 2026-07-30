@@ -5,32 +5,33 @@ namespace App\Http\Controllers;
 use App\Models\LaporanMasyarakat;
 use Illuminate\Http\Request;
 use App\Models\Balai;
+use App\Models\Provinsi; // <-- Pastikan model Provinsi di-import
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Arr;
 
-class DashboardPICBalai extends Controller{
+class DashboardPICBalai extends Controller
+{
     public function databalai()
     {
         $balais = Balai::all();
 
         return view('dashboards.datapicbalai', [
             'title' => 'Data PIC Balai - SITABA',
-            'componentName' => 'opps.data-pic', // Nama komponen Blade
-            'balais' => $balais                 // Data yang dibawa ke komponen
+            'componentName' => 'opps.data-pic', 
+            'balais' => $balais                
         ]);
     }
 
     public function createBalai()
     {
-        $balais = Balai::all();
-        return view('layouts.datapicbalai-show', [
+        return view('layouts.laporanpicbalai', [
             'title' => 'Tambah Data Balai - SITABA',
             'componentName' => 'opps.data-pic-create',
-            'balais' => $balais // Komponen form tambah
+            'provinsis' => Provinsi::orderBy('nama')->get()
         ]);
     }
 
-        public function storeBalai(Request $request)
+    public function storeBalai(Request $request)
     {
         $validatedData = $request->validate([
             'nama_balai' => 'required|string|max:255',
@@ -42,37 +43,68 @@ class DashboardPICBalai extends Controller{
             'pulau'      => 'nullable|string|max:255',
             'kepala'     => 'nullable|string|max:255',
             'kontak'     => 'nullable|string|max:50',
+            
+            // Validasi array PIC (dibuat nullable saat create)
+            'pics'           => 'nullable|array',
+            'pics.*.nama'    => 'required_with:pics|string|max:255',
+            'pics.*.kontak'  => 'required_with:pics|string|max:50',
         ]);
 
         $validatedData['password'] = Hash::make($request->password);
+        
+        // Pisahkan data 'pics'
+        $balaiData = Arr::except($validatedData, ['pics']);
+        
+        // Buat Balai Baru
+        $balai = Balai::create($balaiData);
 
-        Balai::create($validatedData);
+        if ($request->filled('provinsi')) {
+            $provinsiRecord = Provinsi::where('nama', $request->provinsi)->first();
+            if ($provinsiRecord) {
+                $balai->provinsis()->sync([$provinsiRecord->id]);
+            }
+        }
 
-        return redirect()->route('data.pic-balai') // Ganti dengan rute halaman daftar balai Anda
-                        ->with('success', 'Data Balai Bencana berhasil ditambahkan!');
+        // ==========================================
+        // PROSES PENYIMPANAN PICS (Hanya jika ada)
+        // ==========================================
+        if ($request->has('pics') && is_array($request->pics)) {
+            foreach ($request->pics as $picData) {
+                $balai->pics()->create([
+                    'nama' => $picData['nama'],
+                    'kontak' => $picData['kontak']
+                ]);
+            }
+        }
+
+        return redirect()->route('data.pic-balai') 
+                         ->with('success', 'Data Balai Bencana berhasil ditambahkan!');
     }
 
     public function balaiShow(Balai $balai)
     {
-        return view('layouts.datapicbalai-show', [
+        // Eager load pics agar tidak terjadi N+1 query
+        $balai->load('pics');
+
+        return view('layouts.laporanpicbalai', [
             'title' => 'Detail PIC Balai - SITABA',
-            'componentName' => 'opps.data-pic-show', // Nama komponen Blade detail
-            'balai' => $balai                       // Data spesifik balai
+            'componentName' => 'opps.data-pic-show',
+            'balai' => $balai                       
         ]);
     }
 
     public function editBalai(Balai $balai)
     {
-        return view('layouts.datapicbalai-show', [
+        return view('layouts.laporanpicbalai', [
             'title' => 'Edit Data Balai - SITABA',
-            'componentName' => 'opps.data-pic-edit', // Komponen edit yang akan kita buat
-            'balai' => $balai                        // Bawa data spesifik balai
+            'componentName' => 'opps.data-pic-edit',
+            'balai' => $balai,
+            'provinsis' => Provinsi::orderBy('nama')->get() // <-- Bawa data provinsi untuk dropdown
         ]);
     }
 
     public function updateBalai(Request $request, Balai $balai)
     {
-        // 1. Validasi input
         $validatedData = $request->validate([
             'nama_balai' => 'required|string|max:255',
             'username'   => 'required|string|max:255|unique:balais,username,' . $balai->id,
@@ -81,37 +113,44 @@ class DashboardPICBalai extends Controller{
             'unor'       => 'nullable|string|max:255',
             'provinsi'   => 'nullable|string|max:255',
             'pulau'      => 'nullable|string|max:255',
-            'kepala'     => 'nullable|string|max:255', // <-- Restored Kepala Balai
-            'kontak'     => 'nullable|string|max:50',  // <-- Restored Kontak Kepala Balai
+            'kepala'     => 'nullable|string|max:255',
+            'kontak'     => 'nullable|string|max:50', 
             
-            // Validasi array untuk daftar PIC tambahan
+            // Validasi array PIC
             'pics'           => 'required|array|min:1',
             'pics.*.id'      => 'nullable|integer',
             'pics.*.nama'    => 'required|string|max:255',
             'pics.*.kontak'  => 'required|string|max:50',
         ]);
 
-        // 2. Cek apakah admin mengisi password baru
         if ($request->filled('password')) {
             $validatedData['password'] = Hash::make($request->password);
         } else {
             unset($validatedData['password']);
         }
 
-        // 3. Pisahkan data 'pics' agar tidak error saat update model Balai
         $balaiData = Arr::except($validatedData, ['pics']);
 
-        // 4. Update data Balai ke database (termasuk kepala dan kontak)
+        // Update Balai
         $balai->update($balaiData);
 
-        // 5. Proses Daftar PIC Tambahan secara dinamis
-        // Ambil semua ID PIC yang dikirim dari form (buang yang null/kosong)
-        $submittedPicIds = collect($request->pics)->pluck('id')->filter()->toArray();
+        // ==========================================
+        // AUTOMATIC PROVINSI LINKING
+        // ==========================================
+        if ($request->filled('provinsi')) {
+            $provinsiRecord = Provinsi::where('nama', $request->provinsi)->first();
+            if ($provinsiRecord) {
+                $balai->provinsis()->sync([$provinsiRecord->id]);
+            } else {
+                $balai->provinsis()->detach(); 
+            }
+        } else {
+            $balai->provinsis()->detach();
+        }
 
-        // Hapus PIC di database yang tidak ada di form (karena dihapus oleh user via tombol remove)
+        $submittedPicIds = collect($request->pics)->pluck('id')->filter()->toArray();
         $balai->pics()->whereNotIn('id', $submittedPicIds)->delete();
 
-        // Loop data dari form untuk Update (jika punya ID) atau Create (jika baru)
         foreach ($request->pics as $picData) {
             $balai->pics()->updateOrCreate(
                 ['id' => $picData['id'] ?? null], 
@@ -122,17 +161,13 @@ class DashboardPICBalai extends Controller{
             );
         }
 
-        // 6. Redirect kembali dengan pesan sukses
         return redirect()->route('data.pic-balai-show', $balai->id) 
-                        ->with('success', 'Data Balai Bencana berhasil diperbarui!');
+                         ->with('success', 'Data Balai Bencana berhasil diperbarui!');
     }
 
     public function destroyBalai(Balai $balai)
     {
         $balai->delete();
-
-        return redirect()
-            ->route('data.pic-balai')
-            ->with('status', 'Data Balai berhasil dihapus.');
+        return redirect()->route('data.pic-balai')->with('status', 'Data Balai berhasil dihapus.');
     }
 }
