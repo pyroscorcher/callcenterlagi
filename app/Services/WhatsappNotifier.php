@@ -40,4 +40,36 @@ class WhatsappNotifier
             return false;
         }
     }
+
+    /**
+     * Sends the same message to a list of phone numbers via the bot's
+     * /send-blast endpoint. Returns the blast_id on success so the caller
+     * can report back to the user, or null if the request itself failed.
+     */
+    public function sendBlast(array $teleponList, string $message): ?string
+    {
+        try {
+            $response = Http::timeout(15)->post(
+                rtrim(config('services.whatsapp_bot.url'), '/') . '/send-blast',
+                [
+                    'token' => config('services.whatsapp_bot.secret'),
+                    'telepon' => $teleponList,
+                    'message' => $message,
+                ]
+            );
+
+            if ($response->failed()) {
+                Log::warning('Gagal mengirim blast WhatsApp', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                return null;
+            }
+
+            return $response->json('blast_id');
+        } catch (\Throwable $e) {
+            Log::error('Error saat mengirim blast WhatsApp: ' . $e->getMessage());
+            return null;
+        }
+    }
 }

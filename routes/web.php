@@ -42,6 +42,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/data-pic-balai/{balai}/edit', [DashboardPICBalai::class, 'editBalai'])->name('balai.edit');
         Route::put('/data-pic-balai/{balai}', [DashboardPICBalai::class, 'updateBalai'])->name('balai.update');
         Route::delete('/data-pic-balai/{balai}', [DashboardPICBalai::class, 'destroyBalai'])->name('balai.destroy');
+
+        // route blasting balai
+        Route::post('/laporan/{laporan}/kirim-pic', [DashboardController::class, 'kirimPicNotifikasi'])->name('laporan.kirim-pic');
     });
 });
 
