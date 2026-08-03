@@ -22,24 +22,31 @@ class SyncWilayahBalai extends Command
 
         $this->info('Step 1: Generating SDA Balai Placeholders...');
 
-        // 1. Extract unique Balai names (pengelola) from PosDugaAir
-        $pengelolas = DB::table('pos_duga_airs')
-            ->select('pengelola')
-            ->whereNotNull('pengelola')
-            ->distinct()
-            ->pluck('pengelola');
+        // 1. Find the province with the highest number of records for each Balai
+        $balaiData = DB::table('pos_duga_airs as p1')
+            ->select('p1.pengelola', 'p1.provinsi')
+            ->whereNotNull('p1.pengelola')
+            ->whereNotNull('p1.provinsi')
+            ->selectRaw('COUNT(*) as total_stations')
+            ->groupBy('p1.pengelola', 'p1.provinsi')
+            ->orderByDesc('total_stations')
+            ->get()
+            ->groupBy('pengelola')
+            ->map(function ($group) {
+                // Returns the province name that has the highest station count for this Balai
+                return $group->first()->provinsi;
+            });
 
         $createdCount = 0;
 
-        foreach ($pengelolas as $pengelola) {
-            // firstOrCreate prevents duplicating Balais if you run the command twice
+        foreach ($balaiData as $pengelola => $provinsi) {
             $balai = Balai::firstOrCreate(
-                ['nama_balai' => $pengelola], // Search by this
+                ['nama_balai' => $pengelola],
                 [
-                    // If not found, create it with these placeholders
                     'username' => Str::slug($pengelola, '_'), 
-                    'password' => 'password', // Your model automatically hashes this
-                    'unor' => 'SDA', // Tagging them so you know they are SDA
+                    'password' => 'password',
+                    'unor' => 'SDA',
+                    'provinsi' => $provinsi, // This is now the most frequent province!
                 ]
             );
 

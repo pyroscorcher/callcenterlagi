@@ -72,7 +72,7 @@
 
                                             <form action="{{ route('balai.destroy', $balai->id) }}"
                                                 method="POST"
-                                                onsubmit="return confirm('Yakin ingin menghapus data Balai ini?');">
+                                                class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
 

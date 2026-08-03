@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data PIC Balai - SITABA</title>
     @vite('resources/css/app.css')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-[#161446]">
 
@@ -38,26 +39,59 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('searchInput');
-            
-            searchInput.addEventListener('keyup', function () {
-                const filter = this.value.toLowerCase();
-                // Target all table rows inside the tbody of your component
-                const rows = document.querySelectorAll('tbody tr'); 
+    document.addEventListener('DOMContentLoaded', function () {
 
-                rows.forEach(row => {
-                    // Get all text content from the row (Balai name, PIC, location, etc.)
-                    const rowText = row.textContent.toLowerCase();
-                    
-                    if (rowText.includes(filter)) {
-                        row.style.display = ''; // Show row
-                    } else {
-                        row.style.display = 'none'; // Hide row
-                    }
-                });
+        // ==========================
+        // Search
+        // ==========================
+        const searchInput = document.getElementById('searchInput');
+
+        searchInput.addEventListener('keyup', function () {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+
+                row.style.display = rowText.includes(filter)
+                    ? ''
+                    : 'none';
             });
         });
+
+        // ==========================
+        // Delete Confirmation
+        // ==========================
+        document.querySelectorAll('.delete-form').forEach(form => {
+
+            form.addEventListener('submit', function(e) {
+
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Hapus Data?',
+                    text: 'Data Balai yang dihapus tidak dapat dikembalikan.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true,
+                    focusCancel: true
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+
+                });
+
+            });
+
+        });
+
+    });
     </script>
 </body>
 </html>
