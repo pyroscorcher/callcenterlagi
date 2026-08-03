@@ -13,9 +13,9 @@ return new class extends Migration
             
             $table->foreignId('balai_id')->constrained('balais')->cascadeOnDelete();
             $table->foreignId('provinsi_id')->constrained('provinsis')->cascadeOnDelete();
-            $table->foreignId('kabupaten_kota_id')->constrained('kabupaten_kotas')->cascadeOnDelete()->nullable();
-            $table->foreignId('kecamatan_id')->constrained('kecamatans')->cascadeOnDelete()->nullable();
-            $table->foreignId('kelurahan_id')->constrained('kelurahans')->cascadeOnDelete()->nullable();
+            $table->foreignId('kabupaten_kota_id')->nullable()->constrained('kabupaten_kotas')->cascadeOnDelete();
+            $table->foreignId('kecamatan_id')->nullable()->constrained('kecamatans')->cascadeOnDelete();
+            $table->foreignId('kelurahan_id')->nullable()->constrained('kelurahans')->cascadeOnDelete();
             
             $table->timestamps();
 
