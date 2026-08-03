@@ -61,9 +61,7 @@
                   {{ request()->routeIs('data.pic-balai') ? 'bg-white/10 font-bold text-white' : 'hover:bg-white/5' }}">
             Data PIC Balai
         </a>
-    </nav>
 
-    <div class="mt-auto px-4 pb-6">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit"
@@ -75,5 +73,5 @@
                 Logout
             </button>
         </form>
-    </div>
+    </nav>
 </aside>

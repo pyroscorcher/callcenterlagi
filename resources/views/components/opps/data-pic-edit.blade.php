@@ -55,11 +55,11 @@
                             @error('password') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                         </div>
 
-                        <div>
+                        {{-- <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Unit Kerja (Unker)</label>
                             <input type="text" name="unker" value="{{ old('unker', $balai->unker) }}" 
                                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
-                        </div>
+                        </div> --}}
 
                         {{-- Radio Button Dinamis Unor --}}
                         <div class="md:col-span-2">
@@ -95,52 +95,57 @@
                     <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Wilayah & Kepala Balai</h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{-- Disabled Provinsi --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
-                            <select name="provinsi" required
-                                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none">
-                                <option value="">Pilih Provinsi...</option>
-                                @foreach($provinsis as $prov)
-                                    <option value="{{ $prov->nama }}" @selected(old('provinsi', $balai->provinsi) == $prov->nama)>
-                                        {{ $prov->nama }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('provinsi') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Provinsi 
+                                <span class="text-xs text-amber-600 font-normal ml-1">(Terkunci)</span>
+                            </label>
+                            <input type="text" value="{{ $balai->provinsi ?? 'Belum Ditentukan' }}" disabled 
+                                   class="w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-gray-500 cursor-not-allowed select-none" />
+                            
+                            <input type="hidden" name="provinsi" value="{{ $balai->provinsi }}" />
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Pulau</label>
-                            <select name="pulau" required
-                                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none">
-                                <option value="">-- Pilih Pulau --</option>
-                                
-                                @php
-                                    $daftarPulau = [
-                                        'Sumatera',
-                                        'Jawa',
-                                        'Bali',
-                                        'Nusa Tenggara',
-                                        'Kalimantan',
-                                        'Sulawesi',
-                                        'Maluku',
-                                        'Papua'
-                                    ];
-                                @endphp
 
-                                @foreach($daftarPulau as $namaPulau)
-                                    {{-- The null coalescing operator (?? '') makes this safe for both Create and Edit views --}}
-                                    <option value="{{ $namaPulau }}" @selected(old('pulau', $balai->pulau ?? '') == $namaPulau)>
-                                        {{ $namaPulau }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('pulau') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                        {{-- Dinamis Pulau (Fillable if null, locked if filled) --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Pulau
+                                @if(!empty($balai->pulau))
+                                    <span class="text-xs text-amber-600 font-normal ml-1">(Terkunci)</span>
+                                @endif
+                            </label>
+
+                            @if(empty($balai->pulau))
+                                {{-- Render Dropdown jika belum ada data --}}
+                                <select name="pulau" required
+                                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none">
+                                    <option value="">-- Pilih Pulau --</option>
+                                    @php
+                                        $daftarPulau = ['Sumatera', 'Jawa', 'Bali', 'Nusa Tenggara', 'Kalimantan', 'Sulawesi', 'Maluku', 'Papua'];
+                                    @endphp
+                                    @foreach($daftarPulau as $namaPulau)
+                                        <option value="{{ $namaPulau }}" @selected(old('pulau') == $namaPulau)>
+                                            {{ $namaPulau }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('pulau') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                            @else
+                                {{-- Render Input Disabled & Hidden Input jika data sudah ada --}}
+                                <input type="text" value="{{ $balai->pulau }}" disabled 
+                                       class="w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-gray-500 cursor-not-allowed select-none" />
+                                
+                                <input type="hidden" name="pulau" value="{{ $balai->pulau }}" />
+                            @endif
                         </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kepala Balai</label>
                             <input type="text" name="kepala" value="{{ old('kepala', $balai->kepala) }}" 
                                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
                         </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kontak Kepala Balai (WhatsApp)</label>
                             <input type="text" name="kontak" value="{{ old('kontak', $balai->kontak) }}" 
