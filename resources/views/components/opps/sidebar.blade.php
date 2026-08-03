@@ -2,29 +2,42 @@
     'logoUrl' => null, // pass an image path, e.g. asset('images/logo.png')
 ])
 
-<aside class="w-[330px] min-h-screen bg-[#161446] flex flex-col">
+{{-- 
+  Added: id="sidebar", fixed positioning, -translate-x-full (hidden by default on mobile), 
+  transition effects, and md:relative md:translate-x-0 (visible by default on desktop) 
+--}}
+<aside id="sidebar" class="w-[280px] md:w-[330px] min-h-screen bg-[#161446] flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
 
     {{-- Logo section — replaceable --}}
-    <div class="flex items-center gap-3 px-6 py-6">
-        @if ($logoUrl)
-            <img src="{{ $logoUrl }}" alt="Logo" class="w-fit h-fit">
-        @elseif (isset($logo))
-            {{ $logo }}
-        @else
-            {{-- Fallback placeholder logo, swap via the $logoUrl prop or the $logo slot --}}
-            <svg class="w-12 h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="48" rx="4" fill="#161446"/>
-                <path d="M10 8h12a12 12 0 0 1 0 24H10V8z" fill="#F7B733"/>
-                <path d="M10 32h12a8 8 0 0 0 8-8H10v8z" fill="#3B39C4"/>
+    <div class="flex items-center justify-between px-6 py-6">
+        <div class="flex items-center gap-3">
+            @if ($logoUrl)
+                <img src="{{ $logoUrl }}" alt="Logo" class="w-fit h-fit">
+            @elseif (isset($logo))
+                {{ $logo }}
+            @else
+                {{-- Fallback placeholder logo, swap via the $logoUrl prop or the $logo slot --}}
+                <svg class="w-12 h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="48" height="48" rx="4" fill="#161446"/>
+                    <path d="M10 8h12a12 12 0 0 1 0 24H10V8z" fill="#F7B733"/>
+                    <path d="M10 32h12a8 8 0 0 0 8-8H10v8z" fill="#3B39C4"/>
+                </svg>
+            @endif
+        </div>
+
+        {{-- Mobile Close Button (Hidden on Desktop) --}}
+        <button id="close-sidebar-btn" class="md:hidden text-white/70 hover:text-white focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
-        @endif
+        </button>
     </div>
 
     {{-- Nav --}}
-    <nav class="px-4 mt-2 space-y-1">
+    <nav class="px-4 mt-2 space-y-1 overflow-y-auto">
 
         <div class="flex items-center gap-2 px-3 py-2 text-white/90">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -55,7 +68,7 @@
             @csrf
             <button type="submit"
                     class="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-white/90 text-sm hover:bg-white/5">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>

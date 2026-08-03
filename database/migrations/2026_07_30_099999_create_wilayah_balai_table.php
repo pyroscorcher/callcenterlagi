@@ -11,19 +11,18 @@ return new class extends Migration
         Schema::create('wilayah_balai', function (Blueprint $table) {
             $table->id();
             
-            // Core Relationships
             $table->foreignId('balai_id')->constrained('balais')->cascadeOnDelete();
             $table->foreignId('provinsi_id')->constrained('provinsis')->cascadeOnDelete();
-            $table->foreignId('kabupaten_kota_id')->constrained('kabupaten_kotas')->cascadeOnDelete();
-            $table->foreignId('kecamatan_id')->constrained('kecamatans')->cascadeOnDelete();
-            $table->foreignId('kelurahan_id')->constrained('kelurahans')->cascadeOnDelete();
+            $table->foreignId('kabupaten_kota_id')->constrained('kabupaten_kotas')->cascadeOnDelete()->nullable();
+            $table->foreignId('kecamatan_id')->constrained('kecamatans')->cascadeOnDelete()->nullable();
+            $table->foreignId('kelurahan_id')->constrained('kelurahans')->cascadeOnDelete()->nullable();
             
             $table->timestamps();
 
-            // Ensure uniqueness across the entire hierarchy per Balai
+            // Prevent duplicate exact assignments across all levels
             $table->unique(
-                ['balai_id', 'kelurahan_id'], 
-                'balai_kelurahan_unique'
+                ['balai_id', 'provinsi_id', 'kabupaten_kota_id', 'kecamatan_id', 'kelurahan_id'], 
+                'wilayah_balai_unique_assignment'
             );
         });
     }
