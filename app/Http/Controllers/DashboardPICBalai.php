@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LaporanMasyarakat;
 use Illuminate\Http\Request;
 use App\Models\Balai;
-use App\Models\Provinsi; // <-- Pastikan model Provinsi di-import
+use App\Models\Provinsi;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Arr;
 
@@ -39,12 +39,14 @@ class DashboardPICBalai extends Controller
             'password'   => 'required|string|min:6',
             'unker'      => 'nullable|string|max:255',
             'unor'       => 'nullable|string|max:255',
-            'provinsi'   => 'nullable|string|max:255',
             'pulau'      => 'nullable|string|max:255',
             'kepala'     => 'nullable|string|max:255',
             'kontak'     => 'nullable|string|max:50',
             
-            // Validasi array PIC (dibuat nullable saat create)
+            // NEW: Validasi Provinsi sebagai array, maksimal 2
+            'provinsi'   => 'nullable|array|max:2',
+            'provinsi.*' => 'string|max:255',
+            
             'pics'           => 'nullable|array',
             'pics.*.nama'    => 'required_with:pics|string|max:255',
             'pics.*.kontak'  => 'required_with:pics|string|max:50',
@@ -52,22 +54,21 @@ class DashboardPICBalai extends Controller
 
         $validatedData['password'] = Hash::make($request->password);
         
-        // Pisahkan data 'pics'
-        $balaiData = Arr::except($validatedData, ['pics']);
-        
-        // Buat Balai Baru
-        $balai = Balai::create($balaiData);
-
-        if ($request->filled('provinsi')) {
-            $provinsiRecord = Provinsi::where('nama', $request->provinsi)->first();
-            if ($provinsiRecord) {
-                $balai->provinsis()->sync([$provinsiRecord->id]);
-            }
+        // Gabungkan array provinsi menjadi string (contoh: "Jawa Barat, Jawa Tengah")
+        if (isset($validatedData['provinsi'])) {
+            $validatedData['provinsi'] = implode(', ', $validatedData['provinsi']);
         }
 
-        // ==========================================
-        // PROSES PENYIMPANAN PICS (Hanya jika ada)
-        // ==========================================
+        $balaiData = Arr::except($validatedData, ['pics']);
+        
+        $balai = Balai::create($balaiData);
+
+        // NEW: Sync multiple provinces
+        if ($request->filled('provinsi') && is_array($request->provinsi)) {
+            $provinsiIds = Provinsi::whereIn('nama', $request->provinsi)->pluck('id')->toArray();
+            $balai->provinsis()->sync($provinsiIds);
+        }
+
         if ($request->has('pics') && is_array($request->pics)) {
             foreach ($request->pics as $picData) {
                 $balai->pics()->create([
@@ -83,7 +84,6 @@ class DashboardPICBalai extends Controller
 
     public function balaiShow(Balai $balai)
     {
-        // Eager load pics agar tidak terjadi N+1 query
         $balai->load('pics');
 
         return view('layouts.laporanpicbalai', [
@@ -99,7 +99,7 @@ class DashboardPICBalai extends Controller
             'title' => 'Edit Data Balai - SITABA',
             'componentName' => 'opps.data-pic-edit',
             'balai' => $balai,
-            'provinsis' => Provinsi::orderBy('nama')->get() // <-- Bawa data provinsi untuk dropdown
+            'provinsis' => Provinsi::orderBy('nama')->get()
         ]);
     }
 
@@ -111,12 +111,14 @@ class DashboardPICBalai extends Controller
             'password'   => 'nullable|string|min:6',
             'unker'      => 'nullable|string|max:255',
             'unor'       => 'nullable|string|max:255',
-            'provinsi'   => 'nullable|string|max:255',
             'pulau'      => 'nullable|string|max:255',
             'kepala'     => 'nullable|string|max:255',
             'kontak'     => 'nullable|string|max:50', 
             
-            // Validasi array PIC
+            // NEW: Validasi Provinsi sebagai array, maksimal 2
+            'provinsi'   => 'nullable|array|max:2',
+            'provinsi.*' => 'string|max:255',
+            
             'pics'           => 'required|array|min:1',
             'pics.*.id'      => 'nullable|integer',
             'pics.*.nama'    => 'required|string|max:255',
@@ -129,21 +131,21 @@ class DashboardPICBalai extends Controller
             unset($validatedData['password']);
         }
 
+        // Gabungkan array provinsi menjadi string
+        if (isset($validatedData['provinsi'])) {
+            $validatedData['provinsi'] = implode(', ', $validatedData['provinsi']);
+        } else {
+            $validatedData['provinsi'] = null;
+        }
+
         $balaiData = Arr::except($validatedData, ['pics']);
 
-        // Update Balai
         $balai->update($balaiData);
 
-        // ==========================================
-        // AUTOMATIC PROVINSI LINKING
-        // ==========================================
-        if ($request->filled('provinsi')) {
-            $provinsiRecord = Provinsi::where('nama', $request->provinsi)->first();
-            if ($provinsiRecord) {
-                $balai->provinsis()->sync([$provinsiRecord->id]);
-            } else {
-                $balai->provinsis()->detach(); 
-            }
+        // NEW: Sync multiple provinces
+        if ($request->filled('provinsi') && is_array($request->provinsi)) {
+            $provinsiIds = Provinsi::whereIn('nama', $request->provinsi)->pluck('id')->toArray();
+            $balai->provinsis()->sync($provinsiIds);
         } else {
             $balai->provinsis()->detach();
         }
