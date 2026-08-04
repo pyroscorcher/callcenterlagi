@@ -51,5 +51,13 @@ Route::post('/balai/login', [BalaiAuthController::class, 'authenticate'])->name(
 Route::middleware('auth:balai')->group(function () {
     Route::post('/balai/logout', [BalaiAuthController::class, 'logout'])->name('balai.logout');
     Route::get('/balai/dashboard', [BalaiController::class, 'balaiDashboard'])->name('balai.dashboard');
-    Route::get('/balai/dashboard', [BalaiController::class, 'balaiDashboard'])->name('balai.dashboard');
+    Route::get('/balai/laporan-penanganan-balai', [BalaiController::class, 'laporanPenanganan'])->name('balai.laporan-penanganan-balai');
+    Route::get('/balai/laporan-penanganan-balai/create', [BalaiController::class, 'laporanPenangananCreate'])->name('balai.laporan-penanganan-balai.create');
+    Route::get('/balai/laporan-penanganan-balai/{laporan}', [BalaiController::class, 'laporanPenangananShow'])->name('balai.laporan-penanganan-balai.show');
+    Route::put('/balai/laporan-penanganan-balai/{laporan}/update-status', [BalaiController::class, 'updateStatus'])->name('balai.laporan-penanganan-balai.update-status');
+    Route::delete('/balai/laporan-penanganan-balai/{laporan}', [BalaiController::class, 'laporanPenangananDestroy'])->name('balai.laporan-penanganan-balai.destroy');
+    Route::get('/balai/data-pic-balai', [BalaiController::class, 'dataPicBalaiShow'])->name('balai.data-pic-balai.show');
+    Route::get('/balai/data-pic-balai/edit', [BalaiController::class, 'editProfile'])->name('balai.data-pic-balai.edit');
+    Route::put('/balai/data-pic-balai/update', [BalaiController::class, 'updateProfile'])->name('balai.data-pic-balai.update');
+    
 });

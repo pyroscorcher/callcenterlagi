@@ -33,6 +33,7 @@
                                 <th scope="col" class="px-6 py-4 font-medium">Jenis Bencana</th>
                                 <th scope="col" class="px-6 py-4 font-medium">Nama Bencana</th>
                                 <th scope="col" class="px-6 py-4 font-medium">Lokasi Bencana</th>
+                                <th scope="col" class="px-6 py-4 font-medium">Status Laporan</th>
                                 <th scope="col" class="px-6 py-4 font-medium">Pelapor</th>
                                 <th scope="col" class="px-6 py-4 font-medium text-center">Aksi</th>
                             </tr>
@@ -56,16 +57,19 @@
                                         {{ $laporan->lokasi }}
                                     </td>
                                     <td class="px-6 py-4 text-gray-800">
+                                        {{ $laporan->status }}
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-800">
                                         {{ $laporan->pelapor }}
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <div class="flex items-center justify-center gap-2">
-                                            <a href="{{ route('laporan.show', $laporan->id) }}"
+                                            <a href="{{ route('balai.laporan-penanganan-balai.show', $laporan->id) }}"
                                                class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
                                                 Detail
                                             </a>
 
-                                            <form action="{{ route('laporan.destroy', $laporan->id) }}"
+                                            <form action="{{ route('balai.laporan-penanganan-balai.destroy', $laporan->id) }}"
                                                   method="POST"
                                                   onsubmit="return confirm('Yakin ingin menghapus laporan ini?');">
                                                 @csrf
