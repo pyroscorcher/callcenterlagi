@@ -20,47 +20,47 @@ class SyncWilayahBalai extends Command
             return;
         }
 
-        $this->info('Step 1: Generating SDA Balai Placeholders...');
+        $this->info('Step 1: Generating & Updating SDA Balai Placeholders...');
 
-        // 1. Find the province with the highest number of records for each Balai
-        $balaiData = DB::table('pos_duga_airs as p1')
-            ->select('p1.pengelola', 'p1.provinsi')
-            ->whereNotNull('p1.pengelola')
-            ->whereNotNull('p1.provinsi')
-            ->selectRaw('COUNT(*) as total_stations')
-            ->groupBy('p1.pengelola', 'p1.provinsi')
-            ->orderByDesc('total_stations')
-            ->get()
-            ->groupBy('pengelola')
-            ->map(function ($group) {
-                // Returns the province name that has the highest station count for this Balai
-                return $group->first()->provinsi;
-            });
+        // 1. Extract ALL unique Balai names safely
+        $pengelolas = DB::table('pos_duga_airs')
+            ->whereNotNull('pengelola')
+            ->distinct()
+            ->pluck('pengelola');
 
-        $createdCount = 0;
+        $updatedCount = 0;
 
-        foreach ($balaiData as $pengelola => $provinsi) {
-            $balai = Balai::firstOrCreate(
-                ['nama_balai' => $pengelola],
+        foreach ($pengelolas as $pengelola) {
+            // Find the most frequent province strictly for THIS Balai
+            $mostFrequentProvinsi = DB::table('pos_duga_airs')
+                ->where('pengelola', $pengelola)
+                ->whereNotNull('provinsi')
+                ->groupBy('provinsi')
+                ->orderByRaw('COUNT(*) DESC')
+                ->value('provinsi');
+
+            // Use updateOrCreate so it updates existing Balais with the correct Provinsi
+            $balai = Balai::updateOrCreate(
+                ['nama_balai' => $pengelola], // Search by this
                 [
                     'username' => Str::slug($pengelola, '_'), 
                     'password' => 'password',
                     'unor' => 'SDA',
-                    'provinsi' => $provinsi, // This is now the most frequent province!
+                    'provinsi' => $mostFrequentProvinsi, // This will now update!
                 ]
             );
-
-            if ($balai->wasRecentlyCreated) {
-                $createdCount++;
-            }
+            $updatedCount++;
         }
 
-        $this->info("Created {$createdCount} new SDA Balai placeholders.");
+        $this->info("Processed and updated {$updatedCount} SDA Balai placeholders.");
 
 
         $this->info('Step 2: Mapping hierarchical geographic links...');
 
-        // 2. Map the geography using the raw, highly-optimized query
+        // Clear out the junction table first to ensure a perfectly clean sync
+        DB::table('wilayah_balai')->truncate();
+
+        // 2. The mapping query
         $query = "
             INSERT IGNORE INTO wilayah_balai (balai_id, provinsi_id, kabupaten_kota_id, kecamatan_id, kelurahan_id, created_at, updated_at)
             SELECT DISTINCT 
@@ -73,10 +73,7 @@ class SyncWilayahBalai extends Command
                 NOW()
             FROM pos_duga_airs p
             
-            -- Match the Balai Entity we just created
             JOIN balais b ON b.nama_balai = p.pengelola
-            
-            -- Traverse the geographical hierarchy to ensure exact location matching
             JOIN provinsis prov ON prov.nama = p.provinsi
             JOIN kabupaten_kotas kab ON kab.provinsi_id = prov.id AND kab.nama = p.kota_kabupaten
             JOIN kecamatans kec ON kec.kabupaten_kota_id = kab.id AND kec.nama = p.kecamatan
@@ -88,7 +85,11 @@ class SyncWilayahBalai extends Command
         try {
             DB::statement($query);
             $this->info('Step 2 Complete: All hierarchical IDs have been successfully linked.');
-            $this->info('Process finished!');
+            
+            // Output the final count so we know exactly how many rows mapped
+            $totalLinks = DB::table('wilayah_balai')->count();
+            $this->info("SUCCESS! Total rows in wilayah_balai table: {$totalLinks}");
+            
         } catch (\Exception $e) {
             $this->error('An error occurred during synchronization: ' . $e->getMessage());
         }

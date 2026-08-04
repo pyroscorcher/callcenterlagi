@@ -13,6 +13,7 @@ use App\Models\Kelurahan;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Balai;
 use App\Services\WhatsappNotifier;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DashboardController extends Controller
@@ -77,7 +78,14 @@ class DashboardController extends Controller
             
         // 2. Get an array of currently assigned Balai IDs for the Blade component
         $assignedBalais = $laporan->balais->pluck('id')->toArray();
-
+        
+        $recommendedBalaiIds = [];
+            if ($laporan->kelurahan_id) {
+                $recommendedBalaiIds = DB::table('wilayah_balai')
+                    ->where('kelurahan_id', $laporan->kelurahan_id)
+                    ->pluck('balai_id')
+                    ->toArray();
+            }
         return view('layouts.laporanmasukbencana', [
             'component'=> "opps.laporan-table-edit",            
             'laporan' => $laporan,
@@ -87,6 +95,7 @@ class DashboardController extends Controller
             'kelurahans' => $kelurahans,
             'balais' => $balais,
             'assignedBalais' => $assignedBalais,
+            'recommendedBalaiIds' => $recommendedBalaiIds,
         ]);
     }
 
@@ -176,12 +185,38 @@ class DashboardController extends Controller
             ->get(['id', 'nama']);
     }
 
-    public function getBalaiByProvinsi($provinsi_id) {
-        // Ganti 'wilayah_balais' menjadi 'provinsis'
-        $balais = Balai::whereHas('provinsis', function($query) use ($provinsi_id) {
-            $query->where('provinsis.id', $provinsi_id);
-        })->get(['id', 'nama_balai']); 
+    public function getBalaiByProvinsi(Request $request, $provinsi_id)
+    {
+        // Fetch all Balais assigned to the given province
+        $balais = Balai::whereIn('id', function($query) use ($provinsi_id) {
+            $query->select('balai_id')
+                ->from('wilayah_balai')
+                ->where('provinsi_id', $provinsi_id);
+        })->get();
 
+        // Check if the frontend passed a kelurahan_id
+        $kelurahan_id = $request->query('kelurahan_id');
+        
+        if ($kelurahan_id) {
+            // Find which Balai IDs specifically have a match in wilayah_balai for this Kelurahan
+            $recommendedIds = DB::table('wilayah_balai')
+                ->where('kelurahan_id', $kelurahan_id)
+                ->pluck('balai_id')
+                ->toArray();
+                
+            // Append a boolean flag so JS knows which to style and push to top
+            $balais->map(function($balai) use ($recommendedIds) {
+                $balai->is_recommended = in_array($balai->id, $recommendedIds);
+                return $balai;
+            });
+        } else {
+            // If no kelurahan is requested, none are recommended
+            $balais->map(function($balai) {
+                $balai->is_recommended = false;
+                return $balai;
+            });
+        }
+        
         return response()->json($balais);
     }
 
@@ -233,6 +268,7 @@ class DashboardController extends Controller
             ->with('status', 'Laporan berhasil dihapus.');
     }
 
+    // Notifikasi Whatsapp ke PIC balai
     public function kirimPicNotifikasi(LaporanMasyarakat $laporan, WhatsappNotifier $notifier)
     {
         $laporan->load('balais.pics');
