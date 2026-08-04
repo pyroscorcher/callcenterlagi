@@ -12,6 +12,8 @@ use App\Models\Kecamatan;
 use App\Models\Kelurahan;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Balai;
+use App\Services\WhatsappNotifier;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DashboardController extends Controller
@@ -76,7 +78,14 @@ class DashboardController extends Controller
             
         // 2. Get an array of currently assigned Balai IDs for the Blade component
         $assignedBalais = $laporan->balais->pluck('id')->toArray();
-
+        
+        $recommendedBalaiIds = [];
+            if ($laporan->kelurahan_id) {
+                $recommendedBalaiIds = DB::table('wilayah_balai')
+                    ->where('kelurahan_id', $laporan->kelurahan_id)
+                    ->pluck('balai_id')
+                    ->toArray();
+            }
         return view('layouts.laporanmasukbencana', [
             'component'=> "opps.laporan-table-edit",            
             'laporan' => $laporan,
@@ -86,6 +95,7 @@ class DashboardController extends Controller
             'kelurahans' => $kelurahans,
             'balais' => $balais,
             'assignedBalais' => $assignedBalais,
+            'recommendedBalaiIds' => $recommendedBalaiIds,
         ]);
     }
 
@@ -175,12 +185,38 @@ class DashboardController extends Controller
             ->get(['id', 'nama']);
     }
 
-    public function getBalaiByProvinsi($provinsi_id) {
-        // Ganti 'wilayah_balais' menjadi 'provinsis'
-        $balais = Balai::whereHas('provinsis', function($query) use ($provinsi_id) {
-            $query->where('provinsis.id', $provinsi_id);
-        })->get(['id', 'nama_balai']); 
+    public function getBalaiByProvinsi(Request $request, $provinsi_id)
+    {
+        // Fetch all Balais assigned to the given province
+        $balais = Balai::whereIn('id', function($query) use ($provinsi_id) {
+            $query->select('balai_id')
+                ->from('wilayah_balai')
+                ->where('provinsi_id', $provinsi_id);
+        })->get();
 
+        // Check if the frontend passed a kelurahan_id
+        $kelurahan_id = $request->query('kelurahan_id');
+        
+        if ($kelurahan_id) {
+            // Find which Balai IDs specifically have a match in wilayah_balai for this Kelurahan
+            $recommendedIds = DB::table('wilayah_balai')
+                ->where('kelurahan_id', $kelurahan_id)
+                ->pluck('balai_id')
+                ->toArray();
+                
+            // Append a boolean flag so JS knows which to style and push to top
+            $balais->map(function($balai) use ($recommendedIds) {
+                $balai->is_recommended = in_array($balai->id, $recommendedIds);
+                return $balai;
+            });
+        } else {
+            // If no kelurahan is requested, none are recommended
+            $balais->map(function($balai) {
+                $balai->is_recommended = false;
+                return $balai;
+            });
+        }
+        
         return response()->json($balais);
     }
 
@@ -230,5 +266,56 @@ class DashboardController extends Controller
         return redirect()
             ->route('laporan.masuk-bencana')
             ->with('status', 'Laporan berhasil dihapus.');
+    }
+
+    // Notifikasi Whatsapp ke PIC balai
+    public function kirimPicNotifikasi(LaporanMasyarakat $laporan, WhatsappNotifier $notifier)
+    {
+        $laporan->load('balais.pics');
+
+        if ($laporan->balais->isEmpty()) {
+            return response()->json(['message' => 'Laporan ini belum ditugaskan ke Balai manapun.'], 422);
+        }
+
+        $kontakList = $laporan->balais->flatMap->pics->pluck('kontak')->filter()->unique()->values();
+
+        if ($kontakList->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada kontak PIC yang terdaftar untuk Balai terkait.'], 422);
+        }
+
+        $daftarBalai = $laporan->balais->values()
+            ->map(fn ($balai, $i) => ($i + 1) . ". {$balai->nama_balai}")
+            ->implode("\n");
+
+        $sitabaLink = route('laporan.show', $laporan->id);
+
+        $message = <<<TEXT
+    Kepada Balai Besar Wilayah Sungai / Balai Jalan / Balai Bangunan
+    {$daftarBalai}
+    Kami dari Call Center Bencana Kementerian Pekerjaan Umum menginformasikan adanya aduan dari masyarakat.
+    Nama Masyarakat : {$laporan->pelapor}
+    WA : {$laporan->telepon}
+    yang di sampaikan melalui WA Center mengenai kejadian {$laporan->jenis_bencana} | {$laporan->nama_bencana}
+    Lokasi Detail : {$laporan->lokasi}
+    Dampak Bencana: {$laporan->dampak_bencana}
+    Kebutuhan mendesak : {$laporan->kebutuhan_mendesak}
+    Terkait dengan kejadian tersebut, mohon berkenan Kepala Balai dapat mengingatkan PPK untuk segera menindak lanjuti serta disampaikan kembali laporan tersebut pada Sitaba
+    {$sitabaLink}
+    Salam Hormat,
+    Call Center Bencana Kementerian Pekerjaan Umum
+    WhatsApp Center : 0815-1000-0158
+    TEXT;
+
+        $blastId = $notifier->sendBlast($kontakList->all(), $message);
+
+        if ($blastId === null) {
+            return response()->json(['message' => 'Gagal mengirim pesan ke bot WhatsApp.'], 502);
+        }
+
+        return response()->json([
+            'message' => 'Pesan sedang dikirim ke ' . $kontakList->count() . ' PIC.',
+            'blast_id' => $blastId,
+            'total_pic' => $kontakList->count(),
+        ]);
     }
 }

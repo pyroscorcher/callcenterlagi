@@ -39,7 +39,6 @@
                             <tr>
                                 <th scope="col" class="px-6 py-4 font-medium text-center">No</th>
                                 <th scope="col" class="px-6 py-4 font-medium">Nama Balai</th>
-                                <th scope="col" class="px-6 py-4 font-medium">Unit Kerja</th>
                                 <th scope="col" class="px-6 py-4 font-medium">Unit Organisasi</th>
                                 <th scope="col" class="px-6 py-4 font-medium">Nama Kepala</th>
                                 <th scope="col" class="px-6 py-4 font-medium text-center">Aksi</th>
@@ -53,9 +52,6 @@
                                     </td>
                                     <td class="px-6 py-4 font-medium text-gray-900">
                                         {{ $balai->nama_balai ?? '-'}}
-                                    </td>
-                                    <td class="px-6 py-4 text-gray-700">
-                                        {{ $balai->unker ?? '-' }}
                                     </td>
                                     <td class="px-6 py-4 text-gray-700">
                                         {{ $balai->unor ?? '-' }}
@@ -72,7 +68,7 @@
 
                                             <form action="{{ route('balai.destroy', $balai->id) }}"
                                                 method="POST"
-                                                onsubmit="return confirm('Yakin ingin menghapus data Balai ini?');">
+                                                class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
 

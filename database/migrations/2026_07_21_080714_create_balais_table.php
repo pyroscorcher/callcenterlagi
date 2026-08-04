@@ -13,22 +13,21 @@ return new class extends Migration
     {
         Schema::create('balais', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
-            $table->string('username');
+            $table->string('username')->unique(); // Added unique() since this is a login credential
             $table->string('password');
             $table->string('nama_balai');
-            $table->string('unker');
-            $table->string('unor');
-            $table->string('provinsi');
-            $table->string('pulau');
-            $table->string('kepala');
-            $table->string('kontak');
-        });
-
-        Schema::table('balais', function (Blueprint $table) {
+            
+            // Make these nullable so placeholders can be created without throwing errors
+            $table->string('unker')->nullable();
+            $table->string('unor')->nullable(); 
+            $table->string('provinsi')->nullable();
+            $table->string('pulau')->nullable();
+            $table->string('kepala')->nullable();
+            $table->string('kontak')->nullable();
+            
             $table->rememberToken();
+            $table->timestamps();
         });
-
     }
 
     /**
@@ -36,11 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('balais', function (Blueprint $table) {
-            $table->dropColumn('remember_token');
-        });
-
         Schema::dropIfExists('balais');
-        
     }
 };

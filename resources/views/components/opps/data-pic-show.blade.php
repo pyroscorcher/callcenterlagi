@@ -43,10 +43,10 @@
                         <dd class="text-gray-900">{{ $balai->username ?? '-' }}</dd>
                     </div>
 
-                    <div class="grid grid-cols-[200px_1fr] gap-4 py-2 border-b border-gray-100 items-center">
+                    {{-- <div class="grid grid-cols-[200px_1fr] gap-4 py-2 border-b border-gray-100 items-center">
                         <dt class="text-gray-600 font-medium">Unit Kerja</dt>
                         <dd class="text-gray-900">{{ $balai->unker ?? '-' }}</dd>
-                    </div>
+                    </div> --}}
 
                     <div class="grid grid-cols-[200px_1fr] gap-4 py-2 items-center">
                         <dt class="text-gray-600 font-medium">Unit Organisasi</dt>

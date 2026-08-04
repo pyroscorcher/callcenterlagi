@@ -54,7 +54,7 @@ class SyncPosDugaAir extends Command
                 $attributes = $feature['attributes'] ?? [];
 
                 if (empty($attributes['id'])) {
-                    continue; // skip anything without the identifier we upsert on
+                    continue;
                 }
 
                 PosDugaAir::updateOrCreate(

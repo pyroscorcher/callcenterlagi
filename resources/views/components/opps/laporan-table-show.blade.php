@@ -196,19 +196,52 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const checkbox = document.getElementById('laporanValidCheckbox');
-        const button = document.getElementById('kirimPicButton');
+document.addEventListener('DOMContentLoaded', function () {
+    const checkbox = document.getElementById('laporanValidCheckbox');
+    const button = document.getElementById('kirimPicButton');
 
-        checkbox.addEventListener('change', function () {
-            button.disabled = !checkbox.checked;
-            button.classList.toggle('bg-gray-300', !checkbox.checked);
-            button.classList.toggle('text-gray-500', !checkbox.checked);
-            button.classList.toggle('cursor-not-allowed', !checkbox.checked);
-            button.classList.toggle('bg-[#161446]', checkbox.checked);
-            button.classList.toggle('text-white', checkbox.checked);
-            button.classList.toggle('cursor-pointer', checkbox.checked);
-            button.classList.toggle('hover:bg-[#110e36]', checkbox.checked);
-        });
+    checkbox.addEventListener('change', function () {
+        button.disabled = !checkbox.checked;
+        button.classList.toggle('bg-gray-300', !checkbox.checked);
+        button.classList.toggle('text-gray-500', !checkbox.checked);
+        button.classList.toggle('cursor-not-allowed', !checkbox.checked);
+        button.classList.toggle('bg-[#161446]', checkbox.checked);
+        button.classList.toggle('text-white', checkbox.checked);
     });
+
+    button.addEventListener('click', async function () {
+        if (button.disabled) return;
+
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Mengirim...';
+
+        try {
+            const response = await fetch('{{ route('laporan.kirim-pic', $laporan->id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.message || 'Gagal mengirim pesan.');
+                button.disabled = false;
+                button.textContent = originalText;
+                return;
+            }
+
+            button.textContent = 'Pesan Terkirim';
+            alert(data.message);
+        } catch (err) {
+            console.error(err); alert(err.message)
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
+});
 </script>

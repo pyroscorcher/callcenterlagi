@@ -4,8 +4,9 @@
     'kabupatenkotas',
     'kecamatans',
     'kelurahans',
-    'balais',         // List of balais for the currently saved province
-    'assignedBalais', // Array of currently assigned Balai IDs, e.g., [1, 4, 5]
+    'balais',         
+    'assignedBalais', 
+    'recommendedBalaiIds' => [], // NEW: Array of Balai IDs assigned to the current Kelurahan
 ])
 
 <div class="max-w-6xl mx-auto px-8 py-8">
@@ -39,7 +40,6 @@
                         <select name="jenis_bencana" id="jenis_bencana" 
                                 class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]">
                             <option value="">-- Pilih Jenis Bencana --</option>
-                            {{-- Options will be populated automatically via JavaScript --}}
                         </select>
                         @error('jenis_bencana')
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
@@ -54,7 +54,6 @@
                         <select name="nama_bencana" id="nama_bencana" 
                                 class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]">
                             <option value="">-- Pilih Nama Kejadian --</option>
-                            {{-- Options will be populated automatically via JavaScript --}}
                         </select>
                         @error('nama_bencana')
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
@@ -185,7 +184,7 @@
                     <dd class="text-gray-900 flex items-center justify-between">
                         <span>{{ $laporan->lintang ?? '-' }} , {{ $laporan->bujur ?? '-' }}</span>
                         <a href="{{ route('laporan.edit-lokasi', $laporan->id) }}" 
-                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                           class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
                             Edit Titik Lokasi
                         </a>
                     </dd>
@@ -274,27 +273,44 @@
                             </button>
 
                             {{-- Dropdown Content (Hidden by default) --}}
-                            <div id="balai_dropdown_content" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden">
-                                <div id="balai_container" class="max-h-60 overflow-y-auto p-2 space-y-1">
+                            <div id="balai_dropdown_content" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl hidden">
+                                <div id="balai_container" class="max-h-72 overflow-y-auto p-2 space-y-1">
+                                    
                                     @if(isset($balais) && $balais->count() > 0)
-                                        @foreach($balais as $balai)
-                                            <label class="flex items-start space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                                {{-- Added data-name attribute so JS can read the text --}}
+                                        @php
+                                            // PHP SORT: Put recommended (Kelurahan-specific) Balais at the top on initial page load
+                                            $sortedBalais = collect($balais)->sortByDesc(function($balai) use ($recommendedBalaiIds) {
+                                                return in_array($balai->id, $recommendedBalaiIds) ? 1 : 0;
+                                            });
+                                        @endphp
+                                        
+                                        @foreach($sortedBalais as $balai)
+                                            @php
+                                                $isRec = in_array($balai->id, $recommendedBalaiIds);
+                                            @endphp
+                                            
+                                            <label class="flex items-start space-x-3 text-sm cursor-pointer p-2 rounded-lg border transition-colors {{ $isRec ? 'bg-green-50/70 border-green-200 hover:bg-green-100/70' : 'hover:bg-gray-50 border-transparent text-gray-700' }}">
                                                 <input type="checkbox" name="balais[]" value="{{ $balai->id }}" data-name="{{ $balai->nama_balai ?? $balai->nama }}" 
-                                                    @checked(in_array($balai->id, old('balais', $assignedBalais ?? [])))
-                                                    class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500">
-                                                <span>{{ $balai->nama_balai ?? $balai->nama }}</span>
+                                                       @checked(in_array($balai->id, old('balais', $assignedBalais ?? [])))
+                                                       class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                                <div class="flex flex-col">
+                                                    <span class="{{ $isRec ? 'font-semibold text-green-800' : '' }}">{{ $balai->nama_balai ?? $balai->nama }}</span>
+                                                    @if($isRec)
+                                                        <span class="text-[10px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded uppercase tracking-wider mt-0.5 w-fit">Rekomendasi Area Kelurahan</span>
+                                                    @endif
+                                                </div>
                                             </label>
                                         @endforeach
                                     @else
                                         <p class="text-sm text-gray-500 italic p-2 text-center">Pilih provinsi untuk melihat daftar Balai.</p>
                                     @endif
+                                    
                                 </div>
                             </div>
                             
                         </div>
                         
-                        <p class="text-xs text-gray-500 mt-1">Anda dapat memilih lebih dari satu Balai. Daftar menyesuaikan Provinsi.</p>
+                        <p class="text-xs text-gray-500 mt-1">Anda dapat memilih lebih dari satu Balai. Balai yang disorot memiliki stasiun di kelurahan terkait.</p>
                         @error('balais')
                             <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
@@ -319,7 +335,7 @@
     </div>
 </div>
 
- <script>
+<script>
     document.addEventListener("DOMContentLoaded", function() {
         const provinsi = document.getElementById('provinsi');
         const balaiContainer = document.getElementById('balai_container');
@@ -334,51 +350,96 @@
 
         // --- 1. Dropdown UI Logic ---
 
-        // Toggle Dropdown Visibility
         dropdownTrigger.addEventListener('click', function(e) {
             e.stopPropagation();
             dropdownContent.classList.toggle('hidden');
         });
 
-        // Close Dropdown when clicking outside
         document.addEventListener('click', function(e) {
             if (!dropdownTrigger.contains(e.target) && !dropdownContent.contains(e.target)) {
                 dropdownContent.classList.add('hidden');
             }
         });
 
-        // Function to update the text based on checked boxes
         function updateBalaiText() {
             const checkedBoxes = balaiContainer.querySelectorAll('input[type="checkbox"]:checked');
             if (checkedBoxes.length === 0) {
                 dropdownText.textContent = "Pilih Balai Penugasan...";
                 return;
             }
-            // Map over checked boxes to get their data-name attributes and join them with a comma
             const names = Array.from(checkedBoxes).map(cb => cb.getAttribute('data-name'));
             dropdownText.textContent = names.join(', ');
         }
 
-        // Event Delegation: Listen for checkbox changes inside the container 
-        // (Works for both page-load checkboxes and AJAX-loaded checkboxes)
         balaiContainer.addEventListener('change', function(e) {
             if (e.target && e.target.type === 'checkbox') {
                 updateBalaiText();
             }
         });
 
-        // Run once on load to show previous data in Edit Mode
-        updateBalaiText();
+        updateBalaiText(); // Run once on load
 
 
         // --- 2. AJAX Fetch Logic ---
 
-        provinsi.addEventListener('change', async function () {
+        // Reusable function to fetch and re-render Balais based on Provinsi and Kelurahan
+        async function fetchBalais(provId, kelId = null) {
+            // Save currently checked IDs so they don't get erased during re-render
+            const checkedValues = Array.from(balaiContainer.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+
             balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic p-2 text-center">Loading data Balai...</p>';
             dropdownText.textContent = "Loading...";
-            kabupaten.innerHTML = '<option>Loading...</option>';
-            kecamatan.innerHTML = '<option>Pilih Kecamatan</option>';
-            kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
+
+            let url = '/ajax/balai/' + provId;
+            if (kelId) {
+                url += '?kelurahan_id=' + kelId;
+            }
+
+            try {
+                const response = await fetch(url);
+                const dataBalai = await response.json();
+
+                // Sort: recommended (Kelurahan specific) to the top
+                dataBalai.sort((a, b) => (b.is_recommended ? 1 : 0) - (a.is_recommended ? 1 : 0));
+
+                balaiContainer.innerHTML = '';
+                if (dataBalai.length === 0) {
+                    balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic p-2 text-center">Tidak ada Balai yang ditugaskan untuk wilayah ini.</p>';
+                } else {
+                    dataBalai.forEach(item => {
+                        const isRec = item.is_recommended;
+                        // Conditional UI rendering based on recommendation flag
+                        const bgClass = isRec ? 'bg-green-50/70 border-green-200 hover:bg-green-100/70' : 'hover:bg-gray-50 border-transparent text-gray-700';
+                        const textClass = isRec ? 'font-semibold text-green-800' : '';
+                        const badge = isRec ? '<span class="text-[10px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded uppercase tracking-wider mt-0.5 w-fit">Rekomendasi Area Kelurahan</span>' : '';
+                        
+                        const isChecked = checkedValues.includes(String(item.id)) ? 'checked' : '';
+                        const balaiName = item.nama_balai || item.nama;
+
+                        balaiContainer.innerHTML += `
+                            <label class="flex items-start space-x-3 text-sm cursor-pointer p-2 rounded-lg border transition-colors ${bgClass}">
+                                <input type="checkbox" name="balais[]" value="${item.id}" data-name="${balaiName}" class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" ${isChecked}>
+                                <div class="flex flex-col">
+                                    <span class="${textClass}">${balaiName}</span>
+                                    ${badge}
+                                </div>
+                            </label>
+                        `;
+                    });
+                }
+                updateBalaiText();
+            } catch (error) {
+                console.error("Gagal mengambil data Balai:", error);
+                balaiContainer.innerHTML = '<p class="text-sm text-red-500 italic p-2 text-center">Terjadi kesalahan saat memuat data Balai.</p>';
+                dropdownText.textContent = "Error memuat data";
+            }
+        }
+
+        // When Provinsi changes
+        provinsi.addEventListener('change', async function () {
+            kabupaten.innerHTML = '<option value="">Loading...</option>';
+            kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
+            kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
 
             if (!this.value) {
                 balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic p-2 text-center">Pilih provinsi untuk melihat daftar Balai.</p>';
@@ -387,45 +448,21 @@
                 return;
             }
 
-            try {
-                const [responseBalai, responseKabupaten] = await Promise.all([
-                    fetch('/ajax/balai/' + this.value),
-                    fetch('/ajax/kabupaten/' + this.value)
-                ]);
-
-                const dataBalai = await responseBalai.json();
-                const dataKabupaten = await responseKabupaten.json();
-
-                // Populate Balai Checkboxes dynamically
-                balaiContainer.innerHTML = '';
-                if (dataBalai.length === 0) {
-                    balaiContainer.innerHTML = '<p class="text-sm text-gray-500 italic p-2 text-center">Tidak ada Balai yang ditugaskan untuk provinsi ini.</p>';
-                } else {
-                    dataBalai.forEach(item => {
-                        // Added data-name attribute here as well
-                        balaiContainer.innerHTML += `
-                            <label class="flex items-start space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input type="checkbox" name="balais[]" value="${item.id}" data-name="${item.nama_balai}" class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500">
-                                <span>${item.nama_balai}</span>
-                            </label>
-                        `;
+            // Fetch Kabupaten separately
+            fetch('/ajax/kabupaten/' + this.value)
+                .then(res => res.json())
+                .then(data => {
+                    kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
+                    data.forEach(item => {
+                        kabupaten.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
                     });
-                }
-                updateBalaiText(); // Reset text after fetching
-
-                // Populate Kabupaten dropdown
-                kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
-                dataKabupaten.forEach(item => {
-                    kabupaten.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
                 });
 
-            } catch (error) {
-                console.error("Gagal mengambil data:", error);
-                balaiContainer.innerHTML = '<p class="text-sm text-red-500 italic p-2 text-center">Terjadi kesalahan saat memuat data.</p>';
-                dropdownText.textContent = "Error memuat data";
-            }
+            // Fetch Balais (No Kelurahan selected yet, just general Provinsi)
+            fetchBalais(this.value, null);
         });
 
+        // When Kabupaten changes
         kabupaten.addEventListener('change', async function () {
             if (!this.value) {
                 kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
@@ -442,9 +479,12 @@
             });
         });
 
+        // When Kecamatan changes
         kecamatan.addEventListener('change', async function () {
             if (!this.value) {
                 kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
+                // If they undo their selection back to Kec, reset balais back to Provinsi level
+                if (provinsi.value) fetchBalais(provinsi.value, null);
                 return;
             }
             kelurahan.innerHTML = '<option>Loading...</option>';
@@ -455,94 +495,55 @@
                 kelurahan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
             });
         });
-    });
-
-    kabupaten.addEventListener('change', async function () {
-        if (!this.value) {
-            kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
-            kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
-            return;
-        }
-
-        kecamatan.innerHTML = '<option>Loading...</option>';
-        kelurahan.innerHTML = '<option>Pilih Kelurahan</option>';
-
-        const response = await fetch('/ajax/kecamatan/' + this.value);
-        const data = await response.json();
-
-        kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
-        data.forEach(item => {
-            kecamatan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
+        
+        // NEW: When Kelurahan changes, update the Balai Dropdown to show Recommended ones!
+        kelurahan.addEventListener('change', function() {
+            if (provinsi.value) {
+                fetchBalais(provinsi.value, this.value); // Sends Kelurahan ID to AJAX
+            }
         });
-    });
 
-    kecamatan.addEventListener('change', async function () {
-        if (!this.value) {
-            kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
-            return;
-        }
+        // --- 3. Bencana Definitions (Unchanged) ---
+        const bencanaRules = {
+            "Kebakaran Gedung dan Pemukiman": ["Kebakaran Gedung dan Pemukiman"],
+            "Gagal Teknologi": ["Kegagalan Industri", "Kecelakaan Industri"],
+            "Epidemi dan Wabah Penyakit": ["Epidemi", "Wabah Penyakit"],
+            "Kekeringan": ["Kekeringan Meteorologis", "Kekeringan Hidrologis", "Kekeringan Pertanian"],
+            "Tanah Longsor": ["Longsor", "Gerakan Tanah"],
+            "Gempabumi": ["Gempa Tektonik", "Gempa Vulkanik", "Gempabumi Runtuhan"],
+            "Banjir": ["Banjir dan Tanah Longsor", "Banjir Genangan", "Banjir Bandang", "Banjir Drainase & Selokan", "Banjir Waduk", "Tanggul Jebol"],
+            "Konflik Sosial": ["Teror", "Kerusakan Sosial", "Konflik Sosial"],
+            "Cuaca Ekstrim": ["Angin Topan", "Hujan Es", "Siklon Tropis", "Puting Beliung", "Angin Kencang", "Suhu Udara Ekstrem"],
+            "Erupsi Gunung Api": ["Banjir Lahar", "Hujan Abu Vulkanik", "Awan Panas Aliran Piroklastik Guguran", "Awan Panas Aliran Piroklastik", "Gas Vulkanik Beracun"],
+            "Gelombang Pasang dan Abrasi": ["Gelombang Pasang", "Abrasi"],
+            "Kebakaran Hutan dan Lahan": ["Kebakaran Hutan", "Kebakaran Lahan", "Kebakaran Lahan Gambut"],
+            "Tsunami": ["Mikrotsunami", "Tsunami Sesimogenik", "Tsunami Nonseismik", "Tsunami Lokal", "Tsunami Regional", "Tsunami Jarak", "Tsunami Meteorologi"]
+        };
 
-        kelurahan.innerHTML = '<option>Loading...</option>';
-
-        const response = await fetch('/ajax/kelurahan/' + this.value);
-        const data = await response.json();
-
-        kelurahan.innerHTML = '<option value="">Pilih Kelurahan</option>';
-        data.forEach(item => {
-            kelurahan.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
-        });
-    });
-
-
-    const bencanaRules = {
-        "Kebakaran Gedung dan Pemukiman": ["Kebakaran Gedung dan Pemukiman"],
-        "Gagal Teknologi": ["Kegagalan Industri", "Kecelakaan Industri"],
-        "Epidemi dan Wabah Penyakit": ["Epidemi", "Wabah Penyakit"],
-        "Kekeringan": ["Kekeringan Meteorologis", "Kekeringan Hidrologis", "Kekeringan Pertanian"],
-        "Tanah Longsor": ["Longsor", "Gerakan Tanah"],
-        "Gempabumi": ["Gempa Tektonik", "Gempa Vulkanik", "Gempabumi Runtuhan"],
-        "Banjir": ["Banjir dan Tanah Longsor", "Banjir Genangan", "Banjir Bandang", "Banjir Drainase & Selokan", "Banjir Waduk", "Tanggul Jebol"],
-        "Konflik Sosial": ["Teror", "Kerusakan Sosial", "Konflik Sosial"],
-        "Cuaca Ekstrim": ["Angin Topan", "Hujan Es", "Siklon Tropis", "Puting Beliung", "Angin Kencang", "Suhu Udara Ekstrem"],
-        "Erupsi Gunung Api": ["Banjir Lahar", "Hujan Abu Vulkanik", "Awan Panas Aliran Piroklastik Guguran", "Awan Panas Aliran Piroklastik", "Gas Vulkanik Beracun"],
-        "Gelombang Pasang dan Abrasi": ["Gelombang Pasang", "Abrasi"],
-        "Kebakaran Hutan dan Lahan": ["Kebakaran Hutan", "Kebakaran Lahan", "Kebakaran Lahan Gambut"],
-        "Tsunami": ["Mikrotsunami", "Tsunami Sesimogenik", "Tsunami Nonseismik", "Tsunami Lokal", "Tsunami Regional", "Tsunami Jarak", "Tsunami Meteorologi"]
-    };
-
-    document.addEventListener("DOMContentLoaded", function() {
         const jenisSelect = document.getElementById('jenis_bencana');
         const namaSelect = document.getElementById('nama_bencana');
 
         const selectedJenis = @json(old('jenis_bencana', $laporan->jenis_bencana ?? ''));
         const selectedNama = @json(old('nama_bencana', $laporan->nama_bencana ?? ''));
 
-        // 1. Populate Jenis Bencana dropdown
         for (const jenis in bencanaRules) {
             let option = document.createElement('option');
             option.value = jenis;
             option.textContent = jenis;
-            
-            // Trim and case-insensitive check so minor spacing/casing differences don't break it
             if (jenis.trim().toLowerCase() === selectedJenis.trim().toLowerCase()) {
                 option.selected = true;
             }
             jenisSelect.appendChild(option);
         }
 
-        // 2. Function to populate Nama Kejadian based on selected Jenis
         function populateNama(jenisValue, namaValueToSelect = '') {
             namaSelect.innerHTML = '<option value="">-- Pilih Nama Kejadian --</option>';
-            
-            // Find the matching key safely
             let matchedKey = Object.keys(bencanaRules).find(k => k.trim().toLowerCase() === jenisValue.trim().toLowerCase());
-
             if (matchedKey && bencanaRules[matchedKey]) {
                 bencanaRules[matchedKey].forEach(function(nama) {
                     let option = document.createElement('option');
                     option.value = nama;
                     option.textContent = nama;
-                    
                     if (nama.trim().toLowerCase() === namaValueToSelect.trim().toLowerCase()) {
                         option.selected = true;
                     }
@@ -551,14 +552,11 @@
             }
         }
 
-        // 3. Pre-load matching options on page load for Edit view
         if (selectedJenis) {
             populateNama(selectedJenis, selectedNama);
         }
-
-        // 4. Update dropdown dynamically when user changes Jenis Bencana
         jenisSelect.addEventListener('change', function() {
             populateNama(this.value);
         });
     });
-</script> 
+</script>
