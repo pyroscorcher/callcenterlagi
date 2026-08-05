@@ -1,11 +1,8 @@
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 @props([
     'logoUrl' => null, // pass an image path, e.g. asset('images/logo.png')
 ])
-
-{{-- 
-  Added: id="sidebar", fixed positioning, -translate-x-full (hidden by default on mobile), 
-  transition effects, and md:relative md:translate-x-0 (visible by default on desktop) 
---}}
 <aside id="sidebar" class="w-[280px] md:w-[330px] min-h-screen bg-[#161446] flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
 
     {{-- Logo section — replaceable --}}
@@ -62,7 +59,7 @@
             Data PIC Balai
         </a>
 
-        <form method="POST" action="{{ route('logout') }}">
+        <form class="logoutadmin" method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit"
                     class="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-white/90 text-sm hover:bg-white/5">
@@ -75,3 +72,33 @@
         </form>
     </nav>
 </aside>
+
+<script>
+        document.querySelectorAll('.logoutadmin').forEach(form => {
+
+            form.addEventListener('submit', function(e) {
+
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Logout?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626', 
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Logout',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true,
+                    focusCancel: true
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+
+                });
+
+            });
+
+        });
+</script>

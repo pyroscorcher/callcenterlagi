@@ -48,18 +48,18 @@
 
     @if(session('success'))
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            Swal.fire({
-                icon: 'success',
-                title: 'Perubahan Disimpan!',
-                showConfirmButton: false,
-                timer: 2000,
-                iconColor: '#7C8B44',
-                customClass: {
-                    title: 'text-xl font-medium text-gray-800'
-                }
-            });
+    document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+            icon: 'success',
+            title: 'Perubahan Disimpan',
+            text: '{{ session("success") }}',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#161446',
+            iconColor: '#7C8B44',
+            timer: 2500,
+            timerProgressBar: true
         });
+    });
     </script>
     @endif
 
@@ -81,6 +81,7 @@
             if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
             if(overlay) overlay.addEventListener('click', toggleSidebar);
         });
+
     </script>
 </body>
 </html>

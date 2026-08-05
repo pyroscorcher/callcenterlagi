@@ -137,7 +137,7 @@
                                     <td class="px-6 py-4 text-center">
                                         <div class="flex items-center justify-center gap-2">
                                             <a href="{{ route('laporan.show', $laporan->id) }}" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition">Detail</a>
-                                            <form action="{{ route('laporan.destroy', $laporan->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus laporan ini?');">
+                                            <form action="{{ route('laporan.destroy', $laporan->id) }}" method="POST" class="delete-form">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition">Hapus</button>
                                             </form>

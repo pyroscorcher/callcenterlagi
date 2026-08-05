@@ -18,7 +18,7 @@
             <h1 class="text-lg font-bold text-gray-900">Tambah Laporan Bencana</h1>
         </div>
 
-        <form action="{{ route('laporan.store') }}" method="POST" enctype="multipart/form-data">
+        <form class="buat-laporan" action="{{ route('laporan.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <div class="space-y-6">

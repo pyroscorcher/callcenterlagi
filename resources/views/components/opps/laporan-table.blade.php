@@ -76,7 +76,7 @@
 
                                             <form action="{{ route('laporan.destroy', $laporan->id) }}"
                                                   method="POST"
-                                                  onsubmit="return confirm('Yakin ingin menghapus laporan ini?');">
+                                                  class="delete-form"
                                                 @csrf
                                                 @method('DELETE')
 
