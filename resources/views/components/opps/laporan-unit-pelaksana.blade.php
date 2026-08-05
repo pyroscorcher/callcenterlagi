@@ -3,7 +3,7 @@
     'laporanMasyarakat' => null,
 ])
 
-<div class="bg-[#161446] max-w-7xl mx-auto px-8 py-8 min-w-0">
+<div class="bg-[#161446] max-w-6xl mx-auto px-8 py-8 min-w-0">
 
     {{-- Main Container Card --}}
     <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">

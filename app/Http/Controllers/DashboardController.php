@@ -18,6 +18,62 @@ use Illuminate\Support\Facades\Hash;
 
 class DashboardController extends Controller
 {
+    public function create()
+    {
+        $provinsis = Provinsi::orderBy('nama')->get();
+    
+        return view('layouts.laporanmasukbencana', [
+            'component' => "opps.laporan-table-create",
+            'provinsis' => $provinsis,
+        ]);
+    }
+    
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'pelapor'                 => 'required|string|max:255',
+            'telepon'                 => 'required|string|max:255',
+            'jenis_bencana'           => 'required|string|max:255',
+            'nama_bencana'            => 'required|string|max:255',
+            'dampak_bencana'          => 'required|string|max:255',
+            'waktu_kejadian'          => 'required|string|max:255',
+            'wilayah_waktu'           => 'required|string|in:WIB,WITA,WIT',
+            'lokasi'                  => 'required|string|max:255',
+            'provinsi_id'             => 'required|exists:provinsis,id',
+            'kabupaten_kota_id'       => 'required|exists:kabupaten_kotas,id',
+            'kecamatan_id'            => 'required|exists:kecamatans,id',
+            'kelurahan_id'            => 'required|exists:kelurahans,id',
+            'lintang'                 => 'nullable|numeric',
+            'bujur'                   => 'nullable|numeric',
+            'deskripsi'               => 'required|string',
+            'infrastruktur_terdampak' => 'required|string|max:255',
+            'kebutuhan_mendesak'      => 'nullable|string|max:255',
+            'fotos'                   => 'nullable|array',
+            'fotos.*'                 => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5MB each
+        ]);
+    
+        // status / detail_status / validasi / verifikasi intentionally left out of
+        // validation — they're not part of this form. Set a sensible default here
+        // if your DB column doesn't already default it.
+        $validated['status'] = 'pending';
+    
+        $laporan = LaporanMasyarakat::create($validated);
+    
+        if ($request->hasFile('fotos')) {
+            foreach ($request->file('fotos') as $foto) {
+                $path = $foto->store('laporan-fotos', 'public');
+    
+                Foto::create([
+                    'laporan_masyarakat_id' => $laporan->id,
+                    'file_path'  => $path,
+                ]);
+            }
+        }
+    
+        return redirect()->route('laporan.masuk-bencana')
+                        ->with('success', 'Laporan berhasil ditambahkan!');
+    }
+
     public function laporanMasukBencana(Request $request)
     {
         $laporans = LaporanMasyarakat::query()

@@ -18,6 +18,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::middleware('role:admin')->group(function () {
+        Route::get('/laporan/create', [DashboardController::class, 'create'])->name('laporan.create');
+        Route::post('/laporan', [DashboardController::class, 'store'])->name('laporan.store');
         Route::get('/', [DashboardController::class, 'laporanMasukBencana'])->name('laporan.masuk-bencana');
         Route::get('/laporan/{laporan}', [DashboardController::class, 'show'])->name('laporan.show');
         Route::delete('/laporan/{laporan}', [DashboardController::class, 'destroyLaporan'])->name('laporan.destroy');

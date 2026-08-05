@@ -9,16 +9,25 @@
         <span class="font-bold">Laporan Masuk Bencana</span>
     </div>
 
-    {{-- Main Container Card (Desain dari referensi Balai) --}}
+    {{-- Main Container Card --}}
     <div class="bg-[#F4F5F9] rounded-2xl p-8 shadow-sm">
         
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <div>
                 <h1 class="text-xl font-bold text-gray-900">Daftar Laporan Masuk</h1>
                 <p class="text-sm text-gray-600 mt-1">
                     Kelola dan pantau seluruh laporan kejadian bencana dari masyarakat.
                 </p>
             </div>
+
+            {{-- TOMBOL TAMBAH LAPORAN BARU --}}
+            <a href="{{ route('laporan.create') }}" 
+               class="inline-flex items-center gap-2 rounded-lg bg-[#161446] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#110e36] transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Tambah Laporan
+            </a>
         </div>
 
         {{-- Tabel Daftar Laporan --}}
