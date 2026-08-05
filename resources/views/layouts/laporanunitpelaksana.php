@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Masuk Bencana - SITABA</title>
+    <title>Laporan Penanganan Balai - SITABA</title>
     @vite('resources/css/app.css')
 </head>
 <body class="bg-[#161446]">
@@ -13,31 +13,16 @@
         <x-opps.sidebar :logo-url="asset('logositaba.png')" />
 
         {{-- Main content --}}
-        <main class="flex-1 p-8">
-
-        <x-opps.laporan-balai-show :laporan="$laporan" />
+        <main class="flex-1 min-w-0 bg-[#F4F5F9]">
+            
+            {{-- Seluruh UI (Header, Search, Filter, Tabs, Tabel) dipanggil dari komponen ini --}}
+            <x-opps.laporan-unit-pelaksana 
+                :bencanaTerkini="$bencanaTerkini" 
+                :laporanMasyarakat="$laporanMasyarakat" 
+            />
 
         </main>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('searchInput');
-            const tableBody = document.getElementById('laporanTableBody');
- 
-            if (!searchInput || !tableBody) return;
- 
-            searchInput.addEventListener('input', function () {
-                const query = searchInput.value.trim().toLowerCase();
-                const rows = tableBody.querySelectorAll('tr');
- 
-                rows.forEach(function (row) {
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(query) ? '' : 'none';
-                });
-            });
-        });
-    </script>
 
 </body>
 </html>

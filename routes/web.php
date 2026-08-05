@@ -9,7 +9,7 @@ use App\Http\Controllers\DashboardLaporanPelaksanaController;
 use App\Http\Controllers\DashboardPICBalai;
 
 
-Route::get('/', [AuthController::class, 'login'])->name('login');
+Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('login.authenticate');
 Route::get('/balai/login', [BalaiAuthController::class, 'login'])->name('balai.login');
 Route::post('/balai/login', [BalaiAuthController::class, 'authenticate'])->name('balai.login.authenticate');
@@ -18,13 +18,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::middleware('role:admin')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'laporanMasukBencana'])->name('laporan.masuk-bencana');
+        Route::get('/', [DashboardController::class, 'laporanMasukBencana'])->name('laporan.masuk-bencana');
         Route::get('/laporan/{laporan}', [DashboardController::class, 'show'])->name('laporan.show');
         Route::delete('/laporan/{laporan}', [DashboardController::class, 'destroyLaporan'])->name('laporan.destroy');
         Route::get('/laporan/{laporan}/edit', [DashboardController::class, 'edit'])->name('laporan.edit');
         Route::put('/laporan/{laporan}',[DashboardController::class, 'update'])->name('laporan.update');
         Route::get('/laporan/{id}/edit-lokasi', [DashboardController::class, 'editLokasi'])->name('laporan.edit-lokasi');
         Route::put('/laporan/{id}/update-lokasi', [DashboardController::class, 'updateLokasi'])->name('laporan.update-lokasi');
+        // Ajax routes for dynamic dropdowns
         Route::get('/ajax/kabupaten/{provinsi}', [DashboardController::class, 'getKabupaten']);
         Route::get('/ajax/kecamatan/{kabupaten}', [DashboardController::class, 'getKecamatan']);
         Route::get('/ajax/kelurahan/{kecamatan}', [DashboardController::class, 'getKelurahan']);

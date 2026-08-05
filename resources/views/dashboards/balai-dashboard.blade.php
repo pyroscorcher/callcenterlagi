@@ -12,8 +12,8 @@
 
         <x-balai.sidebarbalai :logo-url="asset('logositaba.png')" />
 
-        {{-- Main content --}}
-        <main class="flex-1 p-8">
+        {{-- Main content (ADDED min-w-0 HERE) --}}
+        <main class="flex-1 min-w-0 p-8">
 
             <div class="flex items-center justify-between mb-6 gap-4">
                 <h1 class="text-xl font-bold text-white">Laporan Penanganan Balai</h1>
@@ -55,7 +55,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-6 shadow-sm">
+            <div class="bg-white rounded-2xl p-8 shadow-sm">
 
                 {{-- Tab --}}
                 <div class="flex items-center gap-6 border-b border-gray-200 mb-4">
@@ -70,13 +70,13 @@
                 </div>
 
                 {{-- Isi tab: Bencana Terkini (status = ditangani) --}}
-                <div id="tab-bencana-terkini" class="tab-panel">
+                <div id="tab-bencana-terkini" class="tab-panel w-full">
                     <x-balai.laporan-table :type="'bencana-terkini'" :laporans="$bencanaTerkini" />
                     <div class="mt-4">{{ $bencanaTerkini->links() }}</div>
                 </div>
 
                 {{-- Isi tab: Laporan Masyarakat (status kosong / ditolak / ditutup) --}}
-                <div id="tab-laporan-masyarakat" class="tab-panel hidden">
+                <div id="tab-laporan-masyarakat" class="tab-panel hidden w-full">
                     <x-balai.laporan-table :type="'laporan-masyarakat'" :laporans="$laporanMasyarakat" />
                     <div class="mt-4">{{ $laporanMasyarakat->links() }}</div>
                 </div>
