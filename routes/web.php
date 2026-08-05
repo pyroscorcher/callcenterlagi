@@ -8,12 +8,11 @@ use App\Http\Controllers\BalaiController;
 use App\Http\Controllers\DashboardLaporanPelaksanaController;
 use App\Http\Controllers\DashboardPICBalai;
 
-Route::get('/', function () {
-    return view('welcome');
-});
 
-Route::get('/login', [AuthController::class, 'login'])->name('login');
+Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('login.authenticate');
+Route::get('/balai/login', [BalaiAuthController::class, 'login'])->name('balai.login');
+Route::post('/balai/login', [BalaiAuthController::class, 'authenticate'])->name('balai.login.authenticate');
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -47,9 +46,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/laporan/{laporan}/kirim-pic', [DashboardController::class, 'kirimPicNotifikasi'])->name('laporan.kirim-pic');
     });
 });
-
-Route::get('/balai/login', [BalaiAuthController::class, 'login'])->name('balai.login');
-Route::post('/balai/login', [BalaiAuthController::class, 'authenticate'])->name('balai.login.authenticate');
 
 Route::middleware('auth:balai')->group(function () {
     Route::post('/balai/logout', [BalaiAuthController::class, 'logout'])->name('balai.logout');

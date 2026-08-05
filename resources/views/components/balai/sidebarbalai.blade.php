@@ -42,11 +42,8 @@
                 {{ request()->routeIs('balai.data-pic-balai.*') ? 'bg-white/10 font-bold text-white' : 'hover:bg-white/5' }}">
             Data PIC Balai
         </a>
-    </nav>
 
-    {{-- Logout — pinned to the bottom via mt-auto on the flex column aside --}}
-    <div class="mt-auto px-4 pb-6">
-        <form method="POST" action="{{ route('logout') }}">
+        <form method="POST" action="{{ route('balai.logout') }}">
             @csrf
             <button type="submit"
                     class="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-white/90 text-sm hover:bg-white/5">
@@ -57,5 +54,5 @@
                 Logout
             </button>
         </form>
-    </div>
+    </nav>
 </aside>
