@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/laporan/{laporan}',[DashboardController::class, 'update'])->name('laporan.update');
         Route::get('/laporan/{id}/edit-lokasi', [DashboardController::class, 'editLokasi'])->name('laporan.edit-lokasi');
         Route::put('/laporan/{id}/update-lokasi', [DashboardController::class, 'updateLokasi'])->name('laporan.update-lokasi');
+        Route::post('/laporan/{id}/toggle-verifikasi', [DashboardController::class, 'toggleVerifikasi'])->name('laporan.toggle-verifikasi');
         // Ajax routes for dynamic dropdowns
         Route::get('/ajax/kabupaten/{provinsi}', [DashboardController::class, 'getKabupaten']);
         Route::get('/ajax/kecamatan/{kabupaten}', [DashboardController::class, 'getKecamatan']);

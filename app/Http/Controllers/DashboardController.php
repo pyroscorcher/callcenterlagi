@@ -53,7 +53,7 @@ class DashboardController extends Controller
             'kabupatenKota',
             'kecamatan',
             'kelurahan',
-            'balais', // <-- 1. Added 'balais' relationship here
+            'balais',
         ])->findOrFail($id);
 
         $provinsis = Provinsi::orderBy('nama')->get();
@@ -74,9 +74,8 @@ class DashboardController extends Controller
             ? Balai::whereHas('provinsis', function($q) use ($laporan) {
                 $q->where('provinsi_id', $laporan->provinsi_id);
             })->get()
-            : collect(); // <-- Safely returns empty collection if province isn't set yet
+            : collect();
             
-        // 2. Get an array of currently assigned Balai IDs for the Blade component
         $assignedBalais = $laporan->balais->pluck('id')->toArray();
         
         $recommendedBalaiIds = [];
@@ -103,16 +102,15 @@ class DashboardController extends Controller
     {
         $laporan = LaporanMasyarakat::with('fotos')->findOrFail($id);
 
-        // 1. Validasi Input
         $request->validate([
             'jenis_bencana' => 'required|string|max:255',
             'nama_bencana' => 'required|string|max:255',
             'waktu_kejadian' => 'required|string|max:255',
             'telepon' => 'required|string|max:50',
             'lokasi' => 'required|string',
-            'provinsi_id' => 'nullable|exists:provinsis,id', // Make sure provincial id is validated
-            'balais' => 'nullable|array',                     // <-- Validate balais array
-            'balais.*' => 'exists:balais,id',                 // <-- Ensure each selected balai exists
+            'provinsi_id' => 'nullable|exists:provinsis,id', 
+            'balais' => 'nullable|array',                     
+            'balais.*' => 'exists:balais,id',                 
             'kabupaten_kota_id' => 'nullable|exists:kabupaten_kotas,id',
             'kecamatan_id' => 'nullable|exists:kecamatans,id',
             'kelurahan_id' => 'nullable|exists:kelurahans,id',
@@ -127,30 +125,24 @@ class DashboardController extends Controller
             'fotos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // 2. Update Informasi Teks Laporan (Exclude balais and files from direct table update)
         $laporan->update($request->except(['fotos', 'hapus_foto', 'balais']));
 
-        // 2.1 Sync the multiple Balais via the many-to-many relationship
         if ($request->has('balais')) {
             $laporan->balais()->sync($request->balais);
         } else {
-            $laporan->balais()->detach(); // If all checkboxes are unchecked
+            $laporan->balais()->detach(); 
         }
 
-        // 3. Proses Penghapusan Foto yang dicentang oleh admin
         if ($request->has('hapus_foto')) {
             $fotosDihapus = Foto::whereIn('id', $request->hapus_foto)->get();
             foreach ($fotosDihapus as $foto) {
-                // Hapus file fisik dari storage disk public
                 if (Storage::disk('public')->exists($foto->file_path)) {
                     Storage::disk('public')->delete($foto->file_path);
                 }
-                // Hapus record dari database
                 $foto->delete();
             }
         }
 
-        // 4. Proses Penambahan Foto Baru (Jika ada yang di-upload)
         if ($request->hasFile('fotos')) {
             foreach ($request->file('fotos') as $file) {
                 $path = $file->store('laporan_fotos', 'public');
@@ -164,6 +156,7 @@ class DashboardController extends Controller
         return redirect()->route('laporan.show', $laporan->id)
                         ->with('success', 'Laporan berhasil diperbarui!');
     }
+
     public function getKabupaten($provinsi)
     {
         return KabupatenKota::where('provinsi_id', $provinsi)
@@ -187,30 +180,25 @@ class DashboardController extends Controller
 
     public function getBalaiByProvinsi(Request $request, $provinsi_id)
     {
-        // Fetch all Balais assigned to the given province
         $balais = Balai::whereIn('id', function($query) use ($provinsi_id) {
             $query->select('balai_id')
                 ->from('wilayah_balai')
                 ->where('provinsi_id', $provinsi_id);
         })->get();
 
-        // Check if the frontend passed a kelurahan_id
         $kelurahan_id = $request->query('kelurahan_id');
         
         if ($kelurahan_id) {
-            // Find which Balai IDs specifically have a match in wilayah_balai for this Kelurahan
             $recommendedIds = DB::table('wilayah_balai')
                 ->where('kelurahan_id', $kelurahan_id)
                 ->pluck('balai_id')
                 ->toArray();
                 
-            // Append a boolean flag so JS knows which to style and push to top
             $balais->map(function($balai) use ($recommendedIds) {
                 $balai->is_recommended = in_array($balai->id, $recommendedIds);
                 return $balai;
             });
         } else {
-            // If no kelurahan is requested, none are recommended
             $balais->map(function($balai) {
                 $balai->is_recommended = false;
                 return $balai;
@@ -222,11 +210,8 @@ class DashboardController extends Controller
 
     public function editLokasi($id)
     {
-        // Mengambil data spesifik berdasarkan ID
         $laporan = LaporanMasyarakat::findOrFail($id);
         
-        // Asumsi file pembungkusnya ada di resources/views/laporan/edit-lokasi.blade.php
-        // yang memanggil component @props di atas
         return view('layouts.laporanmasukbencana', [
             'component'=> "opps.laporan-table-leaflet",
             'laporan' => $laporan,
@@ -237,26 +222,22 @@ class DashboardController extends Controller
     {
         $laporan = LaporanMasyarakat::findOrFail($id);
 
-        // 1. Validasi nilai koordinat
         $request->validate([
             'lintang' => 'required|string|max:100',
             'bujur' => 'required|string|max:100',
         ]);
 
-        // 2. Update koordinat Lintang dan Bujur ke dalam tabel laporan_masyarakats
         $laporan->update([
             'lintang' => $request->lintang,
             'bujur' => $request->bujur,
         ]);
 
-        // 3. Mengarahkan kembali ke halaman detail laporan dengan notifikasi sukses
         return redirect()->route('laporan.show', $laporan->id)
                         ->with('success', 'Koordinat titik lokasi berhasil diperbarui!');
     }
 
     public function destroyLaporan(LaporanMasyarakat $laporan)
     {
-        // If a photo was attached, clean up the stored file too.
         if ($laporan->foto) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($laporan->foto);
         }
@@ -268,7 +249,6 @@ class DashboardController extends Controller
             ->with('status', 'Laporan berhasil dihapus.');
     }
 
-    // Notifikasi Whatsapp ke PIC balai
     public function kirimPicNotifikasi(LaporanMasyarakat $laporan, WhatsappNotifier $notifier)
     {
         $laporan->load('balais.pics');
@@ -316,6 +296,25 @@ class DashboardController extends Controller
             'message' => 'Pesan sedang dikirim ke ' . $kontakList->count() . ' PIC.',
             'blast_id' => $blastId,
             'total_pic' => $kontakList->count(),
+        ]);
+    }
+
+    // NEW: Method to toggle verifikasi via AJAX
+    public function toggleVerifikasi(Request $request, $id)
+    {
+        $laporan = LaporanMasyarakat::findOrFail($id);
+        
+        $request->validate([
+            'verifikasi' => 'required|boolean'
+        ]);
+
+        $laporan->update([
+            'verifikasi' => $request->verifikasi
+        ]);
+
+        return response()->json([
+            'message' => 'Status verifikasi laporan berhasil diperbarui.',
+            'verifikasi' => $laporan->verifikasi
         ]);
     }
 }

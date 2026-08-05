@@ -146,13 +146,9 @@
             
             @if(isset($laporan->balais) && $laporan->balais->count() > 0)
                 <div class="flex flex-col gap-4">
-                    {{-- Group the balais by the 'unor' column --}}
                     @foreach($laporan->balais->groupBy('unor') as $unor => $balaiGroup)
                         <div class="grid grid-cols-[220px_1fr] gap-4 items-start">
-                            {{-- Left Column: Unor Name --}}
                             <div class="text-gray-700">{{ $unor ?: 'Tidak Diketahui' }}</div>
-                            
-                            {{-- Right Column: List of Balai under this Unor --}}
                             <div class="text-gray-900 leading-relaxed space-y-1">
                                 @foreach($balaiGroup as $balai)
                                     <div>{{ $balai->nama_balai }}</div>
@@ -177,16 +173,16 @@
             </a>
 
             <div class="flex items-center gap-3">
-                <label class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-800 cursor-pointer hover:bg-gray-50 transition">
+                {{-- NEW: Verifikasi Checkbox (Loads initial state from database) --}}
+                <label class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-800 cursor-pointer hover:bg-gray-50 transition" id="checkboxWrapper">
                     Laporan Valid?
-                    <input type="checkbox" id="laporanValidCheckbox" class="w-4 h-4 rounded border-gray-400 text-[#161446] focus:ring-[#161446]">
+                    <input type="checkbox" id="laporanValidCheckbox" @checked($laporan->verifikasi) class="w-4 h-4 rounded border-gray-400 text-[#161446] focus:ring-[#161446]">
                 </label>
 
                 <button
                     type="button"
                     id="kirimPicButton"
-                    disabled
-                    class="rounded-lg bg-gray-300 px-5 py-2.5 text-gray-500 font-medium cursor-not-allowed transition-colors"
+                    class="rounded-lg px-5 py-2.5 font-medium transition-colors bg-gray-300 text-gray-500 cursor-not-allowed"
                 >
                     Kirim Pesan Kepada PIC
                 </button>
@@ -199,16 +195,62 @@
 document.addEventListener('DOMContentLoaded', function () {
     const checkbox = document.getElementById('laporanValidCheckbox');
     const button = document.getElementById('kirimPicButton');
+    const wrapper = document.getElementById('checkboxWrapper');
 
-    checkbox.addEventListener('change', function () {
-        button.disabled = !checkbox.checked;
-        button.classList.toggle('bg-gray-300', !checkbox.checked);
-        button.classList.toggle('text-gray-500', !checkbox.checked);
-        button.classList.toggle('cursor-not-allowed', !checkbox.checked);
-        button.classList.toggle('bg-[#161446]', checkbox.checked);
-        button.classList.toggle('text-white', checkbox.checked);
+    // Function to apply button styles based on checked state
+    function updateButtonUI(isChecked) {
+        button.disabled = !isChecked;
+        button.classList.toggle('bg-gray-300', !isChecked);
+        button.classList.toggle('text-gray-500', !isChecked);
+        button.classList.toggle('cursor-not-allowed', !isChecked);
+        button.classList.toggle('bg-[#161446]', isChecked);
+        button.classList.toggle('text-white', isChecked);
+    }
+
+    // Set initial button state based on the database verification value
+    updateButtonUI(checkbox.checked);
+
+    // NEW: Handle checkbox click (sends AJAX to update database verifikasi)
+    checkbox.addEventListener('change', async function () {
+        const isChecked = checkbox.checked;
+        
+        // Prevent spam clicking
+        checkbox.disabled = true;
+        wrapper.classList.add('opacity-50', 'cursor-wait');
+
+        try {
+            const response = await fetch('{{ route('laporan.toggle-verifikasi', $laporan->id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ verifikasi: isChecked })
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Gagal mengubah status verifikasi.');
+            }
+
+            // Sync successful, update UI
+            updateButtonUI(isChecked);
+
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+            // Revert checkbox if it failed
+            checkbox.checked = !isChecked; 
+            updateButtonUI(!isChecked);
+        } finally {
+            // Re-enable checkbox
+            checkbox.disabled = false;
+            wrapper.classList.remove('opacity-50', 'cursor-wait');
+        }
     });
 
+    // Handle Kirim Pesan PIC (unchanged)
     button.addEventListener('click', async function () {
         if (button.disabled) return;
 
@@ -238,7 +280,8 @@ document.addEventListener('DOMContentLoaded', function () {
             button.textContent = 'Pesan Terkirim';
             alert(data.message);
         } catch (err) {
-            console.error(err); alert(err.message)
+            console.error(err); 
+            alert(err.message);
             button.disabled = false;
             button.textContent = originalText;
         }

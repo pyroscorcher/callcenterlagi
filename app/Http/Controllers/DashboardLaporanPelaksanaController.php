@@ -9,9 +9,10 @@ class DashboardLaporanPelaksanaController extends Controller
 {
     public function LPB(Request $request)
     {
-        // 1. Laporan yang sedang "ditangani"
+        // 1. Laporan yang sedang "ditangani" DAN sudah diverifikasi
         $bencanaTerkini = LaporanMasyarakat::query()
             ->where('status', 'ditangani')
+            ->where('verifikasi', true) // <-- Filter Laporan Valid/Terverifikasi
             ->when($request->search, function ($query, $search) {
                 $query->where('lokasi', 'like', "%{$search}%")
                     ->orWhere('alamat', 'like', "%{$search}%")
@@ -23,8 +24,9 @@ class DashboardLaporanPelaksanaController extends Controller
             ->paginate(15, ['*'], 'bencana_terkini_page')
             ->withQueryString();
 
-        // 2. Semua Laporan Masuk (Tanpa filter status)
+        // 2. Semua Laporan Masuk DAN sudah diverifikasi
         $laporanMasyarakat = LaporanMasyarakat::query()
+            ->where('verifikasi', true) // <-- Filter Laporan Valid/Terverifikasi
             ->when($request->search, function ($query, $search) {
                 $query->where('lokasi', 'like', "%{$search}%")
                     ->orWhere('alamat', 'like', "%{$search}%")

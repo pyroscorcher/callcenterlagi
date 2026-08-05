@@ -30,6 +30,7 @@ class LaporanMasyarakat extends Model
         'detail_status',
         'kebutuhan_mendesak',
         'validasi',
+        'verifikasi',
     ];
 
 
