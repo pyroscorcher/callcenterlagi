@@ -3,20 +3,20 @@
     'laporanMasyarakat' => null,
 ])
 
-<div class="bg-[#161446] max-w-6xl mx-auto px-8 py-8 min-w-0">
+<div class="bg-[#161446] max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-8 min-w-0">
 
     {{-- Main Container Card --}}
-    <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+    <div class="bg-white rounded-2xl p-4 sm:p-8 shadow-sm border border-gray-100">
         
         {{-- Header Area: Title & Actions (Search, Filter, Export) --}}
-        <div class="flex flex-col xl:flex-row xl:items-center justify-between mb-8 gap-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4 lg:gap-6">
             <div>
                 <h1 class="text-xl font-bold text-gray-900">Laporan Bencana Unit Pelaksana</h1>
             </div>
             
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full lg:w-auto">
                 {{-- Search Input --}}
-                <div class="relative w-full sm:w-auto min-w-[250px]">
+                <div class="relative w-full sm:w-auto min-w-[250px] flex-1">
                     <input type="text" id="searchInput" placeholder="Cari Laporan...."
                            class="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-[#161446] focus:bg-white transition-colors" />
                     <svg class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,26 +24,28 @@
                     </svg>
                 </div>
 
-                {{-- Filter Button --}}
-                <button type="button" class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white text-gray-700 px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors">
-                    Filter
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 12h12M10 20h4" />
-                    </svg>
-                </button>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    {{-- Filter Button --}}
+                    <button type="button" class="flex-1 sm:flex-none justify-center flex items-center gap-2 rounded-lg border border-gray-300 bg-white text-gray-700 px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors">
+                        Filter
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 12h12M10 20h4" />
+                        </svg>
+                    </button>
 
-                {{-- Export Button --}}
-                <a href="#" class="flex items-center gap-2 rounded-lg bg-[#161446] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#110e36] transition-colors shadow-sm">
-                    Export
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
-                    </svg>
-                </a>
+                    {{-- Export Button --}}
+                    <a href="#" class="flex-1 sm:flex-none justify-center flex items-center gap-2 rounded-lg bg-[#161446] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#110e36] transition-colors shadow-sm">
+                        Export
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
+                        </svg>
+                    </a>
+                </div>
             </div>
         </div>
 
         {{-- Tabs Navigation --}}
-        <div class="flex items-center gap-6 border-b border-gray-200 mb-6">
+        <div class="flex items-center gap-6 border-b border-gray-200 mb-6 overflow-x-auto whitespace-wrap hide-scrollbar">
             <button type="button" data-tab="bencana-terkini"
                     class="tab-btn pb-3 text-sm font-semibold border-b-2 border-[#161446] text-[#161446] transition-colors">
                 Bencana Terkini
@@ -93,7 +95,7 @@
                 </div>
                 <div class="mt-4">{{ $bencanaTerkini->links() }}</div>
             @else
-                <div class="bg-gray-50 rounded-xl border border-dashed border-gray-300 p-10 flex flex-col items-center justify-center text-center">
+                <div class="bg-gray-50 rounded-xl border border-dashed border-gray-300 p-8 sm:p-10 flex flex-col items-center justify-center text-center">
                     <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     <p class="text-gray-500 font-medium">Belum ada laporan terkini yang sedang ditangani dan terverifikasi.</p>
                 </div>
@@ -104,7 +106,7 @@
         <div id="tab-laporan-masyarakat" class="tab-panel w-full hidden">
             @if($laporanMasyarakat && $laporanMasyarakat->count() > 0)
                 <div class="w-full overflow-x-auto rounded-lg border border-gray-200">
-                    <table class="min-w-full text-left text-sm whitespace-nowrap">
+                    <table class="min-w-full text-left text-sm whitespace-wrap">
                         <thead class="bg-[#161446] text-white">
                             <tr>
                                 <th class="px-6 py-4 font-medium">Waktu Pelaporan</th>
@@ -150,7 +152,7 @@
                 </div>
                 <div class="mt-4">{{ $laporanMasyarakat->links() }}</div>
             @else
-                <div class="bg-gray-50 rounded-xl border border-dashed border-gray-300 p-10 flex flex-col items-center justify-center text-center">
+                <div class="bg-gray-50 rounded-xl border border-dashed border-gray-300 p-8 sm:p-10 flex flex-col items-center justify-center text-center">
                     <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     <p class="text-gray-500 font-medium">Belum ada laporan bencana yang terverifikasi.</p>
                 </div>
@@ -160,15 +162,24 @@
     </div>
 </div>
 
+<style>
+/* CSS Tambahan agar menu tab bisa di-scroll tanpa memunculkan scrollbar yang jelek di HP */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const tabButtons = document.querySelectorAll('.tab-btn');
         const tabPanels = document.querySelectorAll('.tab-panel');
 
-        // 1. Ambil tab terakhir yang dibuka dari Session Storage (default: bencana-terkini)
         let activeTab = sessionStorage.getItem('activeTab_Pelaksana') || 'bencana-terkini';
 
-        // 2. Cek URL Parameter (Jika user baru saja menekan tombol pagination)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('laporan_masyarakat_page')) {
             activeTab = 'laporan-masyarakat';
@@ -176,41 +187,34 @@
             activeTab = 'bencana-terkini';
         }
 
-        // Fungsi untuk mengubah tab
         function switchTab(target) {
-            // Reset semua tombol tab
             tabButtons.forEach(function (b) {
                 b.classList.remove('border-[#161446]', 'text-[#161446]', 'font-semibold');
                 b.classList.add('border-transparent', 'text-gray-500', 'font-medium');
             });
             
-            // Highlight tombol tab yang aktif
             const activeBtn = document.querySelector(`.tab-btn[data-tab="${target}"]`);
             if (activeBtn) {
                 activeBtn.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
                 activeBtn.classList.add('border-[#161446]', 'text-[#161446]', 'font-semibold');
             }
 
-            // Sembunyikan semua panel, lalu tampilkan yang sesuai
             tabPanels.forEach(function (panel) {
                 panel.classList.toggle('hidden', panel.id !== 'tab-' + target);
             });
 
-            // Simpan status tab ke Session Storage
             sessionStorage.setItem('activeTab_Pelaksana', target);
         }
 
-        // 3. Jalankan fungsi saat halaman pertama kali dimuat
         switchTab(activeTab);
 
-        // 4. Tambahkan event listener untuk klik tab secara manual
         tabButtons.forEach(function (btn) {
             btn.addEventListener('click', function () {
                 switchTab(btn.dataset.tab);
             });
         });
 
-        // Search Filtering Logic (Filters currently visible table)
+        // Search Filtering Logic
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', function () {
@@ -226,4 +230,4 @@
             });
         }
     });
-</script>   
+</script>

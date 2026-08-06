@@ -2,7 +2,7 @@
     'laporans' => [],
 ])
 
-<div class="max-w-6xl mx-auto px-8 py-8">
+<div class="max-w-6xl mx-auto px-4 py-4 md:px-8 md:py-8">
 
     {{-- Breadcrumb --}}
     <div class="mb-6 text-white">
@@ -10,11 +10,11 @@
     </div>
 
     {{-- Main Container Card --}}
-    <div class="bg-[#F4F5F9] rounded-2xl p-8 shadow-sm">
+    <div class="bg-[#F4F5F9] rounded-2xl p-4 md:p-8 shadow-sm">
         
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
-                <h1 class="text-xl font-bold text-gray-900">Daftar Laporan Masuk</h1>
+                <h1 class="text-lg md:text-xl font-bold text-gray-900">Daftar Laporan Masuk</h1>
                 <p class="text-sm text-gray-600 mt-1">
                     Kelola dan pantau seluruh laporan kejadian bencana dari masyarakat.
                 </p>
@@ -22,7 +22,7 @@
 
             {{-- TOMBOL TAMBAH LAPORAN BARU --}}
             <a href="{{ route('laporan.create') }}" 
-               class="inline-flex items-center gap-2 rounded-lg bg-[#161446] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#110e36] transition shadow-sm">
+               class="w-full md:w-auto justify-center inline-flex items-center gap-2 rounded-lg bg-[#161446] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#110e36] transition shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -32,9 +32,11 @@
 
         {{-- Tabel Daftar Laporan --}}
         @if($laporans && $laporans->count() > 0)
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+
+            {{-- Desktop Table --}}
+            <div class="hidden md:block bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full text-left text-sm whitespace-nowrap">
+                    <table class="min-w-full text-left text-sm whitespace-wrap">
                         <thead class="bg-[#161446] text-white">
                             <tr>
                                 <th scope="col" class="px-6 py-4 font-medium">Waktu Pelaporan</th>
@@ -76,7 +78,7 @@
 
                                             <form action="{{ route('laporan.destroy', $laporan->id) }}"
                                                   method="POST"
-                                                  class="delete-form"
+                                                  class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
 
@@ -94,10 +96,77 @@
                     </table>
                 </div>
             </div>
+
+            {{-- Mobile Cards --}}
+            <div class="md:hidden space-y-4">
+                @foreach($laporans as $laporan)
+
+                <div class="bg-white rounded-xl shadow p-4 border laporan-card">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">
+                                {{ $laporan->nama_bencana }}
+                            </h3>
+
+                            <p class="text-sm text-gray-500">
+                                {{ $laporan->jenis_bencana }}
+                            </p>
+                        </div>
+
+                        <span class="text-xs text-gray-500">
+                            {{ $laporan->created_at?->format('d/m/Y') }}
+                        </span>
+                    </div>
+
+                    <div class="mt-4 space-y-2 text-sm">
+                        <div>
+                            <span class="font-medium">Pelapor</span><br>
+                            {{ $laporan->pelapor }}
+                        </div>
+
+                        <div>
+                            <span class="font-medium">Lokasi</span><br>
+                            {{ $laporan->lokasi }}
+                        </div>
+
+                        <div>
+                            <span class="font-medium">Waktu Kejadian</span><br>
+                            {{ $laporan->waktu_kejadian }}
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex gap-2">
+                        <a
+                            href="{{ route('laporan.show', $laporan->id) }}"
+                            class="flex-1 rounded-lg bg-blue-600 py-2 text-center text-white">
+                            Detail
+                        </a>
+
+                        <form
+                            action="{{ route('laporan.destroy', $laporan->id) }}"
+                            method="POST"
+                            class="delete-form flex-1">
+
+                            @csrf
+                            @method('DELETE')
+
+                            <button
+                                class="w-full rounded-lg bg-red-600 py-2 text-white">
+                                Hapus
+                            </button>
+
+                        </form>
+                    </div>
+
+                </div>
+
+                @endforeach
+            </div>
+
         @else
             {{-- Empty State jika belum ada laporan --}}
-            <div class="bg-white rounded-xl border border-dashed border-gray-300 p-10 flex flex-col items-center justify-center text-center">
-                <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white rounded-xl border border-dashed border-gray-300 p-6 md:p-10 flex flex-col items-center justify-center text-center">
+                <svg class="w-10 h-10 md:w-12 md:h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <p class="text-gray-500 font-medium">Belum ada laporan bencana yang masuk.</p>
