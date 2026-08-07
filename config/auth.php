@@ -42,11 +42,6 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-
-        'balai' => [
-            'driver' => 'session',
-            'provider' => 'balais',
-        ],
     ],
 
     /*
@@ -70,11 +65,6 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
-        ],
-
-        'balais' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Balai::class,
         ],
     ],
 

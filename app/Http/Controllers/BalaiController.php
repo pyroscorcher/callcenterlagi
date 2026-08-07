@@ -11,33 +11,6 @@ use App\Models\Pic;
 
 class BalaiController extends Controller
 {
-    // public function balaiDashboard(Request $request)
-    // {
-    //     $laporans = LaporanMasyarakat::query()
-    //         ->when($request->search, function ($query, $search) {
-    //             $query->where('lokasi', 'like', "%{$search}%")
-    //                 ->orWhere('alamat', 'like', "%{$search}%")
-    //                 ->orWhere('jenis_bencana', 'like', "%{$search}%")
-    //                 ->orWhere('nama_bencana', 'like', "%{$search}%")
-    //                 ->orWhere('pelapor', 'like', "%{$search}%");
-    //         })
-    //         ->latest()
-    //         ->paginate(15)
-    //         ->withQueryString();
-
-    //     return view('dashboards.balai-dashboard', [
-    //         'laporans' => $laporans,
-    //     ]);
-    // }
-
-    // public function laporanPenanganan()
-    // {
-    //     $laporanMasyarakat = LaporanMasyarakat::latest()->paginate(10);
-
-    //     $bencanaTerkini = collect(); // TODO: ganti dengan query tabel "bencana terkini" yang sebenarnya
-
-    //     return view('dashboards.penanganan-balai', compact('bencanaTerkini', 'laporanMasyarakat'));
-    // }
 
     public function balaiDashboard(Request $request)
     {
@@ -152,23 +125,17 @@ public function laporanPenangananCreate()
 
     public function dataPicBalaiShow()
     {
-    $balai = Auth::guard('balai')->user();
+        $balai = Auth::user()->balai;
 
-    return view('dashboards.data-pic-balai-show', compact('balai'));
+        return view('dashboards.data-pic-balai-show', compact('balai'));
     }
-
     public function editProfile()
     {
-        $balai = Auth::guard('balai')->user()->load('pics');
-
+        $balai = Auth::user()->balai()->with('pics')->first();
         $provinsis = Provinsi::orderBy('nama')->get();
 
-        return view(
-            'dashboards.data-pic-balai-edit',
-            compact('balai', 'provinsis')
-        );
+        return view('dashboards.data-pic-balai-edit', compact('balai', 'provinsis'));
     }
-
     public function updateProfile(Request $request)
     {
     $balai = Auth::guard('balai')->user();

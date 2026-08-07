@@ -43,7 +43,7 @@
             Data PIC Balai
         </a>
 
-        <form method="POST" action="{{ route('balai.logout') }}">
+        <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit"
                     class="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-white/90 text-sm hover:bg-white/5">

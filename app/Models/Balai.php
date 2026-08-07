@@ -2,37 +2,29 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
 
-class Balai extends Authenticatable
+class Balai extends Model
 {
-    use Notifiable;
-
     protected $fillable = [
-        'username', 'password', 'nama_balai', 'unker', 'unor', 
+        'nama_balai', 'unker', 'unor',
         'provinsi', 'pulau', 'kepala', 'kontak',
     ];
 
-    protected $hidden = ['password', 'remember_token'];
-
-    protected function casts(): array
-    {
-        return ['password' => 'hashed'];
-    }
-
-    // RELASI MANY-TO-MANY KE PROVINSI
     public function provinsis()
     {
         return $this->belongsToMany(Provinsi::class, 'wilayah_balai', 'balai_id', 'provinsi_id');
     }
+
     public function laporanMasyarakats()
     {
         return $this->belongsToMany(LaporanMasyarakat::class, 'laporan_balai')->withTimestamps();
     }
 
+    // Kept the same method name so anything still calling $balai->pics doesn't break —
+    // it now points at users with role=pic instead of the old pics table.
     public function pics()
     {
-        return $this->hasMany(Pic::class);
+        return $this->hasMany(User::class)->where('role', 'pic');
     }
 }

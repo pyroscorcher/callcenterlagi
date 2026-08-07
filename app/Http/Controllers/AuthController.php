@@ -28,7 +28,12 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('laporan.masuk-bencana'));
+        $destination = match (Auth::user()->role) {
+            'pic'   => route('balai.dashboard'),
+            default => route('laporan.masuk-bencana'),
+        };
+
+        return redirect()->intended($destination);
     }
 
     public function logout(Request $request)
