@@ -19,7 +19,7 @@
         
         <div class="mb-6">
             <h1 class="text-xl font-bold text-gray-900">Formulir Edit Data Balai</h1>
-            <p class="text-sm text-gray-600 mt-1">Lakukan perubahan pada informasi akun, organisasi, wilayah, serta kontak penanggung jawab balai.</p>
+            <p class="text-sm text-gray-600 mt-1">Lakukan perubahan pada informasi organisasi, wilayah, kontak penanggung jawab, serta akun PIC balai.</p>
         </div>
 
         {{-- Form POST ke Route Update dengan @method('PUT') --}}
@@ -29,37 +29,20 @@
 
             <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
                 
-                {{-- Bagian Akun & Organisasi --}}
+                {{-- Bagian Organisasi --}}
                 <div>
-                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Informasi Akun & Organisasi</h2>
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Informasi Organisasi</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         
-                        <div>
+                        <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Balai</label>
                             <input type="text" name="nama_balai" value="{{ old('nama_balai', $balai->nama_balai) }}" required 
                                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
                             @error('nama_balai') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Username Login</label>
-                            <input type="text" name="username" value="{{ old('username', $balai->username) }}" required 
-                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
-                            @error('username') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru <span class="text-gray-400 font-normal">(Kosongkan jika tidak ingin mengubah password)</span></label>
-                            <input type="password" name="password" placeholder="Isi hanya jika ingin mengubah password lama..."
-                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
-                            @error('password') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
-                        </div>
-
-                        {{-- <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Unit Kerja (Unker)</label>
-                            <input type="text" name="unker" value="{{ old('unker', $balai->unker) }}" 
-                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
-                        </div> --}}
+                        {{-- Balai no longer has its own login. Username/password removed here —
+                             each PIC now has their own login, managed in the PIC list below. --}}
 
                         {{-- Radio Button Dinamis Unor --}}
                         <div class="md:col-span-2">
@@ -100,9 +83,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Provinsi (Maks 2)</label>
                             
                             @php
-                                // Convert comma-separated string from DB back into an array for the checkboxes
                                 $selectedProvinsis = old('provinsi', explode(', ', $balai->provinsi ?? ''));
-                                // Clean up empty values in case it was null
                                 $selectedProvinsis = array_filter(array_map('trim', $selectedProvinsis));
                             @endphp
 
@@ -138,7 +119,6 @@
                             </label>
 
                             @if(empty($balai->pulau))
-                                {{-- Render Dropdown jika belum ada data --}}
                                 <select name="pulau" required
                                         class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none">
                                     <option value="">-- Pilih Pulau --</option>
@@ -153,7 +133,6 @@
                                 </select>
                                 @error('pulau') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                             @else
-                                {{-- Render Input Disabled & Hidden Input jika data sudah ada --}}
                                 <input type="text" value="{{ $balai->pulau }}" disabled 
                                        class="w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-gray-500 cursor-not-allowed select-none" />
                                 
@@ -177,18 +156,29 @@
 
                 <hr class="border-gray-200">
 
-                {{-- Bagian Daftar PIC (Banyak PIC) --}}
+                {{-- Bagian Daftar PIC — now each PIC is a full login account (users table, role=pic) --}}
                 <div>
-                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Daftar Person In Charge (PIC) Tambahan</h2>
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Daftar Person In Charge (PIC)</h2>
+                    <p class="text-xs text-gray-500 mb-4">Setiap PIC memiliki akun login sendiri. Kosongkan kolom password jika tidak ingin mengubah password PIC yang sudah ada.</p>
                     
                     <div id="pic-container" class="space-y-4">
                         @php
-                            $pics = old('pics', $balai->pics->toArray());
-                            if(empty($pics)) { $pics = [['id' => '', 'nama' => '', 'kontak' => '']]; }
+                            // $balai->pics now returns Users where role=pic
+                            $pics = old('pics', $balai->pics->map(function ($pic) {
+                                return [
+                                    'id' => $pic->id,
+                                    'nama' => $pic->name,
+                                    'username' => $pic->username,
+                                    'kontak' => $pic->kontak,
+                                ];
+                            })->toArray());
+                            if (empty($pics)) {
+                                $pics = [['id' => '', 'nama' => '', 'username' => '', 'kontak' => '']];
+                            }
                         @endphp
 
                         @foreach($pics as $index => $pic)
-                            <div class="pic-row grid grid-cols-[1fr_1fr_auto] gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200 relative">
+                            <div class="pic-row grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200 relative">
                                 <input type="hidden" name="pics[{{ $index }}][id]" value="{{ $pic['id'] ?? '' }}">
                                 
                                 <div>
@@ -197,7 +187,17 @@
                                            class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp PIC</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                    <input type="text" name="pics[{{ $index }}][username]" value="{{ $pic['username'] ?? '' }}" required
+                                           class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                    <input type="password" name="pics[{{ $index }}][password]" placeholder="{{ !empty($pic['id']) ? 'Kosongkan jika tidak diubah' : 'Wajib untuk PIC baru' }}"
+                                           class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp</label>
                                     <input type="text" name="pics[{{ $index }}][kontak]" value="{{ $pic['kontak'] ?? '' }}" required
                                            class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
                                 </div>
@@ -241,13 +241,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('pic-container');
     const addButton = document.getElementById('add-pic');
     
-    // Counter to ensure unique array indexes
     let picIndex = {{ count($pics) }};
 
-    // Add new row
     addButton.addEventListener('click', function() {
         const row = document.createElement('div');
-        row.className = 'pic-row grid grid-cols-[1fr_1fr_auto] gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200 relative';
+        row.className = 'pic-row grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200 relative';
         row.innerHTML = `
             <input type="hidden" name="pics[${picIndex}][id]" value="">
             <div>
@@ -256,7 +254,17 @@ document.addEventListener('DOMContentLoaded', function() {
                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp PIC</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <input type="text" name="pics[${picIndex}][username]" required
+                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" name="pics[${picIndex}][password]" placeholder="Wajib untuk PIC baru"
+                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kontak WhatsApp</label>
                 <input type="text" name="pics[${picIndex}][kontak]" required
                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#161446] focus:outline-none" />
             </div>
@@ -270,7 +278,6 @@ document.addEventListener('DOMContentLoaded', function() {
         picIndex++;
     });
 
-    // Remove row (Event Delegation)
     container.addEventListener('click', function(e) {
         if (e.target.closest('.remove-pic')) {
             const rows = container.querySelectorAll('.pic-row');
@@ -290,20 +297,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const provText = document.getElementById('provinsi_dropdown_text');
     const provCheckboxes = document.querySelectorAll('.provinsi-checkbox');
 
-    // Toggle dropdown
     provTrigger.addEventListener('click', function(e) {
         e.stopPropagation();
         provContent.classList.toggle('hidden');
     });
 
-    // Close when clicking outside
     document.addEventListener('click', function(e) {
         if (!provTrigger.contains(e.target) && !provContent.contains(e.target)) {
             provContent.classList.add('hidden');
         }
     });
 
-    // Handle Checkbox Changes & Max 2 Logic
     function updateProvinsiText() {
         const checkedBoxes = Array.from(document.querySelectorAll('.provinsi-checkbox:checked'));
         if (checkedBoxes.length === 0) {
@@ -318,13 +322,13 @@ document.addEventListener('DOMContentLoaded', function() {
         cb.addEventListener('change', function() {
             const checkedCount = document.querySelectorAll('.provinsi-checkbox:checked').length;
             if (checkedCount > 2) {
-                this.checked = false; // Undo the check
+                this.checked = false;
                 alert('Maksimal hanya dapat memilih 2 Provinsi untuk satu Balai.');
             }
             updateProvinsiText();
         });
     });
 
-    updateProvinsiText(); // Run once on load
+    updateProvinsiText();
 });
 </script>
