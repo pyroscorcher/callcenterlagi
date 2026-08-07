@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\LaporanMasyarakat;
 use App\Models\Balai;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use App\Models\Provinsi;
-use App\Models\Pic;
 
 class BalaiController extends Controller
 {
@@ -87,10 +89,10 @@ class BalaiController extends Controller
     ]);
     }
 
-public function laporanPenangananCreate()
-{
-    return view('dashboards.form-laporan-bencana', ['laporan' => null]);
-}
+    public function laporanPenangananCreate()
+    {
+        return view('dashboards.form-laporan-bencana', ['laporan' => null]);
+    }
 
     public function laporanPenangananShow($id)
     {
@@ -129,85 +131,121 @@ public function laporanPenangananCreate()
 
         return view('dashboards.data-pic-balai-show', compact('balai'));
     }
+
     public function editProfile()
     {
         $balai = Auth::user()->balai()->with('pics')->first();
         $provinsis = Provinsi::orderBy('nama')->get();
 
-        return view('dashboards.data-pic-balai-edit', compact('balai', 'provinsis'));
+        return view('dashboards.data-pic-balai-edit', [
+            'balai' => $balai,
+            'provinsis' => $provinsis,
+            'authUserId' => Auth::id(),
+        ]);
     }
+
     public function updateProfile(Request $request)
     {
-    $balai = Auth::guard('balai')->user();
+        $balai = Auth::user()->balai;
 
-    $request->validate([
-        'nama_balai' => 'required|string|max:255',
-        'username'   => 'required|string|max:255|unique:balais,username,' . $balai->id,
-        'password'   => 'nullable|min:6',
+        if (! $balai) {
+            abort(404, 'Balai tidak ditemukan untuk akun ini.');
+        }
 
-        'unor'       => 'required|string',
-        'provinsi'   => 'required|string',
-        'pulau'      => 'required|string',
-        'kepala'     => 'nullable|string|max:255',
-        'kontak'     => 'nullable|string|max:30',
-        'pics' => 'required|array|min:1',
-        'pics.*.nama' => 'required|string|max:255',
-        'pics.*.kontak' => 'required|string|max:30',
-    ]);
+        $validated = $request->validate([
+            'nama_balai' => 'required|string|max:255',
+            'unor'       => 'required|string',
+            'provinsi'   => 'required|array|max:2',
+            'provinsi.*' => 'string|max:255',
+            'pulau'      => 'required|string',
+            'kepala'     => 'nullable|string|max:255',
+            'kontak'     => 'nullable|string|max:30',
 
-        $balai->nama_balai = $request->nama_balai;
-        $balai->username   = $request->username;
-        $balai->unor       = $request->unor;
-        $balai->provinsi   = $request->provinsi;
-        $balai->pulau      = $request->pulau;
-        $balai->kepala     = $request->kepala;
-        $balai->kontak     = $request->kontak;
+            // Balai no longer has its own login — every PIC below is a full account.
+            'pics'            => 'required|array|min:1',
+            'pics.*.id'       => 'nullable|integer',
+            'pics.*.nama'     => 'required|string|max:255',
+            'pics.*.username' => 'required|string|max:255',
+            'pics.*.password' => 'nullable|string|min:6',
+            'pics.*.kontak'   => 'required|string|max:30',
+        ]);
 
-    if ($request->filled('password')) {
-        $balai->password = Hash::make($request->password);
-    }
+        // Manual uniqueness + "password required for new PICs" checks — array-wildcard
+        // unique/required_if rules can't express "except this row's own id".
+        $usernamesSeen = [];
+        foreach ($request->pics as $index => $picData) {
+            $username = $picData['username'];
+            $picId    = $picData['id'] ?? null;
 
-    $balai->save();
-
-    $submittedIds = [];
-
-    foreach ($request->pics as $picData) {
-
-        // Jika PIC lama
-        if (!empty($picData['id'])) {
-
-            $pic = $balai->pics()->find($picData['id']);
-
-            if ($pic) {
-
-                $pic->update([
-                    'nama' => $picData['nama'],
-                    'kontak' => $picData['kontak'],
+            if (isset($usernamesSeen[$username])) {
+                throw ValidationException::withMessages([
+                    "pics.{$index}.username" => 'Username PIC tidak boleh sama satu sama lain.',
                 ]);
+            }
+            $usernamesSeen[$username] = true;
 
-                $submittedIds[] = $pic->id;
+            $conflict = User::where('username', $username)
+                ->when($picId, fn ($q) => $q->where('id', '!=', $picId))
+                ->exists();
+
+            if ($conflict) {
+                throw ValidationException::withMessages([
+                    "pics.{$index}.username" => "Username \"{$username}\" sudah digunakan.",
+                ]);
             }
 
-        } else {
-
-            // Jika PIC baru
-            $pic = $balai->pics()->create([
-                'nama' => $picData['nama'],
-                'kontak' => $picData['kontak'],
-            ]);
-
-            $submittedIds[] = $pic->id;
+            if (empty($picId) && empty($picData['password'] ?? null)) {
+                throw ValidationException::withMessages([
+                    "pics.{$index}.password" => 'Password wajib diisi untuk PIC baru.',
+                ]);
+            }
         }
+
+        // Guard: the currently logged-in PIC can't be removed from their own submission —
+        // otherwise they'd delete their own account mid-request while still authenticated.
+        $submittedIds = collect($request->pics)->pluck('id')->filter()->map(fn ($id) => (int) $id)->toArray();
+        if (! in_array(Auth::id(), $submittedIds, true)) {
+            throw ValidationException::withMessages([
+                'pics' => 'Anda tidak dapat menghapus akun Anda sendiri dari daftar PIC.',
+            ]);
+        }
+
+        $balai->update([
+            'nama_balai' => $validated['nama_balai'],
+            'unor'       => $validated['unor'],
+            'provinsi'   => implode(', ', $validated['provinsi']),
+            'pulau'      => $validated['pulau'],
+            'kepala'     => $validated['kepala'] ?? null,
+            'kontak'     => $validated['kontak'] ?? null,
+        ]);
+
+        User::where('balai_id', $balai->id)
+            ->where('role', 'pic')
+            ->whereNotIn('id', $submittedIds ?: [0])
+            ->delete();
+
+        foreach ($request->pics as $picData) {
+            $attributes = [
+                'name'     => $picData['nama'],
+                'username' => $picData['username'],
+                'kontak'   => $picData['kontak'],
+                'role'     => 'pic',
+                'balai_id' => $balai->id,
+            ];
+
+            if (!empty($picData['password'])) {
+                $attributes['password'] = Hash::make($picData['password']);
+            }
+
+            User::updateOrCreate(
+                ['id' => $picData['id'] ?? null],
+                $attributes
+            );
+        }
+
+        return redirect()
+            ->route('balai.data-pic-balai.show')
+            ->with('success', 'Data balai berhasil diperbarui.');
     }
-    
-    $balai->pics()
-        ->whereNotIn('id', $submittedIds)
-        ->delete();
-
-    return redirect()
-        ->route('balai.data-pic-balai.show', $balai->id)
-        ->with('success', 'Data balai berhasil diperbarui.');
-}
-
 
 }
