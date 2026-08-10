@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('penanganan_permanen', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('tanggal');
+            $table->date('tanggal');
             $table->string('kewenangan');
-            $table->foreignId('balai_id')->constrained('balais')->nullOnDelete();
+            $table->foreignId('balai_id')->nullable()->constrained('balais')->nullOnDelete(); 
             $table->string('keterangan');
         });
 
@@ -36,6 +36,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('penanganan_permanen_foto');
         Schema::dropIfExists('penanganan_permanen');
     }
 };
