@@ -91,13 +91,93 @@ class BalaiController extends Controller
 
     public function laporanPenangananCreate()
     {
-        return view('dashboards.form-laporan-bencana', ['laporan' => null]);
+        return view('dashboards.form-laporan-bencana', [
+            'mode' => 'create',
+            'laporan' => null,
+        ]);
+    }
+
+    // BARU — tujuan tombol "Submit Data" di form mode create.
+    public function laporanPenangananStore(Request $request)
+    {
+        $validated = $request->validate([
+            'jenis_bencana' => 'nullable|string',
+            'nama_bencana' => 'nullable|string',
+            'waktu_kejadian' => 'nullable|string',
+            'wilayah_waktu' => 'nullable|in:WIB,WITA,WIT',
+            'lokasi' => 'nullable|string',
+            'lintang' => 'nullable|numeric',
+            'bujur' => 'nullable|numeric',
+            'deskripsi' => 'nullable|string',
+            'dampak_bencana' => 'nullable|string',
+            'infrastruktur_terdampak' => 'nullable|string',
+            'kebutuhan_mendesak' => 'nullable|string',
+        ]);
+
+        $laporan = LaporanMasyarakat::create($validated + [
+            'status' => 'ditangani',
+        ]);
+
+        // TODO: pastikan dulu nama tabel pivot yang benar (laporan_balai vs
+        // balai_laporan — Balai::laporanMasyarakats() dan LaporanMasyarakat::balais()
+        // sekarang nunjuk ke nama tabel yang beda) sebelum baris ini dipakai.
+        Auth::user()->balai->laporanMasyarakats()->attach($laporan->id);
+
+        return redirect()
+            ->route('balai.laporan-penanganan-balai')
+            ->with('success', 'Laporan berhasil disimpan.');
+    }
+
+    // BARU — tujuan tombol "Edit" di tabel.
+    public function laporanPenangananEdit($id)
+    {
+        $laporan = LaporanMasyarakat::with('fotos')->findOrFail($id);
+
+        return view('dashboards.form-laporan-bencana', [
+            'mode' => 'edit',
+            'laporan' => $laporan,
+        ]);
+    }
+
+    // BARU — submit dari form mode edit.
+    public function laporanPenangananUpdate(Request $request, $id)
+    {
+        $laporan = LaporanMasyarakat::findOrFail($id);
+
+        $validated = $request->validate([
+            'jenis_bencana' => 'nullable|string',
+            'nama_bencana' => 'nullable|string',
+            'waktu_kejadian' => 'nullable|string',
+            'wilayah_waktu' => 'nullable|in:WIB,WITA,WIT',
+            'lokasi' => 'nullable|string',
+            'lintang' => 'nullable|numeric',
+            'bujur' => 'nullable|numeric',
+            'deskripsi' => 'nullable|string',
+            'dampak_bencana' => 'nullable|string',
+            'infrastruktur_terdampak' => 'nullable|string',
+            'kebutuhan_mendesak' => 'nullable|string',
+        ]);
+
+        $laporan->update($validated);
+
+        return redirect()
+            ->route('balai.laporan-penanganan-balai')
+            ->with('success', 'Laporan berhasil diperbarui.');
     }
 
     public function laporanPenangananShow($id)
     {
         $laporan = LaporanMasyarakat::with('fotos')->findOrFail($id);
 
+        // Datang dari tab "Bencana Terkini" (status sudah ditangani) -> form lengkap read-only.
+        if ($laporan->status === 'ditangani') {
+            return view('dashboards.form-laporan-bencana', [
+                'mode' => 'detail',
+                'laporan' => $laporan,
+            ]);
+        }
+
+        // Datang dari tab "Laporan Masyarakat" -> halaman detail simpel lama, TIDAK berubah.
         return view('dashboards.laporan-masyarakat-show', compact('laporan'));
     }
 
@@ -113,6 +193,16 @@ class BalaiController extends Controller
             'status' => $request->status,
             'detail_status' => $request->detail_status,
         ]);
+
+        // ASUMSI: begitu status diubah jadi "ditangani" dari menu Laporan Masyarakat,
+        // balai langsung dilempar ke form biar bisa lanjut isi Penanganan Sementara,
+        // Sumberdaya, dst. Kalau maunya tetap balik ke daftar seperti semula,
+        // hapus blok if ini dan biarkan cuma redirect()->back() di bawah.
+        if ($request->status === 'ditangani') {
+            return redirect()
+                ->route('balai.laporan-penanganan-balai.edit', $laporan->id)
+                ->with('success', 'Status laporan diubah menjadi ditangani.');
+        }
 
         return redirect()->back()->with('success', 'Status laporan berhasil diperbarui.');
     }
@@ -161,7 +251,6 @@ class BalaiController extends Controller
             'kepala'     => 'nullable|string|max:255',
             'kontak'     => 'nullable|string|max:30',
 
-            // Balai no longer has its own login — every PIC below is a full account.
             'pics'            => 'required|array|min:1',
             'pics.*.id'       => 'nullable|integer',
             'pics.*.nama'     => 'required|string|max:255',
@@ -170,8 +259,6 @@ class BalaiController extends Controller
             'pics.*.kontak'   => 'required|string|max:30',
         ]);
 
-        // Manual uniqueness + "password required for new PICs" checks — array-wildcard
-        // unique/required_if rules can't express "except this row's own id".
         $usernamesSeen = [];
         foreach ($request->pics as $index => $picData) {
             $username = $picData['username'];
@@ -201,8 +288,6 @@ class BalaiController extends Controller
             }
         }
 
-        // Guard: the currently logged-in PIC can't be removed from their own submission —
-        // otherwise they'd delete their own account mid-request while still authenticated.
         $submittedIds = collect($request->pics)->pluck('id')->filter()->map(fn ($id) => (int) $id)->toArray();
         if (! in_array(Auth::id(), $submittedIds, true)) {
             throw ValidationException::withMessages([
@@ -247,5 +332,4 @@ class BalaiController extends Controller
             ->route('balai.data-pic-balai.show')
             ->with('success', 'Data balai berhasil diperbarui.');
     }
-
 }

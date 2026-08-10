@@ -108,8 +108,8 @@
                         @endforelse
                     --}}
                     <tr>
-                        <td class="px-4 py-3">{{ auth('balai')->user()->unor ?? '-' }}</td>
-                        <td class="px-4 py-3">{{ auth('balai')->user()->nama_balai ?? '-' }}</td>
+                        <td class="px-4 py-3">-</td>
+                        <td class="px-4 py-3">-</td>
                         <td class="px-4 py-3">{{ $laporan->status ?? '-' }}</td>
                         <td class="px-4 py-3">{{ $laporan->detail_status ?? '-' }}</td>
                     </tr>

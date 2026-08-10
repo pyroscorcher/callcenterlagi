@@ -44,13 +44,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/laporan/{laporan}/kirim-pic', [DashboardController::class, 'kirimPicNotifikasi'])->name('laporan.kirim-pic');
     });
 
-    Route::middleware('role:pic')->group(function () {
+        Route::middleware('role:pic')->group(function () {
         Route::get('/balai/dashboard', [BalaiController::class, 'balaiDashboard'])->name('balai.dashboard');
+    
         Route::get('/balai/laporan-penanganan-balai', [BalaiController::class, 'laporanPenanganan'])->name('balai.laporan-penanganan-balai');
         Route::get('/balai/laporan-penanganan-balai/create', [BalaiController::class, 'laporanPenangananCreate'])->name('balai.laporan-penanganan-balai.create');
+        Route::post('/balai/laporan-penanganan-balai', [BalaiController::class, 'laporanPenangananStore'])->name('balai.laporan-penanganan-balai.store'); // BARU
+        Route::get('/balai/laporan-penanganan-balai/{laporan}/edit', [BalaiController::class, 'laporanPenangananEdit'])->name('balai.laporan-penanganan-balai.edit'); // BARU
+        Route::put('/balai/laporan-penanganan-balai/{laporan}', [BalaiController::class, 'laporanPenangananUpdate'])->name('balai.laporan-penanganan-balai.update'); // BARU
         Route::get('/balai/laporan-penanganan-balai/{laporan}', [BalaiController::class, 'laporanPenangananShow'])->name('balai.laporan-penanganan-balai.show');
         Route::put('/balai/laporan-penanganan-balai/{laporan}/update-status', [BalaiController::class, 'updateStatus'])->name('balai.laporan-penanganan-balai.update-status');
         Route::delete('/balai/laporan-penanganan-balai/{laporan}', [BalaiController::class, 'laporanPenangananDestroy'])->name('balai.laporan-penanganan-balai.destroy');
+    
         Route::get('/balai/data-pic-balai', [BalaiController::class, 'dataPicBalaiShow'])->name('balai.data-pic-balai.show');
         Route::get('/balai/data-pic-balai/edit', [BalaiController::class, 'editProfile'])->name('balai.data-pic-balai.edit');
         Route::put('/balai/data-pic-balai/update', [BalaiController::class, 'updateProfile'])->name('balai.data-pic-balai.update');

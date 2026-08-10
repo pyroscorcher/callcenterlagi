@@ -3,8 +3,32 @@
     'laporans' => [],
 ])
 
+{{-- Header judul + tombol Tambah (cuma muncul di tab Bencana Terkini) --}}
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div>
+        <h1 class="text-lg md:text-xl font-bold text-gray-900">
+            {{ $type === 'bencana-terkini' ? 'Bencana Terkini' : 'Laporan Masyarakat' }}
+        </h1>
+        <p class="text-sm text-gray-600 mt-1">
+            Kelola dan pantau seluruh laporan kejadian bencana dari masyarakat.
+        </p>
+    </div>
+
+    @if ($type === 'bencana-terkini')
+        {{-- TOMBOL TAMBAH LAPORAN BARU --}}
+        <a href="{{ route('balai.laporan-penanganan-balai.create') }}"
+           class="w-full md:w-auto justify-center inline-flex items-center gap-2 rounded-lg bg-[#161446] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#110e36] transition shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Tambah Laporan
+        </a>
+    @endif
+</div>
+
 @if ($laporans && $laporans->count() > 0)
     {{-- Removed redundant card wrapper, left only the scroll wrapper --}}
+
     <div class="w-full overflow-x-auto rounded-xl border border-gray-200">
         <table class="min-w-full text-left text-sm whitespace-nowrap">
             <thead class="bg-[#161446] text-white">
@@ -35,13 +59,13 @@
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('balai.laporan-penanganan-balai.show', $laporan->id) }}"
                                    class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
-                                    Status
+                                    Detail Laporan
                                 </a>
 
                                 @if ($type === 'bencana-terkini')
                                     {{-- TODO: sambungkan ke route edit kalau sudah siap --}}
-                                    <a href="#"
-                                       class="inline-flex items-center rounded-md bg-yellow-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-yellow-600">
+                                    <a href="{{ route('balai.laporan-penanganan-balai.edit', $laporan->id) }}"
+                                    class="rounded-lg bg-yellow-500 text-white px-4 py-2 text-sm font-medium hover:bg-yellow-600 transition">
                                         Edit
                                     </a>
                                 @endif
