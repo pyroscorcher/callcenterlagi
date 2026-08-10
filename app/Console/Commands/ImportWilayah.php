@@ -20,15 +20,13 @@ class ImportWilayah extends Command
             return self::FAILURE;
         }
 
-        $this->info('1. Memuat raw dump ke tabel staging "wilayah"...');
+        $this->info('Raw dump Staging...');
         DB::unprepared(File::get($path));
 
-        // FIX COLLATION ERROR DI SINI
-        $this->info('2. Menyesuaikan Collation tabel staging dengan Laravel...');
+        $this->info('Matching staged data with Laravel collation...');
         DB::statement('ALTER TABLE wilayah CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;');
 
-        $this->info('3. Memecah dan memasukkan data ke tabel provinsis...');
-        // Hapus data lama agar tidak duplikat jika command dijalankan ulang
+        $this->info('Hierarchy mapping...');
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('kelurahans')->truncate();
         DB::table('kecamatans')->truncate();
@@ -43,7 +41,7 @@ class ImportWilayah extends Command
             WHERE kode NOT LIKE '%.%'
         ");
 
-        $this->info('4. Memecah ke tabel kabupaten_kotas (Relasi ke Provinsi)...');
+        $this->info('Memecah ke tabel kabupaten/kota (Relasi ke Provinsi)...');
         DB::statement("
             INSERT INTO kabupaten_kotas (kode, nama, provinsi_id, created_at, updated_at)
             SELECT w.kode, w.nama, p.id, NOW(), NOW()
@@ -52,7 +50,7 @@ class ImportWilayah extends Command
             WHERE (LENGTH(w.kode) - LENGTH(REPLACE(w.kode, '.', ''))) = 1
         ");
 
-        $this->info('5. Memecah ke tabel kecamatans (Relasi ke Kabupaten)...');
+        $this->info('Memecah ke tabel kecamatans (Relasi ke Kabupaten)...');
         DB::statement("
             INSERT INTO kecamatans (kode, nama, kabupaten_kota_id, created_at, updated_at)
             SELECT w.kode, w.nama, k.id, NOW(), NOW()
@@ -61,7 +59,7 @@ class ImportWilayah extends Command
             WHERE (LENGTH(w.kode) - LENGTH(REPLACE(w.kode, '.', ''))) = 2
         ");
 
-        $this->info('6. Memecah ke tabel kelurahans (Relasi ke Kecamatan)...');
+        $this->info('Memecah ke tabel kelurahans (Relasi ke Kecamatan)...');
         DB::statement("
             INSERT INTO kelurahans (kode, nama, kecamatan_id, created_at, updated_at)
             SELECT w.kode, w.nama, kc.id, NOW(), NOW()
@@ -75,7 +73,7 @@ class ImportWilayah extends Command
             DB::statement('DROP TABLE IF EXISTS wilayah');
         }
 
-        $this->info('Selesai! Jumlah data yang berhasil dipetakan:');
+        $this->info('Total Data rows (should be above 83,514 rows):');
         $this->table(
             ['Tabel', 'Jumlah Baris'],
             [
