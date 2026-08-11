@@ -53,6 +53,7 @@
 
             <x-balai.form-laporan-bencana
                 :laporan="$laporan ?? null"
+                :provinsis="$provinsis ?? []"
                 :readonly="$readonly"
             />
 

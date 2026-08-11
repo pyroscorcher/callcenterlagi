@@ -234,6 +234,13 @@ class DashboardController extends Controller
             ->get(['id', 'nama']);
     }
 
+    public function getBalaiByUnor($unor)
+    {
+        return Balai::where('unor', $unor)
+            ->orderBy('nama_balai')
+            ->get(['id', 'nama_balai', 'kepala', 'kontak']);
+    }
+
     public function getBalaiByProvinsi(Request $request, $provinsi_id)
     {
         $balais = Balai::whereIn('id', function($query) use ($provinsi_id) {

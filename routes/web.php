@@ -10,6 +10,13 @@ use App\Http\Controllers\DashboardPICBalai;
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('login.authenticate');
 
+// AJAX Routes for dependent dropdowns
+Route::get('/ajax/kabupaten/{provinsi}', [DashboardController::class, 'getKabupaten']);
+Route::get('/ajax/kecamatan/{kabupaten}', [DashboardController::class, 'getKecamatan']);
+Route::get('/ajax/kelurahan/{kecamatan}', [DashboardController::class, 'getKelurahan']);
+Route::get('/ajax/balai-by-unor/{unor}', [DashboardController::class, 'getBalaiByUnor']);
+Route::get('/ajax/balai/{provinsi_id}', [DashboardController::class, 'getBalaiByProvinsi']);
+
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -25,10 +32,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/laporan/{id}/update-lokasi', [DashboardController::class, 'updateLokasi'])->name('laporan.update-lokasi');
         Route::post('/laporan/{id}/toggle-verifikasi', [DashboardController::class, 'toggleVerifikasi'])->name('laporan.toggle-verifikasi');
 
-        Route::get('/ajax/kabupaten/{provinsi}', [DashboardController::class, 'getKabupaten']);
-        Route::get('/ajax/kecamatan/{kabupaten}', [DashboardController::class, 'getKecamatan']);
-        Route::get('/ajax/kelurahan/{kecamatan}', [DashboardController::class, 'getKelurahan']);
-        Route::get('/ajax/balai/{provinsi_id}', [DashboardController::class, 'getBalaiByProvinsi']);
 
         Route::get('/laporan-penanganan-balai', [DashboardLaporanPelaksanaController::class, 'LPB'])->name('laporan-penanganan-balai');
         Route::get('/laporan-penanganan-balai/{laporan}', [DashboardLaporanPelaksanaController::class, 'LPBShow'])->name('laporan-penanganan-balai.show');

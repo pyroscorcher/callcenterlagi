@@ -83,17 +83,21 @@ class BalaiController extends Controller
         ->paginate(15, ['*'], 'laporan_masyarakat_page')
         ->withQueryString();
 
-    return view('dashboards.penanganan-balai', [
-        'bencanaTerkini' => $bencanaTerkini,
-        'laporanMasyarakat' => $laporanMasyarakat,
-    ]);
+        return view('dashboards.balai-dashboard', [
+            'bencanaTerkini' => $bencanaTerkini,
+            'laporanMasyarakat' => $laporanMasyarakat,
+        ]);
     }
 
     public function laporanPenangananCreate()
     {
+        // 1. Ambil data semua provinsi
+        $provinsis = Provinsi::orderBy('nama')->get();
+
         return view('dashboards.form-laporan-bencana', [
             'mode' => 'create',
             'laporan' => null,
+            'provinsis' => $provinsis, // <-- Pastikan ini dipassing
         ]);
     }
 
@@ -132,10 +136,14 @@ class BalaiController extends Controller
     public function laporanPenangananEdit($id)
     {
         $laporan = LaporanMasyarakat::with('fotos')->findOrFail($id);
+        
+        // 1. Ambil data semua provinsi
+        $provinsis = Provinsi::orderBy('nama')->get();
 
         return view('dashboards.form-laporan-bencana', [
             'mode' => 'edit',
             'laporan' => $laporan,
+            'provinsis' => $provinsis, // <-- Pastikan ini dipassing
         ]);
     }
 

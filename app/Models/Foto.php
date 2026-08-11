@@ -12,6 +12,7 @@ class Foto extends Model
     protected $fillable = [
         'laporan_masyarakat_id',
         'file_path',
+        'keterangan', // <-- Added here to match your view
     ];
 
     /**
