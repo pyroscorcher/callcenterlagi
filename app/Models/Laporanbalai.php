@@ -63,8 +63,12 @@ class LaporanBalai extends Model
         return $this->hasMany(DokumenLaporanPimpinan::class);
     }
 
-    public function picBencana(): HasOne
+    public function picBencanas()
     {
-        return $this->hasOne(PicBencana::class);
+        return $this->hasMany(PicBencana::class, 'laporan_balai_id');
+    }
+    public function logs()
+    {
+        return $this->hasMany(LaporanBalaiLog::class, 'laporan_id');
     }
 }

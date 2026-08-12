@@ -918,13 +918,18 @@
 
             {{-- ================= Dilaporkan Oleh (PIC) ================= --}}
             <div>
-                <h2 class="font-bold text-gray-900 mb-4">Dilaporkan oleh (PIC)</h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-bold text-gray-900">Dilaporkan oleh (PIC)</h2>
+                    @unless($readonly)
+                        <button type="button" id="btn-add-pic"
+                                class="rounded-full bg-blue-600 text-white w-8 h-8 flex items-center justify-center hover:bg-blue-700 transition">+</button>
+                    @endunless
+                </div>
 
                 @if($readonly)
-                    @php $pic = $laporan->picBencana; @endphp
-                    
-                    @if($pic)
-                        <div class="mb-5 pb-5 border-b border-gray-100">
+                    @forelse (($laporan->picBencanas ?? []) as $pic)
+                        <div class="{{ !$loop->last ? 'mb-5 pb-5 border-b border-gray-100' : '' }}">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">PIC {{ $loop->iteration }}</p>
                             @if($pic->isExternalPic())
                                 {!! $detailRow('PIC Eksternal (Lainnya)', $pic->pic_lainnya ?? '-') !!}
                             @else
@@ -934,81 +939,124 @@
                                 {!! $detailRow('No. HP / Kontak', $pic->kontak ?? '-') !!}
                             @endif
                         </div>
-                    @else
+                    @empty
                         <p class="text-sm text-gray-400 italic">Tidak ada data</p>
-                    @endif
-                    
+                    @endforelse
                 @else
-                    @php $pic = $laporan?->picBencana; @endphp
-                    
-                    <div class="border border-gray-200 rounded-lg p-5 space-y-5">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Data PIC</span>
-                        
-                        {{-- Filter Wilayah/Balai --}}
-                        <div class="grid grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">Unit Organisasi (UNOR)</label>
-                                <select id="unor_pic" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <option value="">Pilih UNOR</option>
-                                    <option value="SDA">SDA</option>
-                                    <option value="Binamarga">Bina Marga</option>
-                                    <option value="Ciptakarya">Cipta Karya</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">Balai</label>
-                                <select name="pic[balai_id]" id="balai_pic" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100" disabled>
-                                    <option value="">Pilih Balai</option>
-                                </select>
+                    <div id="pic-list" class="space-y-5">
+                        @php $existingPics = $laporan?->picBencanas ?? collect(); @endphp
+
+                        @forelse ($existingPics as $pic)
+                            <div class="pic-row border border-gray-200 rounded-lg p-5 space-y-5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Data PIC</span>
+                                    <button type="button" data-remove-row
+                                            class="{{ $loop->first && $existingPics->count() === 1 ? 'hidden ' : '' }}shrink-0 rounded-lg bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">−</button>
+                                </div>
                                 
-                                {{-- Hidden inputs for Edit Mode Hydration --}}
-                                <input type="hidden" id="old_pic_unor" value="{{ $pic->balai->unor ?? '' }}">
-                                <input type="hidden" id="old_pic_balai_id" value="{{ $pic->balai_id ?? '' }}">
-                            </div>
-                        </div>
+                                {{-- Filter Wilayah/Balai --}}
+                                <div class="grid grid-cols-2 gap-5">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">Unit Organisasi (UNOR)</label>
+                                        <select class="unor-select w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                            <option value="">Pilih UNOR</option>
+                                            <option value="SDA" @selected(($pic->balai->unor ?? '') === 'SDA')>SDA</option>
+                                            <option value="Binamarga" @selected(($pic->balai->unor ?? '') === 'Binamarga')>Bina Marga</option>
+                                            <option value="Ciptakarya" @selected(($pic->balai->unor ?? '') === 'Ciptakarya')>Cipta Karya</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">Balai</label>
+                                        <select name="pic[][balai_id]" class="balai-select w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100" disabled>
+                                            <option value="">Pilih Balai</option>
+                                        </select>
+                                        
+                                        {{-- Hidden inputs for Edit Mode Hydration --}}
+                                        <input type="hidden" class="old-pic-unor" value="{{ $pic->balai->unor ?? '' }}">
+                                        <input type="hidden" class="old-pic-balai-id" value="{{ $pic->balai_id ?? '' }}">
+                                    </div>
+                                </div>
 
-                        {{-- Auto-filled inputs based on Balai --}}
-                        <div class="grid grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">Nama PIC (Kepala Balai)</label>
-                                <input type="text" name="pic[nama_pic]" id="nama_pic" value="{{ $pic->nama_pic ?? '' }}" readonly class="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">No. HP / Kontak</label>
-                                <input type="text" name="pic[kontak]" id="kontak_pic" value="{{ $pic->kontak ?? '' }}" readonly class="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
-                            </div>
-                        </div>
+                                {{-- Auto-filled inputs based on Balai --}}
+                                <div class="grid grid-cols-2 gap-5">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">Nama PIC (Kepala Balai)</label>
+                                        <input type="text" name="pic[][nama_pic]" value="{{ $pic->nama_pic ?? '' }}" readonly class="nama-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">No. HP / Kontak</label>
+                                        <input type="text" name="pic[][kontak]" value="{{ $pic->kontak ?? '' }}" readonly class="kontak-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
+                                    </div>
+                                </div>
 
-                        {{-- Fallback PIC Eksternal --}}
-                        <div class="pt-3 border-t border-gray-100">
-                            <label class="block text-xs text-gray-500 mb-1">PIC Lainnya (Opsional / Eksternal)</label>
-                            <input type="text" name="pic[pic_lainnya]" value="{{ $pic->pic_lainnya ?? '' }}" placeholder="Masukkan nama jika PIC bukan dari daftar Balai" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                        </div>
+                                {{-- Fallback PIC Eksternal --}}
+                                <div class="pt-3 border-t border-gray-100">
+                                    <label class="block text-xs text-gray-500 mb-1">PIC Lainnya (Opsional / Eksternal)</label>
+                                    <input type="text" name="pic[][pic_lainnya]" value="{{ $pic->pic_lainnya ?? '' }}" placeholder="Masukkan nama jika PIC bukan dari daftar Balai" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                </div>
+                            </div>
+                        @empty
+                            <div class="pic-row border border-gray-200 rounded-lg p-5 space-y-5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Data PIC</span>
+                                    <button type="button" data-remove-row class="hidden shrink-0 rounded-lg bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">−</button>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-5">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">Unit Organisasi (UNOR)</label>
+                                        <select class="unor-select w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                            <option value="">Pilih UNOR</option>
+                                            <option value="SDA">SDA</option>
+                                            <option value="Binamarga">Bina Marga</option>
+                                            <option value="Ciptakarya">Cipta Karya</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">Balai</label>
+                                        <select name="pic[][balai_id]" class="balai-select w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100" disabled>
+                                            <option value="">Pilih Balai</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-5">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">Nama PIC (Kepala Balai)</label>
+                                        <input type="text" name="pic[][nama_pic]" readonly class="nama-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">No. HP / Kontak</label>
+                                        <input type="text" name="pic[][kontak]" readonly class="kontak-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 border-t border-gray-100">
+                                    <label class="block text-xs text-gray-500 mb-1">PIC Lainnya (Opsional / Eksternal)</label>
+                                    <input type="text" name="pic[][pic_lainnya]" placeholder="Masukkan nama jika PIC bukan dari daftar Balai" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                </div>
+                            </div>
+                        @endforelse
                     </div>
 
-                    {{-- Script Khusus Autofill PIC --}}
+                    {{-- Script Khusus Autofill PIC (Multi-Row Support) --}}
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
-                            const unorPic = document.getElementById('unor_pic');
-                            const balaiPic = document.getElementById('balai_pic');
-                            const namaPic = document.getElementById('nama_pic');
-                            const kontakPic = document.getElementById('kontak_pic');
+                            let picBalaiDataMap = {}; // Cache map for rapid additions
 
-                            const oldPicUnor = document.getElementById('old_pic_unor')?.value;
-                            const oldPicBalaiId = document.getElementById('old_pic_balai_id')?.value;
+                            async function fetchPicBalaisByUnor(unorValue, row, selectedId = null) {
+                                const balaiSelect = row.querySelector('.balai-select');
+                                const namaPic = row.querySelector('.nama-pic-input');
+                                const kontakPic = row.querySelector('.kontak-pic-input');
 
-                            let picBalaiDataMap = {};
-
-                            async function fetchPicBalaisByUnor(unorValue, selectedId = null) {
-                                if (!balaiPic) return;
-                                balaiPic.innerHTML = '<option value="">Loading...</option>';
-                                balaiPic.disabled = true;
-                                namaPic.value = '';
-                                kontakPic.value = '';
-                                picBalaiDataMap = {};
+                                if (!balaiSelect) return;
+                                balaiSelect.innerHTML = '<option value="">Loading...</option>';
+                                balaiSelect.disabled = true;
+                                if(namaPic) namaPic.value = '';
+                                if(kontakPic) kontakPic.value = '';
 
                                 if (!unorValue) {
-                                    balaiPic.innerHTML = '<option value="">Pilih Balai</option>';
+                                    balaiSelect.innerHTML = '<option value="">Pilih Balai</option>';
                                     return;
                                 }
 
@@ -1016,52 +1064,132 @@
                                     const response = await fetch('/ajax/balai-by-unor/' + unorValue);
                                     const data = await response.json();
 
-                                    balaiPic.innerHTML = '<option value="">Pilih Balai</option>';
+                                    balaiSelect.innerHTML = '<option value="">Pilih Balai</option>';
                                     data.forEach(item => {
                                         picBalaiDataMap[item.id] = item;
                                         const isSelected = (selectedId && String(selectedId) === String(item.id)) ? 'selected' : '';
-                                        balaiPic.innerHTML += `<option value="${item.id}" ${isSelected}>${item.nama_balai}</option>`;
+                                        balaiSelect.innerHTML += `<option value="${item.id}" ${isSelected}>${item.nama_balai}</option>`;
                                     });
-                                    balaiPic.disabled = false;
+                                    balaiSelect.disabled = false;
 
                                     // Trigger change if we selected a specific Balai on load
-                                    if (selectedId) balaiPic.dispatchEvent(new Event('change'));
+                                    if (selectedId) balaiSelect.dispatchEvent(new Event('change', { bubbles: true }));
                                 } catch (error) {
-                                    balaiPic.innerHTML = '<option value="">Gagal memuat data</option>';
+                                    balaiSelect.innerHTML = '<option value="">Gagal memuat data</option>';
                                 }
                             }
 
-                            if (unorPic) {
-                                unorPic.addEventListener('change', function() {
-                                    fetchPicBalaisByUnor(this.value);
-                                });
+                            // Use Event Delegation to handle dynamic rows seamlessly
+                            document.addEventListener('change', function(e) {
+                                if (e.target.matches('.unor-select')) {
+                                    const row = e.target.closest('.pic-row');
+                                    fetchPicBalaisByUnor(e.target.value, row);
+                                }
 
-                                balaiPic.addEventListener('change', function() {
-                                    const selected = picBalaiDataMap[this.value];
+                                if (e.target.matches('.balai-select')) {
+                                    const row = e.target.closest('.pic-row');
+                                    const namaPic = row.querySelector('.nama-pic-input');
+                                    const kontakPic = row.querySelector('.kontak-pic-input');
+                                    const selected = picBalaiDataMap[e.target.value];
+
                                     if (selected) {
-                                        namaPic.value = selected.kepala ?? '-';
-                                        kontakPic.value = selected.kontak ?? '-';
+                                        if(namaPic) namaPic.value = selected.kepala ?? '-';
+                                        if(kontakPic) kontakPic.value = selected.kontak ?? '-';
                                     } else {
-                                        namaPic.value = '';
-                                        kontakPic.value = '';
+                                        if(namaPic) namaPic.value = '';
+                                        if(kontakPic) kontakPic.value = '';
+                                    }
+                                }
+                            });
+
+                            // Edit Mode Hydration for all pre-existing rows on load
+                            document.querySelectorAll('.pic-row').forEach(row => {
+                                const oldPicUnor = row.querySelector('.old-pic-unor')?.value;
+                                const oldPicBalaiId = row.querySelector('.old-pic-balai-id')?.value;
+                                const unorSelect = row.querySelector('.unor-select');
+
+                                if (oldPicUnor && unorSelect) {
+                                    unorSelect.value = oldPicUnor;
+                                    fetchPicBalaisByUnor(oldPicUnor, row, oldPicBalaiId);
+                                }
+                            });
+                        });
+
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const picList = document.getElementById('pic-list');
+                            const addPicBtn = document.querySelector('#btn-add-pic');
+
+                            // Fungsi Toggle Tombol Hapus (Minimal harus ada 1 baris)
+                            function toggleRemoveButtons() {
+                                const rows = picList.querySelectorAll('.pic-row');
+                                rows.forEach((row, index) => {
+                                    const removeBtn = row.querySelector('[data-remove-row]');
+                                    if (removeBtn) {
+                                        if (rows.length === 1) {
+                                            removeBtn.classList.add('hidden'); // Sembunyikan jika tersisa 1
+                                        } else {
+                                            removeBtn.classList.remove('hidden'); // Tampilkan jika lebih dari 1
+                                        }
                                     }
                                 });
-
-                                // Edit Mode Hydration
-                                if (oldPicUnor) {
-                                    unorPic.value = oldPicUnor;
-                                    fetchPicBalaisByUnor(oldPicUnor, oldPicBalaiId);
-                                }
                             }
+
+                            // --- TAMBAH BARIS PIC ---
+                            if (addPicBtn && picList) {
+                                addPicBtn.addEventListener('click', function () {
+                                    const rows = picList.querySelectorAll('.pic-row');
+                                    if (rows.length === 0) return;
+
+                                    // Clone baris pertama
+                                    const firstRow = rows[0];
+                                    const newRow = firstRow.cloneNode(true);
+
+                                    // Reset nilai semua input
+                                    newRow.querySelectorAll('input').forEach(input => {
+                                        if(input.type !== 'hidden') {
+                                            input.value = '';
+                                        }
+                                    });
+
+                                    // Reset nilai semua dropdown
+                                    newRow.querySelectorAll('select').forEach(select => {
+                                        select.selectedIndex = 0;
+                                        if(select.classList.contains('balai-select')) {
+                                            select.innerHTML = '<option value="">Pilih Balai</option>';
+                                            select.disabled = true;
+                                        }
+                                    });
+
+                                    // Tampilkan di view
+                                    picList.appendChild(newRow);
+                                    
+                                    // Evaluasi ketersediaan tombol hapus
+                                    toggleRemoveButtons();
+                                });
+                            }
+
+                            // --- HAPUS BARIS PIC (Event Delegation) ---
+                            document.addEventListener('click', function(e) {
+                                const removeBtn = e.target.closest('[data-remove-row]');
+                                if (removeBtn) {
+                                    const row = removeBtn.closest('.pic-row');
+                                    const rows = picList.querySelectorAll('.pic-row');
+                                    
+                                    if (rows.length > 1) {
+                                        row.remove();
+                                        toggleRemoveButtons();
+                                    }
+                                }
+                            });
+
+                            // Cek inisial saat halaman dimuat
+                            if(picList) toggleRemoveButtons();
                         });
                     </script>
                 @endif
             </div>
 
-            {{-- ================= Log Perubahan Data (khusus mode readonly) =================
-                 Data ini nantinya diambil dari relasi/tabel log perubahan laporan
-                 (misal $laporan->logs). Selama tabelnya belum ada, forelse di bawah
-                 otomatis jatuh ke "Tidak ada data". --}}
+            {{-- ================= Log Perubahan Data (khusus mode readonly) ================= --}}
             @if($readonly)
                 <div class="pt-6 border-t border-gray-100">
                     <h2 class="font-bold text-gray-900 mb-4">Log Perubahan Data</h2>
@@ -1069,23 +1197,38 @@
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="bg-blue-300">
-                                    <th class="px-4 py-3 font-semibold text-gray-900 text-center">Tanggal Perubahan</th>
-                                    <th class="px-4 py-3 font-semibold text-gray-900 text-center">Aktivitas</th>
-                                    <th class="px-4 py-3 font-semibold text-gray-900 text-center">Oleh</th>
-                                    <th class="px-4 py-3 font-semibold text-gray-900 text-center">Unker</th>
+                                    <th class="px-4 py-3 font-semibold text-gray-900 text-center">Tanggal & Waktu</th>
+                                    <th class="px-4 py-3 font-semibold text-gray-900 text-center">Aksi</th>
+                                    <th class="px-4 py-3 font-semibold text-gray-900 text-center">Oleh (Kepala Balai)</th>
+                                    <th class="px-4 py-3 font-semibold text-gray-900 text-center">Unker (Balai)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse (($laporan->logs ?? []) as $log)
-                                    <tr class="{{ $loop->even ? 'bg-gray-50' : 'bg-white' }}">
-                                        <td class="px-4 py-3 text-center text-gray-700">{{ $log->tanggal ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-center text-gray-700">{{ $log->aktivitas ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-center text-gray-700">{{ $log->oleh ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-center text-gray-700 text-xs">{{ $log->unit_kerja ?? '-' }}</td>
+                                    <tr class="{{ $loop->even ? 'bg-gray-50' : 'bg-white' }} border-b border-gray-100 last:border-0">
+                                        <td class="px-4 py-3 text-center text-gray-700">
+                                            {{ $log->created_at ? $log->created_at->format('d/m/Y H:i') : '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            @if($log->action === 'created')
+                                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-md">Dibuat</span>
+                                            @elseif($log->action === 'updated')
+                                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-md">Diperbarui</span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-md">{{ ucfirst($log->action) }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-gray-700">
+                                            {{ $log->kepala_balai ?? '-' }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-gray-700 text-xs">
+                                            {{ $log->nama_balai ?? '-' }}
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">Tidak ada data</td>
+                                        {{-- Colspan disesuaikan menjadi 4 karena ada 4 kolom --}}
+                                        <td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">Belum ada riwayat perubahan data</td>
                                     </tr>
                                 @endforelse
                             </tbody>

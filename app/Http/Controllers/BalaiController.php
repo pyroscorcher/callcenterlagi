@@ -16,72 +16,98 @@ class BalaiController extends Controller
 
     public function balaiDashboard(Request $request)
     {
-    $bencanaTerkini = LaporanMasyarakat::query()
-        ->where('status', 'ditangani')
-        ->when($request->search, function ($query, $search) {
-            $query->where('lokasi', 'like', "%{$search}%")
-                ->orWhere('alamat', 'like', "%{$search}%")
-                ->orWhere('jenis_bencana', 'like', "%{$search}%")
-                ->orWhere('nama_bencana', 'like', "%{$search}%")
-                ->orWhere('pelapor', 'like', "%{$search}%");
-        })
-        ->latest()
-        ->paginate(15, ['*'], 'bencana_terkini_page')
-        ->withQueryString();
+        $balai = Auth::user()->balai;
+        
+        $provinsiBalai = $balai && $balai->provinsi 
+            ? array_map('trim', explode(',', $balai->provinsi)) 
+            : [];
 
-    $laporanMasyarakat = LaporanMasyarakat::query()
-        ->where(function ($query) {
-            $query->whereNull('status')
-                ->orWhere('status', '')
-                ->orWhere('status', 'ditolak')
-                ->orWhere('status', 'ditutup');
-        })
-        ->when($request->search, function ($query, $search) {
-            $query->where('lokasi', 'like', "%{$search}%")
-                ->orWhere('alamat', 'like', "%{$search}%")
-                ->orWhere('jenis_bencana', 'like', "%{$search}%")
-                ->orWhere('nama_bencana', 'like', "%{$search}%")
-                ->orWhere('pelapor', 'like', "%{$search}%");
-        })
-        ->latest()
-        ->paginate(15, ['*'], 'laporan_masyarakat_page')
-        ->withQueryString();
+        // --- TAB BENCANA TERKINI (Khusus status: ditangani) ---
+        $bencanaTerkini = LaporanMasyarakat::query()
+            ->whereHas('provinsi', function ($q) use ($provinsiBalai) {
+                $q->whereIn('nama', $provinsiBalai);
+            })
+            ->where('status', 'ditangani')
+            ->when($request->search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('lokasi', 'like', "%{$search}%")
+                        ->orWhere('alamat', 'like', "%{$search}%")
+                        ->orWhere('jenis_bencana', 'like', "%{$search}%")
+                        ->orWhere('nama_bencana', 'like', "%{$search}%")
+                        ->orWhere('pelapor', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(15, ['*'], 'bencana_terkini_page')
+            ->withQueryString();
 
-    return view('dashboards.balai-dashboard', [
-        'bencanaTerkini' => $bencanaTerkini,
-        'laporanMasyarakat' => $laporanMasyarakat,
-    ]);
+        // --- TAB LAPORAN MASYARAKAT (Semua status ditampilkan) ---
+        $laporanMasyarakat = LaporanMasyarakat::query()
+            ->whereHas('provinsi', function ($q) use ($provinsiBalai) {
+                $q->whereIn('nama', $provinsiBalai);
+            })
+            // Blok filter status dihapus dari sini
+            ->when($request->search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('lokasi', 'like', "%{$search}%")
+                        ->orWhere('alamat', 'like', "%{$search}%")
+                        ->orWhere('jenis_bencana', 'like', "%{$search}%")
+                        ->orWhere('nama_bencana', 'like', "%{$search}%")
+                        ->orWhere('pelapor', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(15, ['*'], 'laporan_masyarakat_page')
+            ->withQueryString();
+
+        return view('dashboards.balai-dashboard', [
+            'bencanaTerkini' => $bencanaTerkini,
+            'laporanMasyarakat' => $laporanMasyarakat,
+        ]);
     }
 
     public function laporanPenanganan(Request $request)
     {
-    $bencanaTerkini = LaporanMasyarakat::query()
-        ->where('status', 'ditangani')
-        ->when($request->search, function ($query, $search) {
-            $query->where('lokasi', 'like', "%{$search}%")
-                ->orWhere('jenis_bencana', 'like', "%{$search}%")
-                ->orWhere('nama_bencana', 'like', "%{$search}%")
-                ->orWhere('pelapor', 'like', "%{$search}%");
-        })
-        ->latest()
-        ->paginate(15, ['*'], 'bencana_terkini_page')
-        ->withQueryString();
+        $balai = Auth::user()->balai;
+        $provinsiBalai = $balai && $balai->provinsi 
+            ? array_map('trim', explode(',', $balai->provinsi)) 
+            : [];
 
-    $laporanMasyarakat = LaporanMasyarakat::query()
-        ->where(function ($query) {
-            $query->whereNull('status')
-                ->orWhere('status', 'ditolak')
-                ->orWhere('status', 'ditutup');
-        })
-        ->when($request->search, function ($query, $search) {
-            $query->where('lokasi', 'like', "%{$search}%")
-                ->orWhere('jenis_bencana', 'like', "%{$search}%")
-                ->orWhere('nama_bencana', 'like', "%{$search}%")
-                ->orWhere('pelapor', 'like', "%{$search}%");
-        })
-        ->latest()
-        ->paginate(15, ['*'], 'laporan_masyarakat_page')
-        ->withQueryString();
+        // --- TAB BENCANA TERKINI (Khusus status: ditangani) ---
+        $bencanaTerkini = LaporanMasyarakat::query()
+            ->whereHas('provinsi', function ($q) use ($provinsiBalai) {
+                $q->whereIn('nama', $provinsiBalai);
+            })
+            ->where('status', 'ditangani')
+            ->when($request->search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('lokasi', 'like', "%{$search}%")
+                        ->orWhere('jenis_bencana', 'like', "%{$search}%")
+                        ->orWhere('nama_bencana', 'like', "%{$search}%")
+                        ->orWhere('pelapor', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(15, ['*'], 'bencana_terkini_page')
+            ->withQueryString();
+
+        // --- TAB LAPORAN MASYARAKAT (Semua status ditampilkan) ---
+        $laporanMasyarakat = LaporanMasyarakat::query()
+            ->whereHas('provinsi', function ($q) use ($provinsiBalai) {
+                $q->whereIn('nama', $provinsiBalai);
+            })
+            // Blok filter status dihapus dari sini
+            ->when($request->search, function ($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('lokasi', 'like', "%{$search}%")
+                        ->orWhere('jenis_bencana', 'like', "%{$search}%")
+                        ->orWhere('nama_bencana', 'like', "%{$search}%")
+                        ->orWhere('pelapor', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(15, ['*'], 'laporan_masyarakat_page')
+            ->withQueryString();
 
         return view('dashboards.balai-dashboard', [
             'bencanaTerkini' => $bencanaTerkini,
@@ -116,16 +142,42 @@ class BalaiController extends Controller
             'dampak_bencana' => 'nullable|string',
             'infrastruktur_terdampak' => 'nullable|string',
             'kebutuhan_mendesak' => 'nullable|string',
+            'pic' => 'nullable|array', // Validasi array PIC
         ]);
 
-        $laporan = LaporanMasyarakat::create($validated + [
-            'status' => 'ditangani',
-        ]);
+        // Simpan laporan tanpa menyertakan array 'pic' ke kolom tabel utama
+        $laporanData = collect($validated)->except('pic')->toArray();
+        $laporanData['status'] = 'ditangani';
+        
+        $laporan = LaporanMasyarakat::create($laporanData);
 
-        // TODO: pastikan dulu nama tabel pivot yang benar (laporan_balai vs
-        // balai_laporan — Balai::laporanMasyarakats() dan LaporanMasyarakat::balais()
-        // sekarang nunjuk ke nama tabel yang beda) sebelum baris ini dipakai.
+        // TODO: pastikan dulu nama tabel pivot yang benar
         Auth::user()->balai->laporanMasyarakats()->attach($laporan->id);
+
+        // --- SIMPAN DATA PIC ---
+        if ($request->has('pic') && is_array($request->pic)) {
+            foreach ($request->pic as $picData) {
+                if (!empty($picData['pic_lainnya'])) {
+                    $laporan->picBencanas()->create([
+                        'pic_lainnya' => $picData['pic_lainnya']
+                    ]);
+                } elseif (!empty($picData['balai_id'])) {
+                    $laporan->picBencanas()->create([
+                        'balai_id' => $picData['balai_id'],
+                        'nama_pic' => $picData['nama_pic'] ?? null,
+                        'kontak'   => $picData['kontak'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        $balai = Auth::user()->balai;
+        $laporan->logs()->create([
+            'action'       => 'created',
+            'user_id'      => Auth::id(),
+            'nama_balai'   => $balai->nama_balai ?? 'Unknown Balai',
+            'kepala_balai' => $balai->kepala ?? 'Unknown Kepala',
+        ]);
 
         return redirect()
             ->route('balai.laporan-penanganan-balai')
@@ -164,9 +216,40 @@ class BalaiController extends Controller
             'dampak_bencana' => 'nullable|string',
             'infrastruktur_terdampak' => 'nullable|string',
             'kebutuhan_mendesak' => 'nullable|string',
+            'pic' => 'nullable|array', // Validasi array PIC
         ]);
 
-        $laporan->update($validated);
+        // Update laporan utama
+        $laporan->update(collect($validated)->except('pic')->toArray());
+
+        // --- UPDATE DATA PIC ---
+        // Hapus data PIC yang lama terlebih dahulu
+        $laporan->picBencanas()->delete();
+
+        // Insert ulang data PIC dari request
+        if ($request->has('pic') && is_array($request->pic)) {
+            foreach ($request->pic as $picData) {
+                if (!empty($picData['pic_lainnya'])) {
+                    $laporan->picBencanas()->create([
+                        'pic_lainnya' => $picData['pic_lainnya']
+                    ]);
+                } elseif (!empty($picData['balai_id'])) {
+                    $laporan->picBencanas()->create([
+                        'balai_id' => $picData['balai_id'],
+                        'nama_pic' => $picData['nama_pic'] ?? null,
+                        'kontak'   => $picData['kontak'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        $balai = Auth::user()->balai;
+        $laporan->logs()->create([
+            'action'       => 'updated',
+            'user_id'      => Auth::id(),
+            'nama_balai'   => $balai->nama_balai ?? 'Unknown Balai',
+            'kepala_balai' => $balai->kepala ?? 'Unknown Kepala',
+        ]);
 
         return redirect()
             ->route('balai.laporan-penanganan-balai')
