@@ -131,31 +131,62 @@ class BalaiController extends Controller
     // BARU — tujuan tombol "Submit Data" di form mode create.
     public function laporanPenangananStore(Request $request)
     {
+        // 1. Validasi Data Laporan Utama & Data Laporan Balai (Array)
         $validated = $request->validate([
-            // ... (validasi tetap sama seperti sebelumnya)
-            'pic' => 'nullable|array',
+            // --- Data Laporan Masyarakat ---
+            'jenis_bencana'           => 'nullable|string',
+            'nama_bencana'            => 'nullable|string',
+            'waktu_kejadian'          => 'nullable|string',
+            'wilayah_waktu'           => 'nullable|in:WIB,WITA,WIT',
+            'lokasi'                  => 'nullable|string',
+            'provinsi_id'             => 'nullable|integer|exists:provinsis,id',
+            'kabupaten_kota_id'       => 'nullable|integer|exists:kabupaten_kotas,id',
+            'kecamatan_id'            => 'nullable|integer|exists:kecamatans,id',
+            'kelurahan_id'            => 'nullable|integer|exists:kelurahans,id',
+            'lintang'                 => 'nullable|numeric',
+            'bujur'                   => 'nullable|numeric',
+            'deskripsi'               => 'nullable|string',
+            'dampak_bencana'          => 'nullable|string',
+            'infrastruktur_terdampak' => 'nullable|string', // Kolom text lama (opsional)
+            'kebutuhan_mendesak'      => 'nullable|string',
+            
+            // --- Data Laporan Balai (Atribut Utama) ---
+            'status_terkini'          => 'nullable|string',
+            'tanggal_respon'          => 'nullable|date',
+            'catatan'                 => 'nullable|string',
+
+            // --- Data Laporan Balai (Relasi/Array) ---
+            'pic'                     => 'nullable|array',
+            'infrastruktur'           => 'nullable|array', // Asumsi atribut form name="infrastruktur[][nama_kolom]"
+            'penanganan_sementara'    => 'nullable|array', // Asumsi atribut form name="penanganan_sementara[][nama_kolom]"
+            'penanganan_permanen'     => 'nullable|array', // Asumsi atribut form name="penanganan_permanen[][nama_kolom]"
         ]);
 
-        $laporanData = collect($validated)->except('pic')->toArray();
-        $laporanData['status'] = 'ditangani';
+        // 2. Buat Laporan Masyarakat Utama
+        $laporanData = collect($validated)->only([
+            'jenis_bencana', 'nama_bencana', 'waktu_kejadian', 'wilayah_waktu', 
+            'lokasi', 'provinsi_id', 'kabupaten_kota_id', 'kecamatan_id', 'kelurahan_id', 
+            'lintang', 'bujur', 'deskripsi', 'dampak_bencana', 'infrastruktur_terdampak', 'kebutuhan_mendesak'
+        ])->toArray();
         
-        // 1. Buat Laporan Masyarakat
+        $laporanData['status'] = 'ditangani';
         $laporan = LaporanMasyarakat::create($laporanData);
 
-        // 2. BUAT LAPORAN BALAI (Sebagai pengganti attach)
-        // Pastikan nama kolom 'laporan_id' sesuai dengan struktur tabel laporan_balai Anda
+        // 3. Buat Laporan Balai
         $laporanBalai = LaporanBalai::create([
-            'laporan_id' => $laporan->id,
-            'balai_id'   => Auth::user()->balai->id,
+            'laporan_masyarakat_id' => $laporan->id, // Menggunakan nama field yang sesuai dengan Model Anda
+            'balai_id'              => Auth::user()->balai->id,
+            'created_by'            => Auth::id(),
+            'status_terkini'        => $request->status_terkini ?? null,
+            'tanggal_respon'        => $request->tanggal_respon ?? now(),
+            'catatan'               => $request->catatan ?? null,
         ]);
 
-        // 3. SIMPAN DATA PIC KE LAPORAN BALAI (Bukan ke Laporan Masyarakat)
+        // 4. Simpan Relasi: PIC Bencana
         if ($request->has('pic') && is_array($request->pic)) {
             foreach ($request->pic as $picData) {
                 if (!empty($picData['pic_lainnya'])) {
-                    $laporanBalai->picBencanas()->create([
-                        'pic_lainnya' => $picData['pic_lainnya']
-                    ]);
+                    $laporanBalai->picBencanas()->create(['pic_lainnya' => $picData['pic_lainnya']]);
                 } elseif (!empty($picData['balai_id'])) {
                     $laporanBalai->picBencanas()->create([
                         'balai_id' => $picData['balai_id'],
@@ -166,7 +197,60 @@ class BalaiController extends Controller
             }
         }
 
-        // 4. REKAM LOG KE LAPORAN BALAI
+        // 5. Simpan Relasi: Infrastruktur Terdampak
+        if ($request->has('infrastruktur') && isset($request->infrastruktur['unor'])) {
+            $jumlahBaris = count($request->infrastruktur['unor']);
+            
+            for ($i = 0; $i < $jumlahBaris; $i++) {
+                // Pastikan baris ini tidak kosong sebelum disimpan
+                if (!empty($request->infrastruktur['unor'][$i]) || !empty($request->infrastruktur['kategori'][$i])) {
+                    $laporanBalai->infrastrukturTerdampak()->create([
+                        'unor'     => $request->infrastruktur['unor'][$i] ?? null,
+                        'kategori' => $request->infrastruktur['kategori'][$i] ?? null,
+                        'nama'     => $request->infrastruktur['nama'][$i] ?? null,
+                        'satuan'   => $request->infrastruktur['satuan'][$i] ?? null,
+                        'jumlah'   => $request->infrastruktur['jumlah'][$i] ?? null,
+                        'detail'   => $request->infrastruktur['detail'][$i] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        // 6. Simpan Relasi: Penanganan Sementara
+        if ($request->has('penanganan_sementara') && isset($request->penanganan_sementara['kewenangan'])) {
+            $jumlahBaris = count($request->penanganan_sementara['kewenangan']);
+            
+            for ($i = 0; $i < $jumlahBaris; $i++) {
+                if (!empty($request->penanganan_sementara['kewenangan'][$i])) {
+                    $laporanBalai->penangananSementara()->create([
+                        'tanggal'    => $request->penanganan_sementara['tanggal'][$i] ?? null,
+                        'kewenangan' => $request->penanganan_sementara['kewenangan'][$i] ?? null,
+                        'target'     => $request->penanganan_sementara['target'][$i] ?? null,
+                        'progres'    => $request->penanganan_sementara['progres'][$i] ?? null,
+                        // Tambahkan kolom lain jika ada
+                    ]);
+                }
+            }
+        }
+
+        // 7. Simpan Relasi: Penanganan Permanen
+        if ($request->has('penanganan_permanen') && isset($request->penanganan_permanen['kewenangan'])) {
+            $jumlahBaris = count($request->penanganan_permanen['kewenangan']);
+            
+            for ($i = 0; $i < $jumlahBaris; $i++) {
+                if (!empty($request->penanganan_permanen['kewenangan'][$i])) {
+                    $laporanBalai->penangananPermanen()->create([
+                        'tanggal'    => $request->penanganan_permanen['tanggal'][$i] ?? null,
+                        'kewenangan' => $request->penanganan_permanen['kewenangan'][$i] ?? null,
+                        'target'     => $request->penanganan_permanen['target'][$i] ?? null,
+                        'progres'    => $request->penanganan_permanen['progres'][$i] ?? null,
+                        // Tambahkan kolom lain jika ada
+                    ]);
+                }
+            }
+        }
+
+        // 8. Rekam Log (History)
         $balai = Auth::user()->balai;
         $laporanBalai->logs()->create([
             'action'       => 'created',
@@ -177,7 +261,7 @@ class BalaiController extends Controller
 
         return redirect()
             ->route('balai.laporan-penanganan-balai')
-            ->with('success', 'Laporan berhasil disimpan.');
+            ->with('success', 'Laporan beserta detail penanganan berhasil disimpan.');
     }
 
     // BARU — tujuan tombol "Edit" di tabel.
@@ -200,53 +284,116 @@ class BalaiController extends Controller
     {
         $laporan = LaporanMasyarakat::findOrFail($id);
 
+        // 1. Validasi Data
         $validated = $request->validate([
-            // ... (validasi tetap sama seperti sebelumnya)
-            'pic' => 'nullable|array',
+            // (Masukkan rules validasi yang sama persis seperti di method store di atas)
+            'jenis_bencana'           => 'nullable|string',
+            'nama_bencana'            => 'nullable|string',
+            'waktu_kejadian'          => 'nullable|string',
+            'wilayah_waktu'           => 'nullable|in:WIB,WITA,WIT',
+            'lokasi'                  => 'nullable|string',
+            'provinsi_id'             => 'nullable|integer|exists:provinsis,id',
+            'kabupaten_kota_id'       => 'nullable|integer|exists:kabupaten_kotas,id',
+            'kecamatan_id'            => 'nullable|integer|exists:kecamatans,id',
+            'kelurahan_id'            => 'nullable|integer|exists:kelurahans,id',
+            'lintang'                 => 'nullable|numeric',
+            'bujur'                   => 'nullable|numeric',
+            'deskripsi'               => 'nullable|string',
+            'dampak_bencana'          => 'nullable|string',
+            'infrastruktur_terdampak' => 'nullable|string',
+            'kebutuhan_mendesak'      => 'nullable|string',
+            
+            'status_terkini'          => 'nullable|string',
+            'tanggal_respon'          => 'nullable|date',
+            'catatan'                 => 'nullable|string',
+            'pic'                     => 'nullable|array',
+            'infrastruktur'           => 'nullable|array',
+            'penanganan_sementara'    => 'nullable|array',
+            'penanganan_permanen'     => 'nullable|array',
         ]);
 
-        // 1. Update laporan utama
-        $laporan->update(collect($validated)->except('pic')->toArray());
+        // 2. Update Laporan Utama
+        $laporanData = collect($validated)->only([
+            'jenis_bencana', 'nama_bencana', 'waktu_kejadian', 'wilayah_waktu', 
+            'lokasi', 'provinsi_id', 'kabupaten_kota_id', 'kecamatan_id', 'kelurahan_id', 
+            'lintang', 'bujur', 'deskripsi', 'dampak_bencana', 'infrastruktur_terdampak', 'kebutuhan_mendesak'
+        ])->toArray();
+        $laporan->update($laporanData);
 
-        // 2. Cari record LaporanBalai yang terhubung
-        // Sesuaikan 'laporan_id' jika nama kolom di database Anda berbeda
-        $laporanBalai = LaporanBalai::where('laporan_id', $laporan->id)
-                            ->where('balai_id', Auth::user()->balai->id)
-                            ->first();
+        // 3. Update atau Create Laporan Balai
+        $laporanBalai = LaporanBalai::firstOrCreate(
+            [
+                'laporan_masyarakat_id' => $laporan->id,
+                'balai_id'              => Auth::user()->balai->id,
+            ],
+            [
+                'created_by' => Auth::id(),
+            ]
+        );
 
-        if ($laporanBalai) {
-            // --- UPDATE DATA PIC ---
-            $laporanBalai->picBencanas()->delete();
+        // Update atribut statis Laporan Balai
+        $laporanBalai->update([
+            'status_terkini' => $request->status_terkini ?? $laporanBalai->status_terkini,
+            'tanggal_respon' => $request->tanggal_respon ?? $laporanBalai->tanggal_respon,
+            'catatan'        => $request->catatan ?? $laporanBalai->catatan,
+        ]);
 
-            if ($request->has('pic') && is_array($request->pic)) {
-                foreach ($request->pic as $picData) {
-                    if (!empty($picData['pic_lainnya'])) {
-                        $laporanBalai->picBencanas()->create([
-                            'pic_lainnya' => $picData['pic_lainnya']
-                        ]);
-                    } elseif (!empty($picData['balai_id'])) {
-                        $laporanBalai->picBencanas()->create([
-                            'balai_id' => $picData['balai_id'],
-                            'nama_pic' => $picData['nama_pic'] ?? null,
-                            'kontak'   => $picData['kontak'] ?? null,
-                        ]);
-                    }
+        // 4. Hapus Data Lama untuk mencegah penumpukan baris ganda
+        $laporanBalai->picBencanas()->delete();
+        $laporanBalai->infrastrukturTerdampak()->delete();
+        $laporanBalai->penangananSementara()->delete();
+        $laporanBalai->penangananPermanen()->delete();
+
+        // 5. Insert Ulang Relasi (Proses ini sama persis dengan Create)
+        
+        // PIC
+        if ($request->has('pic') && is_array($request->pic)) {
+            foreach ($request->pic as $picData) {
+                if (!empty($picData['pic_lainnya'])) {
+                    $laporanBalai->picBencanas()->create(['pic_lainnya' => $picData['pic_lainnya']]);
+                } elseif (!empty($picData['balai_id'])) {
+                    $laporanBalai->picBencanas()->create([
+                        'balai_id' => $picData['balai_id'],
+                        'nama_pic' => $picData['nama_pic'] ?? null,
+                        'kontak'   => $picData['kontak'] ?? null,
+                    ]);
                 }
             }
-
-            // --- REKAM LOG ---
-            $balai = Auth::user()->balai;
-            $laporanBalai->logs()->create([
-                'action'       => 'updated',
-                'user_id'      => Auth::id(),
-                'nama_balai'   => $balai->nama_balai ?? 'Unknown Balai',
-                'kepala_balai' => $balai->kepala ?? 'Unknown Kepala',
-            ]);
         }
+
+        // Infrastruktur Terdampak
+        if ($request->has('infrastruktur') && is_array($request->infrastruktur)) {
+            foreach ($request->infrastruktur as $infraData) {
+                $laporanBalai->infrastrukturTerdampak()->create($infraData);
+            }
+        }
+
+        // Penanganan Sementara
+        if ($request->has('penanganan_sementara') && is_array($request->penanganan_sementara)) {
+            foreach ($request->penanganan_sementara as $sementaraData) {
+                $laporanBalai->penangananSementara()->create($sementaraData);
+            }
+        }
+
+        // Penanganan Permanen
+        if ($request->has('penanganan_permanen') && is_array($request->penanganan_permanen)) {
+            foreach ($request->penanganan_permanen as $permanenData) {
+                $laporanBalai->penangananPermanen()->create($permanenData);
+            }
+        }
+
+        // 6. Rekam Log (History)
+        $balai = Auth::user()->balai;
+        $laporanBalai->logs()->create([
+            'action'       => 'updated',
+            'user_id'      => Auth::id(),
+            'nama_balai'   => $balai->nama_balai ?? 'Unknown Balai',
+            'kepala_balai' => $balai->kepala ?? 'Unknown Kepala',
+        ]);
 
         return redirect()
             ->route('balai.laporan-penanganan-balai')
-            ->with('success', 'Laporan berhasil diperbarui.');
+            ->with('success', 'Laporan beserta seluruh detail penanganan berhasil diperbarui.');
     }
 
     public function laporanPenangananShow($id)

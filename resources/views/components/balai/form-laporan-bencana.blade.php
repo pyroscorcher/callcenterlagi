@@ -362,25 +362,25 @@
                                             class="{{ $loop->first && $existingInfrastruktur->count() === 1 ? 'hidden ' : '' }}shrink-0 rounded-lg bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">−</button>
                                 </div>
                                 <div class="grid grid-cols-3 gap-5">
-                                    <select name="infrastruktur[][unor]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <select name="infrastruktur[unor][]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         <option value="">Unit Organisasi</option>
                                         <option value="SDA" @selected(($item->unor ?? '') === 'SDA')>SDA</option>
                                         <option value="Bina Marga" @selected(($item->unor ?? '') === 'Bina Marga')>Bina Marga</option>
                                         <option value="Cipta Karya" @selected(($item->unor ?? '') === 'Cipta Karya')>Cipta Karya</option>
                                     </select>
-                                    <input type="text" name="infrastruktur[][kategori]" value="{{ $item->kategori ?? '' }}" placeholder="Kategori Infrastruktur" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <input type="text" name="infrastruktur[][nama]" value="{{ $item->nama ?? '' }}" placeholder="Nama Infrastruktur" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="infrastruktur[kategori][]" value="{{ $item->kategori ?? '' }}" placeholder="Kategori Infrastruktur" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="infrastruktur[nama][]" value="{{ $item->nama ?? '' }}" placeholder="Nama Infrastruktur" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                                 <div class="grid grid-cols-3 gap-5">
-                                    <select name="infrastruktur[][satuan]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <select name="infrastruktur[satuan][]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         <option value="">Satuan</option>
                                         <option value="Unit" @selected(($item->satuan ?? '') === 'Unit')>Unit</option>
                                         <option value="Meter" @selected(($item->satuan ?? '') === 'Meter')>Meter</option>
                                         <option value="Ha" @selected(($item->satuan ?? '') === 'Ha')>Ha</option>
                                         <option value="Lokasi" @selected(($item->satuan ?? '') === 'Lokasi')>Lokasi</option>
                                     </select>
-                                    <input type="number" name="infrastruktur[][jumlah]" value="{{ $item->jumlah ?? '' }}" placeholder="Jumlah" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <input type="text" name="infrastruktur[][detail]" value="{{ $item->detail ?? '' }}" placeholder="Jalan tergenang/jembatan putus" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="number" name="infrastruktur[jumlah][]" value="{{ $item->jumlah ?? '' }}" placeholder="Jumlah" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="infrastruktur[detail][]" value="{{ $item->detail ?? '' }}" placeholder="Jalan tergenang/jembatan putus" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Foto/Video Dokumentasi</label>
@@ -639,8 +639,8 @@
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-5">
-                                    <input type="date" name="penanganan_permanen[][tanggal]" value="{{ $pp->tanggal?->format('Y-m-d') ?? '' }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <select name="penanganan_permanen[][kewenangan]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="date" name="penanganan_permanen[tanggal][]" value="{{ $pp->tanggal?->format('Y-m-d') ?? '' }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <select name="penanganan_permanen[kewenangan][]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         <option value="">Pilih Kewenangan</option>
                                         <option value="Balai" @selected(($pp->kewenangan ?? '') === 'Balai')>Balai</option>
                                         <option value="Pemerintah Daerah" @selected(($pp->kewenangan ?? '') === 'Pemerintah Daerah')>Pemerintah Daerah</option>
@@ -649,7 +649,7 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Deskripsi Penanganan</label>
-                                    <textarea name="penanganan_permanen[][keterangan]" rows="4"
+                                    <textarea name="penanganan_permanen[keterangan][]" rows="4"
                                             placeholder="(a. Memobilisasi alat berat berupa ... untuk normalisasi sungai ...)"
                                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">{{ $pp->keterangan ?? '' }}</textarea>
                                 </div>
