@@ -19,7 +19,7 @@ class LaporanBalai extends Model
         'balai_id',
         'created_by',
         'status',
-        'status_terkini', // <-- Tambahkan ini
+        'status_terkini',
         'tanggal_respon',
         'catatan',
     ];
@@ -43,6 +43,16 @@ class LaporanBalai extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * FIX B: this relation was missing entirely. KewenanganInfrastruktur now
+     * points at laporan_balai_id directly (one per report), so this needs to
+     * be a hasOne, not hasMany.
+     */
+    public function kewenangan(): HasOne
+    {
+        return $this->hasOne(KewenanganInfrastruktur::class);
+    }
+
     public function infrastrukturTerdampak(): HasMany
     {
         return $this->hasMany(InfrastrukturTerdampak::class);
@@ -63,11 +73,12 @@ class LaporanBalai extends Model
         return $this->hasMany(DokumenLaporanPimpinan::class);
     }
 
-    public function picBencanas()
+    public function picBencanas(): HasMany
     {
         return $this->hasMany(PicBencana::class, 'laporan_balai_id');
     }
-    public function logs()
+
+    public function logs(): HasMany
     {
         return $this->hasMany(LaporanBalaiLog::class, 'laporan_id');
     }

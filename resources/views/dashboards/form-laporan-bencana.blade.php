@@ -9,9 +9,6 @@
 <body class="bg-[#161446]">
 
     @php
-        // View TUNGGAL & DINAMIS untuk create / edit / detail.
-        // $mode dikirim dari controller: 'create' | 'edit' | 'detail'
-        // $laporan dikirim dari controller: null (create) atau Eloquent LaporanMasyarakat (edit/detail)
         $mode = $mode ?? 'create';
         $readonly = $mode === 'detail';
         $judul = match ($mode) {
@@ -22,14 +19,9 @@
     @endphp
 
     <div class="flex min-h-screen">
-
         <x-balai.sidebarbalai :logo-url="asset('logositaba.png')" />
 
         <main class="flex-1 min-w-0 p-8">
-
-            {{-- Tombol "Kembali" di pojok atas DIHAPUS — komponen form sudah
-                 punya tombol Kembali sendiri di bagian bawah (baik mode
-                 create/edit maupun readonly), jadi tidak perlu dobel. --}}
             <div class="mb-6">
                 <h1 class="text-xl font-bold text-white">{{ $judul }}</h1>
             </div>
@@ -53,10 +45,10 @@
 
             <x-balai.form-laporan-bencana
                 :laporan="$laporan ?? null"
+                :laporan-balai="$laporanBalai ?? null"
                 :provinsis="$provinsis ?? []"
                 :readonly="$readonly"
             />
-
         </main>
     </div>
 

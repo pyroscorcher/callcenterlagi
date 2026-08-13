@@ -1,9 +1,13 @@
 {{--
-    Komponen: <x-balai.form-laporan-bencana :laporan="$laporan ?? null" :readonly="true|false" />
+    Komponen: <x-balai.form-laporan-bencana
+                    :laporan="$laporan ?? null"
+                    :laporan-balai="$laporanBalai ?? null"
+                    :readonly="true|false" />
 --}}
 
 @props([
     'laporan' => null,
+    'laporanBalai' => null,
     'foto' => [],
     'provinsis' => [],
     'readonly' => false,
@@ -11,10 +15,8 @@
 
 @php
     $disabled = $readonly ? 'disabled' : '';
-    $ro = $readonly ? 'bg-gray-50 text-gray-600' : ''; // dipakai HANYA di mode edit/create (tetap ada select/input)
+    $ro = $readonly ? 'bg-gray-50 text-gray-600' : '';
 
-    // Baris label-kiri / isi-kanan untuk mode readonly.
-    // Dipanggil lewat @include biar tidak menulis ulang markup yang sama berkali-kali.
     $detailRow = function (string $label, $value) {
         $value = $value === null || $value === '' ? '-' : $value;
         return '<div class="flex flex-col sm:flex-row py-1.5 gap-1 sm:gap-6">
@@ -37,13 +39,13 @@
         </div>
 
         <form action="{{ $laporan ? route('balai.laporan-penanganan-balai.update', $laporan->id) : route('balai.laporan-penanganan-balai.store') }}"
-              method="POST" class="px-8 py-6 {{ $readonly ? 'space-y-8' : 'space-y-12' }}">
+              method="POST" enctype="multipart/form-data" class="px-8 py-6 {{ $readonly ? 'space-y-8' : 'space-y-12' }}">
             @csrf
             @if($laporan)
                 @method('PUT')
             @endif
 
-            {{-- ================= Identitas Kejadian ================= --}}
+            {{-- ================= Identitas Kejadian ================= (LaporanMasyarakat) --}}
             @if($readonly)
                 <div>
                     {!! $detailRow('Jenis Bencana', $laporan->jenis_bencana ?? null) !!}
@@ -77,9 +79,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">Nama Kejadian</label>
                         <select name="nama_bencana" id="nama_bencana" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100" disabled>
                             <option value="">Pilih Nama Kejadian</option>
-                            <!-- Options will be populated by JS -->
                         </select>
-                        {{-- Hidden input to store old value for JS initialization --}}
                         <input type="hidden" id="old_nama_bencana" value="{{ $laporan->nama_bencana ?? '' }}">
                     </div>
 
@@ -116,37 +116,35 @@
                     {!! $detailRow('Kabupaten / Kota', $laporan->kabupatenKota?->nama ?? null) !!}
                     {!! $detailRow('Kecamatan', $laporan->kecamatan?->nama ?? null) !!}
                     {!! $detailRow('Kelurahan', $laporan->kelurahan?->nama ?? null) !!}
-                    {!! $detailRow('Detail Lokasi', $laporan->detail_lokasi ?? null) !!}
+                    {!! $detailRow('Detail Lokasi', $laporan->lokasi ?? null) !!}
                     {!! $detailRow('Titik Kejadian', isset($laporan->lintang, $laporan->bujur) ? $laporan->lintang . ' , ' . $laporan->bujur : null) !!}
-                    
+
                     <h3 class="font-semibold text-gray-800 mt-6 mb-2 border-b pb-1">Kewenangan Infrastruktur</h3>
-                    {!! $detailRow('Tipe Kewenangan', ucfirst($laporan->kewenangan?->tipe ?? '-')) !!}
-                    
-                    @if(($laporan->kewenangan?->tipe ?? '') === 'balai')
-                        {!! $detailRow('UNOR', $laporan->kewenangan->unor ?? null) !!}
-                        {!! $detailRow('Nama Balai', $laporan->kewenangan->balai?->nama_balai ?? null) !!}
-                        {!! $detailRow('Kepala Balai', $laporan->kewenangan->kepala ?? null) !!}
-                        {!! $detailRow('Kontak', $laporan->kewenangan->kontak ?? null) !!}
-                    @elseif(($laporan->kewenangan?->tipe ?? '') === 'delegasi')
-                        {!! $detailRow('DAS dan WS', $laporan->kewenangan->das ?? null) !!}
-                        {!! $detailRow('PCH & Intensitas', $laporan->kewenangan->pch ?? null) !!}
-                        {!! $detailRow('Ruas Jalan', $laporan->kewenangan->ruas_jalan ?? null) !!}
-                        {!! $detailRow('Instansi', $laporan->kewenangan->instansi ?? null) !!}
-                        {!! $detailRow('Penanggung Jawab', $laporan->kewenangan->penanggung_jawab ?? null) !!}
-                        {!! $detailRow('Telepon', $laporan->kewenangan->telepon ?? null) !!}
+                    {!! $detailRow('Tipe Kewenangan', ucfirst($laporanBalai?->kewenangan?->tipe ?? '-')) !!}
+
+                    @if(($laporanBalai?->kewenangan?->tipe ?? '') === 'balai')
+                        {!! $detailRow('UNOR', $laporanBalai->kewenangan->unor ?? null) !!}
+                        {!! $detailRow('Nama Balai', $laporanBalai->kewenangan->balai?->nama_balai ?? null) !!}
+                        {!! $detailRow('Kepala Balai', $laporanBalai->kewenangan->kepala ?? null) !!}
+                        {!! $detailRow('Kontak', $laporanBalai->kewenangan->kontak ?? null) !!}
+                    @elseif(($laporanBalai?->kewenangan?->tipe ?? '') === 'delegasi')
+                        {!! $detailRow('DAS dan WS', $laporanBalai->kewenangan->das ?? null) !!}
+                        {!! $detailRow('PCH & Intensitas', $laporanBalai->kewenangan->pch ?? null) !!}
+                        {!! $detailRow('Ruas Jalan', $laporanBalai->kewenangan->ruas_jalan ?? null) !!}
+                        {!! $detailRow('Instansi', $laporanBalai->kewenangan->instansi ?? null) !!}
+                        {!! $detailRow('Penanggung Jawab', $laporanBalai->kewenangan->penanggung_jawab ?? null) !!}
+                        {!! $detailRow('Telepon', $laporanBalai->kewenangan->telepon ?? null) !!}
                     @endif
                 @else
-                    {{-- Hidden inputs for Edit Mode Hydration --}}
                     <input type="hidden" id="old_provinsi" value="{{ $laporan->provinsi_id ?? '' }}">
                     <input type="hidden" id="old_kabupaten" value="{{ $laporan->kabupaten_kota_id ?? '' }}">
                     <input type="hidden" id="old_kecamatan" value="{{ $laporan->kecamatan_id ?? '' }}">
                     <input type="hidden" id="old_kelurahan" value="{{ $laporan->kelurahan_id ?? '' }}">
-                    
-                    <input type="hidden" id="old_tipe_kewenangan" value="{{ $laporan->kewenangan?->tipe ?? '' }}">
-                    <input type="hidden" id="old_unor" value="{{ $laporan->kewenangan?->unor ?? '' }}">
-                    <input type="hidden" id="old_balai_id" value="{{ $laporan->kewenangan?->balai_id ?? '' }}">
 
-                    {{-- 1. Wilayah Cascading --}}
+                    <input type="hidden" id="old_tipe_kewenangan" value="{{ $laporanBalai?->kewenangan?->tipe ?? '' }}">
+                    <input type="hidden" id="old_unor" value="{{ $laporanBalai?->kewenangan?->unor ?? '' }}">
+                    <input type="hidden" id="old_balai_id" value="{{ $laporanBalai?->kewenangan?->balai_id ?? '' }}">
+
                     <div class="grid grid-cols-3 gap-5 mb-5">
                         <select name="provinsi_id" id="provinsi" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                             <option value="">Pilih Provinsi</option>
@@ -181,7 +179,6 @@
                                class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                     </div>
 
-                    {{-- 2. Kewenangan Infrastruktur --}}
                     <div class="p-5 border border-gray-200 rounded-xl bg-gray-50/50 mb-5">
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">Kewenangan Infrastruktur</label>
                         <select name="tipe_kewenangan" id="tipe_kewenangan" class="w-full md:w-1/2 rounded-lg border border-gray-300 px-3 py-2 text-sm mb-5">
@@ -190,7 +187,6 @@
                             <option value="delegasi">Delegasi</option>
                         </select>
 
-                        {{-- Tipe 1: Balai --}}
                         <div id="wrapper_kewenangan_balai" class="hidden space-y-5 border-t border-gray-200 pt-5">
                             <div class="grid grid-cols-2 gap-5">
                                 <div>
@@ -212,43 +208,42 @@
                             <div class="grid grid-cols-2 gap-5">
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Kepala Balai</label>
-                                    <input type="text" name="kepala" id="kepala_balai" value="{{ $laporan->kewenangan?->kepala ?? '' }}" readonly class="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
+                                    <input type="text" name="kepala" id="kepala_balai" value="{{ $laporanBalai?->kewenangan?->kepala ?? '' }}" readonly class="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Kontak Balai</label>
-                                    <input type="text" name="kontak" id="kontak_balai" value="{{ $laporan->kewenangan?->kontak ?? '' }}" readonly class="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
+                                    <input type="text" name="kontak" id="kontak_balai" value="{{ $laporanBalai?->kewenangan?->kontak ?? '' }}" readonly class="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Tipe 2: Delegasi --}}
                         <div id="wrapper_kewenangan_delegasi" class="hidden space-y-5 border-t border-gray-200 pt-5">
                             <div class="grid grid-cols-3 gap-5">
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">DAS dan WS</label>
-                                    <input type="text" name="das" value="{{ $laporan->kewenangan?->das ?? '' }}" placeholder="Tambahkan Nama DAS/WS" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="das" value="{{ $laporanBalai?->kewenangan?->das ?? '' }}" placeholder="Tambahkan Nama DAS/WS" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">PCH & Intensitas</label>
-                                    <input type="text" name="pch" value="{{ $laporan->kewenangan?->pch ?? '' }}" placeholder="PCH & curah hujan" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="pch" value="{{ $laporanBalai?->kewenangan?->pch ?? '' }}" placeholder="PCH & curah hujan" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Ruas Jalan</label>
-                                    <input type="text" name="ruas_jalan" value="{{ $laporan->kewenangan?->ruas_jalan ?? '' }}" placeholder="Nama/Nomor ruas jalan" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="ruas_jalan" value="{{ $laporanBalai?->kewenangan?->ruas_jalan ?? '' }}" placeholder="Nama/Nomor ruas jalan" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                             </div>
                             <div class="grid grid-cols-3 gap-5">
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Instansi</label>
-                                    <input type="text" name="instansi" value="{{ $laporan->kewenangan?->instansi ?? '' }}" placeholder="Nama Instansi" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="instansi" value="{{ $laporanBalai?->kewenangan?->instansi ?? '' }}" placeholder="Nama Instansi" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Penanggung Jawab</label>
-                                    <input type="text" name="penanggung_jawab" value="{{ $laporan->kewenangan?->penanggung_jawab ?? '' }}" placeholder="Nama PIC" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="penanggung_jawab" value="{{ $laporanBalai?->kewenangan?->penanggung_jawab ?? '' }}" placeholder="Nama PIC" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-xs text-gray-500 mb-1">Telepon</label>
-                                    <input type="text" name="telepon" value="{{ $laporan->kewenangan?->telepon ?? '' }}" placeholder="Nomor Kontak" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="telepon" value="{{ $laporanBalai?->kewenangan?->telepon ?? '' }}" placeholder="Nomor Kontak" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                             </div>
                         </div>
@@ -256,7 +251,7 @@
                 @endif
             </div>
 
-            {{-- ================= Deskripsi ================= --}}
+            {{-- ================= Deskripsi ================= (LaporanMasyarakat) --}}
             @if($readonly)
                 <div>
                     {!! $detailRow('Deskripsi Penyebab Bencana', $laporan->deskripsi ?? null) !!}
@@ -278,7 +273,7 @@
                 </div>
             @endif
 
-            {{-- ================= Dokumentasi Bencana ================= --}}
+            {{-- ================= Dokumentasi Bencana ================= (LaporanMasyarakat->fotos) --}}
             <div>
                 <h2 class="font-bold text-gray-900 mb-4">Dokumentasi Bencana</h2>
 
@@ -292,16 +287,18 @@
                     <div class="space-y-4" id="dokumentasi-bencana-list">
                         @forelse (($laporan->fotos ?? []) as $foto)
                             <div class="flex gap-4 items-start items-center">
-                                <input type="file" name="fotos[][file]" class="hidden foto-input" accept="image/*,video/*">
+                                <input type="hidden" name="fotos[id][]" value="{{ $foto->id }}">
+                                <input type="file" name="fotos[file][]" class="hidden foto-input" accept="image/*,video/*">
                                 <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white hover:bg-gray-50 transition">Browse Image/Video</button>
-                                <textarea name="fotos[][keterangan]" rows="2" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Keterangan foto">{{ $foto->keterangan ?? '' }}</textarea>
+                                <textarea name="fotos[keterangan][]" rows="2" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Keterangan foto">{{ $foto->keterangan ?? '' }}</textarea>
                                 <button type="button" onclick="this.closest('div').remove()" class="{{ $loop->first ? 'hidden ' : '' }}shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                             </div>
                         @empty
                             <div class="flex gap-4 items-start items-center">
-                                <input type="file" name="fotos[][file]" class="hidden foto-input" accept="image/*,video/*">
+                                <input type="hidden" name="fotos[id][]" value="">
+                                <input type="file" name="fotos[file][]" class="hidden foto-input" accept="image/*,video/*">
                                 <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white hover:bg-gray-50 transition">Browse Image/Video</button>
-                                <textarea name="fotos[][keterangan]" rows="2" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Keterangan foto"></textarea>
+                                <textarea name="fotos[keterangan][]" rows="2" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Keterangan foto"></textarea>
                                 <button type="button" onclick="this.closest('div').remove()" class="hidden shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                             </div>
                         @endforelse
@@ -313,7 +310,7 @@
                 @endif
             </div>
 
-            {{-- ================= Kebutuhan Mendesak ================= --}}
+            {{-- ================= Kebutuhan Mendesak ================= (LaporanMasyarakat) --}}
             @if($readonly)
                 {!! $detailRow('Kebutuhan Mendesak', $laporan->kebutuhan_mendesak ?? null) !!}
             @else
@@ -324,7 +321,7 @@
                 </div>
             @endif
 
-            {{-- ================= Infrastruktur Terdampak ================= --}}
+            {{-- ================= Infrastruktur Terdampak ================= (LaporanBalai) --}}
             <div>
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-bold text-gray-900">Infrastruktur Terdampak</h2>
@@ -335,7 +332,7 @@
                 </div>
 
                 @if($readonly)
-                    @forelse (($laporan->infrastrukturTerdampak ?? []) as $item)
+                    @forelse (($laporanBalai->infrastrukturTerdampak ?? []) as $item)
                         <div class="{{ !$loop->last ? 'mb-5 pb-5 border-b border-gray-100' : '' }}">
                             <p class="text-sm font-semibold text-gray-700 mb-1">Infrastruktur {{ $loop->iteration }}</p>
                             {!! $detailRow('Unit Organisasi', $item->unor ?? null) !!}
@@ -351,7 +348,7 @@
                 @else
                     <div id="infrastruktur-list" class="space-y-5">
                         @php
-                            $existingInfrastruktur = $laporan?->infrastrukturTerdampak ?? collect();
+                            $existingInfrastruktur = $laporanBalai?->infrastrukturTerdampak ?? collect();
                         @endphp
 
                         @forelse ($existingInfrastruktur as $item)
@@ -384,7 +381,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Foto/Video Dokumentasi</label>
-                                    <input type="file" name="infrastruktur[][dokumentasi]" class="hidden">
+                                    <input type="file" name="infrastruktur[dokumentasi][]" class="hidden">
                                     <button type="button" onclick="this.previousElementSibling.click()" class="rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white hover:bg-gray-50 transition">Browse Image/Video</button>
                                 </div>
                             </div>
@@ -392,33 +389,32 @@
                             <div class="infrastruktur-row border border-gray-200 rounded-lg p-5 space-y-4">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Infrastruktur</span>
-                                    <button type="button" data-remove-row
-                                            class="hidden shrink-0 rounded-lg bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">−</button>
+                                    <button type="button" data-remove-row class="hidden shrink-0 rounded-lg bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">−</button>
                                 </div>
                                 <div class="grid grid-cols-3 gap-5">
-                                    <select name="infrastruktur[][unor]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <select name="infrastruktur[unor][]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         <option value="">Unit Organisasi</option>
                                         <option value="SDA">SDA</option>
                                         <option value="Bina Marga">Bina Marga</option>
                                         <option value="Cipta Karya">Cipta Karya</option>
                                     </select>
-                                    <input type="text" name="infrastruktur[][kategori]" placeholder="Kategori Infrastruktur" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <input type="text" name="infrastruktur[][nama]" placeholder="Nama Infrastruktur" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="infrastruktur[kategori][]" placeholder="Kategori Infrastruktur" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="infrastruktur[nama][]" placeholder="Nama Infrastruktur" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                                 <div class="grid grid-cols-3 gap-5">
-                                    <select name="infrastruktur[][satuan]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <select name="infrastruktur[satuan][]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         <option value="">Satuan</option>
                                         <option value="Unit">Unit</option>
                                         <option value="Meter">Meter</option>
                                         <option value="Ha">Ha</option>
                                         <option value="Lokasi">Lokasi</option>
                                     </select>
-                                    <input type="number" name="infrastruktur[][jumlah]" placeholder="Jumlah" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <input type="text" name="infrastruktur[][detail]" placeholder="Jalan tergenang/jembatan putus" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="number" name="infrastruktur[jumlah][]" placeholder="Jumlah" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="infrastruktur[detail][]" placeholder="Jalan tergenang/jembatan putus" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Foto/Video Dokumentasi</label>
-                                    <input type="file" name="infrastruktur[][dokumentasi]" class="hidden">
+                                    <input type="file" name="infrastruktur[dokumentasi][]" class="hidden">
                                     <button type="button" onclick="this.previousElementSibling.click()" class="rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white hover:bg-gray-50 transition">Browse Image/Video</button>
                                 </div>
                             </div>
@@ -427,7 +423,7 @@
                 @endif
             </div>
 
-            {{-- ================= Penanganan Sementara ================= --}}
+            {{-- ================= Penanganan Sementara ================= (LaporanBalai) --}}
             <div>
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-bold text-gray-900">Penanganan Sementara</h2>
@@ -438,7 +434,7 @@
                 </div>
 
                 @if($readonly)
-                    @forelse (($laporan->penangananSementara ?? []) as $p)
+                    @forelse (($laporanBalai->penangananSementara ?? []) as $p)
                         <div class="{{ !$loop->last ? 'mb-5 pb-5 border-b border-gray-100' : '' }}">
                             <p class="text-sm font-semibold text-gray-700 mb-1">Penanganan {{ $loop->iteration }}</p>
                             {!! $detailRow('Tanggal', $p->tanggal?->format('Y-m-d') ?? null) !!}
@@ -459,7 +455,7 @@
                 @else
                     <div id="penanganan-list" class="space-y-5">
                         @php
-                            $existingPenanganan = $laporan?->penangananSementara ?? collect();
+                            $existingPenanganan = $laporanBalai?->penangananSementara ?? collect();
                         @endphp
 
                         @forelse ($existingPenanganan as $p)
@@ -470,28 +466,28 @@
                                             class="{{ $loop->first && $existingPenanganan->count() === 1 ? 'hidden ' : '' }}shrink-0 rounded-lg bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">−</button>
                                 </div>
                                 <div class="grid grid-cols-2 gap-5">
-                                    <input type="date" name="penanganan[][tanggal]" value="{{ $p->tanggal?->format('Y-m-d') ?? '' }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <select name="penanganan[][kewenangan]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="date" name="penanganan_sementara[tanggal][]" value="{{ $p->tanggal?->format('Y-m-d') ?? '' }}" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <select name="penanganan_sementara[kewenangan][]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         <option value="">Pilih Kewenangan</option>
                                         <option value="Balai" @selected(($p->kewenangan ?? '') === 'Balai')>Balai</option>
                                         <option value="Pemerintah Daerah" @selected(($p->kewenangan ?? '') === 'Pemerintah Daerah')>Pemerintah Daerah</option>
                                     </select>
                                 </div>
                                 <div class="grid grid-cols-1 gap-5">
-                                    <input type="number" name="penanganan[][jumlah_personil]" value="{{ $p->jumlah_personil ?? '' }}" placeholder="Jumlah Personil" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="number" name="penanganan_sementara[jumlah_personil][]" value="{{ $p->jumlah_personil ?? '' }}" placeholder="Jumlah Personil" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
-                                <textarea name="penanganan[][keterangan]" rows="3" placeholder="Deskripsi/Keterangan Penanganan"
+                                <textarea name="penanganan_sementara[keterangan][]" rows="3" placeholder="Deskripsi/Keterangan Penanganan"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">{{ $p->keterangan ?? '' }}</textarea>
 
                                 <div class="penanganan-foto-list space-y-4">
                                     <div class="penanganan-foto-row flex gap-4 items-start">
-                                        <input type="file" name="penanganan_foto[][file]" class="hidden">
+                                        <input type="file" name="penanganan_sementara_foto[file][]" class="hidden">
                                         <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white">Browse Image/Video</button>
                                         <div class="w-40 space-y-2">
-                                            <input type="text" name="penanganan_foto[][latitude]" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                            <input type="text" name="penanganan_foto[][longitude]" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                            <input type="text" name="penanganan_sementara_foto[latitude][]" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                            <input type="text" name="penanganan_sementara_foto[longitude][]" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         </div>
-                                        <textarea name="penanganan_foto[][keterangan]" rows="2" placeholder="description" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
+                                        <textarea name="penanganan_sementara_foto[keterangan][]" rows="2" placeholder="description" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
                                         <button type="button" data-remove-foto-row class="hidden shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                                     </div>
                                 </div>
@@ -504,27 +500,27 @@
                                     <button type="button" data-remove-row class="hidden shrink-0 rounded-lg bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">−</button>
                                 </div>
                                 <div class="grid grid-cols-2 gap-5">
-                                    <input type="date" name="penanganan[][tanggal]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <select name="penanganan[][kewenangan]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="date" name="penanganan_sementara[tanggal][]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <select name="penanganan_sementara[kewenangan][]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         <option value="">Pilih Kewenangan</option>
                                         <option value="Balai">Balai</option>
                                         <option value="Pemerintah Daerah">Pemerintah Daerah</option>
                                     </select>
                                 </div>
                                 <div class="grid grid-cols-1 gap-5">
-                                    <input type="number" name="penanganan[][jumlah_personil]" placeholder="Jumlah Personil" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="number" name="penanganan_sementara[jumlah_personil][]" placeholder="Jumlah Personil" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
-                                <textarea name="penanganan[][keterangan]" rows="3" placeholder="Deskripsi/Keterangan Penanganan" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
+                                <textarea name="penanganan_sementara[keterangan][]" rows="3" placeholder="Deskripsi/Keterangan Penanganan" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
 
                                 <div class="penanganan-foto-list space-y-4">
                                     <div class="penanganan-foto-row flex gap-4 items-start">
-                                        <input type="file" name="penanganan_foto[][file]" class="hidden">
+                                        <input type="file" name="penanganan_sementara_foto[file][]" class="hidden">
                                         <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white">Browse Image/Video</button>
                                         <div class="w-40 space-y-2">
-                                            <input type="text" name="penanganan_foto[][latitude]" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                            <input type="text" name="penanganan_foto[][longitude]" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                            <input type="text" name="penanganan_sementara_foto[latitude][]" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                            <input type="text" name="penanganan_sementara_foto[longitude][]" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         </div>
-                                        <textarea name="penanganan_foto[][keterangan]" rows="2" placeholder="description" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
+                                        <textarea name="penanganan_sementara_foto[keterangan][]" rows="2" placeholder="description" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
                                         <button type="button" data-remove-foto-row class="hidden shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                                     </div>
                                 </div>
@@ -535,13 +531,13 @@
                 @endif
             </div>
 
-            {{-- ================= Sumberdaya ================= --}}
+            {{-- ================= Sumberdaya ================= (LaporanBalai->penangananSementara->alatDanBahan) --}}
             <div>
                 <h2 class="font-bold text-gray-900 mb-4">Sumberdaya</h2>
 
                 @if($readonly)
                     <p class="text-sm font-semibold text-gray-700 mt-4 mb-1">Alat & Bahan</p>
-                    @forelse (($laporan->penangananSementara?->flatMap->alatDanBahan ?? []) as $item)
+                    @forelse (($laporanBalai->penangananSementara?->flatMap->alatDanBahan ?? []) as $item)
                         <div class="{{ !$loop->last ? 'mb-3 pb-3 border-b border-gray-100' : '' }}">
                             {!! $detailRow('Kategori / Kelas / Model', trim(($item->kategori ?? '-') . ' / ' . ($item->kelas ?? '-') . ' / ' . ($item->model ?? '-'))) !!}
                             {!! $detailRow('Jumlah', $item->jumlah ?? null) !!}
@@ -556,10 +552,10 @@
 
                     <div id="sumberdaya-list" class="space-y-4 mb-4">
                         <div class="sumberdaya-row grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 items-center">
-                            <input type="text" name="sumberdaya[][kategori]" placeholder="Kategori" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                            <input type="text" name="sumberdaya[][kelas]" placeholder="Kelas" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                            <input type="text" name="sumberdaya[][model]" placeholder="Model" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                            <input type="number" name="sumberdaya[][jumlah]" placeholder="Jumlah" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                            <input type="text" name="sumberdaya[kategori][]" placeholder="Kategori" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                            <input type="text" name="sumberdaya[kelas][]" placeholder="Kelas" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                            <input type="text" name="sumberdaya[model][]" placeholder="Model" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                            <input type="number" name="sumberdaya[jumlah][]" placeholder="Jumlah" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                             <button type="button" data-remove-sumberdaya class="hidden rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">−</button>
                         </div>
                     </div>
@@ -577,10 +573,10 @@
                         document.addEventListener('click', function (e) {
                             const btn = e.target.closest('[data-remove-sumberdaya]');
                             if (!btn) return;
-                            
+
                             const row = btn.closest('.sumberdaya-row');
                             const container = document.getElementById('sumberdaya-list');
-                            
+
                             if (container.querySelectorAll('.sumberdaya-row').length > 1) {
                                 row.remove();
                             } else {
@@ -591,7 +587,7 @@
                 @endif
             </div>
 
-            {{-- ================= Penanganan Permanen ================= --}}
+            {{-- ================= Penanganan Permanen ================= (LaporanBalai) --}}
             <div>
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-bold text-gray-900">Penanganan Permanen</h2>
@@ -602,7 +598,7 @@
                 </div>
 
                 @if($readonly)
-                    @forelse (($laporan->penangananPermanen ?? []) as $pp)
+                    @forelse (($laporanBalai->penangananPermanen ?? []) as $pp)
                         <div class="{{ !$loop->last ? 'mb-5 pb-5 border-b border-gray-100' : '' }}">
                             <p class="text-sm font-semibold text-gray-700 mb-1">Penanganan Permanen {{ $loop->iteration }}</p>
                             {!! $detailRow('Tanggal', $pp->tanggal?->format('d/m/Y') ?? null) !!}
@@ -627,7 +623,7 @@
                 @else
                     <div id="penanganan-permanen-list" class="space-y-5">
                         @php
-                            $existingPermanen = $laporan?->penangananPermanen ?? collect();
+                            $existingPermanen = $laporanBalai?->penangananPermanen ?? collect();
                         @endphp
 
                         @forelse ($existingPermanen as $pp)
@@ -655,38 +651,37 @@
                                 </div>
 
                                 <div class="penanganan-permanen-foto-list space-y-4">
-                                    {{-- Loop existing photos if editing --}}
                                     @forelse (($pp->foto ?? []) as $foto)
                                         <div class="penanganan-permanen-foto-row flex gap-4 items-start">
-                                            <input type="hidden" name="penanganan_permanen_foto[][id]" value="{{ $foto->id }}">
-                                            <input type="file" name="penanganan_permanen_foto[][file]" class="hidden" accept="image/*,video/*" onchange="this.nextElementSibling.querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Browse Image/Video'">
+                                            <input type="hidden" name="penanganan_permanen_foto[id][]" value="{{ $foto->id }}">
+                                            <input type="file" name="penanganan_permanen_foto[file][]" class="hidden" accept="image/*,video/*" onchange="this.nextElementSibling.querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Browse Image/Video'">
                                             <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white w-48 overflow-hidden text-ellipsis whitespace-nowrap text-left">
                                                 <span>{{ $foto->foto ? basename($foto->foto) : 'Browse Image/Video' }}</span>
                                             </button>
                                             <div class="w-40 space-y-2">
-                                                <input type="text" name="penanganan_permanen_foto[][latitude]" value="{{ $foto->latitude ?? '' }}" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                                <input type="text" name="penanganan_permanen_foto[][longitude]" value="{{ $foto->longitude ?? '' }}" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                                <input type="text" name="penanganan_permanen_foto[latitude][]" value="{{ $foto->latitude ?? '' }}" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                                <input type="text" name="penanganan_permanen_foto[longitude][]" value="{{ $foto->longitude ?? '' }}" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                             </div>
-                                            <textarea name="penanganan_permanen_foto[][keterangan]" rows="2" placeholder="Keterangan foto" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm">{{ $foto->keterangan ?? '' }}</textarea>
+                                            <textarea name="penanganan_permanen_foto[keterangan][]" rows="2" placeholder="Keterangan foto" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm">{{ $foto->keterangan ?? '' }}</textarea>
                                             <button type="button" data-remove-permanen-foto-row class="shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                                         </div>
                                     @empty
                                         <div class="penanganan-permanen-foto-row flex gap-4 items-start">
-                                            <input type="hidden" name="penanganan_permanen_foto[][id]" value="">
-                                            <input type="file" name="penanganan_permanen_foto[][file]" class="hidden" accept="image/*,video/*" onchange="this.nextElementSibling.querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Browse Image/Video'">
+                                            <input type="hidden" name="penanganan_permanen_foto[id][]" value="">
+                                            <input type="file" name="penanganan_permanen_foto[file][]" class="hidden" accept="image/*,video/*" onchange="this.nextElementSibling.querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Browse Image/Video'">
                                             <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white w-48 overflow-hidden text-ellipsis whitespace-nowrap text-left">
                                                 <span>Browse Image/Video</span>
                                             </button>
                                             <div class="w-40 space-y-2">
-                                                <input type="text" name="penanganan_permanen_foto[][latitude]" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                                <input type="text" name="penanganan_permanen_foto[][longitude]" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                                <input type="text" name="penanganan_permanen_foto[latitude][]" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                                <input type="text" name="penanganan_permanen_foto[longitude][]" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                             </div>
-                                            <textarea name="penanganan_permanen_foto[][keterangan]" rows="2" placeholder="Keterangan foto" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
+                                            <textarea name="penanganan_permanen_foto[keterangan][]" rows="2" placeholder="Keterangan foto" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
                                             <button type="button" data-remove-permanen-foto-row class="hidden shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                                         </div>
                                     @endforelse
                                 </div>
-                                
+
                                 <button type="button" data-add-foto-permanen
                                         class="rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition">
                                     + Tambah Foto/Video
@@ -701,8 +696,8 @@
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-5">
-                                    <input type="date" name="penanganan_permanen[][tanggal]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <select name="penanganan_permanen[][kewenangan]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="date" name="penanganan_permanen[tanggal][]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <select name="penanganan_permanen[kewenangan][]" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         <option value="">Pilih Kewenangan</option>
                                         <option value="Balai">Balai</option>
                                         <option value="Pemerintah Daerah">Pemerintah Daerah</option>
@@ -711,27 +706,27 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Deskripsi Penanganan</label>
-                                    <textarea name="penanganan_permanen[][keterangan]" rows="4"
+                                    <textarea name="penanganan_permanen[keterangan][]" rows="4"
                                             placeholder="(a. Memobilisasi alat berat berupa ... untuk normalisasi sungai ...)"
                                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
                                 </div>
 
                                 <div class="penanganan-permanen-foto-list space-y-4">
                                     <div class="penanganan-permanen-foto-row flex gap-4 items-start">
-                                        <input type="hidden" name="penanganan_permanen_foto[][id]" value="">
-                                        <input type="file" name="penanganan_permanen_foto[][file]" class="hidden" accept="image/*,video/*" onchange="this.nextElementSibling.querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Browse Image/Video'">
+                                        <input type="hidden" name="penanganan_permanen_foto[id][]" value="">
+                                        <input type="file" name="penanganan_permanen_foto[file][]" class="hidden" accept="image/*,video/*" onchange="this.nextElementSibling.querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Browse Image/Video'">
                                         <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white w-48 overflow-hidden text-ellipsis whitespace-nowrap text-left">
                                             <span>Browse Image/Video</span>
                                         </button>
                                         <div class="w-40 space-y-2">
-                                            <input type="text" name="penanganan_permanen_foto[][latitude]" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                            <input type="text" name="penanganan_permanen_foto[][longitude]" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                            <input type="text" name="penanganan_permanen_foto[latitude][]" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                            <input type="text" name="penanganan_permanen_foto[longitude][]" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                         </div>
-                                        <textarea name="penanganan_permanen_foto[][keterangan]" rows="2" placeholder="Keterangan foto" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
+                                        <textarea name="penanganan_permanen_foto[keterangan][]" rows="2" placeholder="Keterangan foto" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
                                         <button type="button" data-remove-permanen-foto-row class="hidden shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                                     </div>
                                 </div>
-                                
+
                                 <button type="button" data-add-foto-permanen
                                         class="rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition">
                                     + Tambah Foto/Video
@@ -740,42 +735,34 @@
                         @endforelse
                     </div>
 
-                    {{-- Script Khusus Penanganan Permanen --}}
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
-                            // Handle Add Photo Row
                             document.addEventListener('click', function (e) {
                                 if (e.target.closest('[data-add-foto-permanen]')) {
                                     const row = e.target.closest('.penanganan-permanen-row');
                                     const list = row.querySelector('.penanganan-permanen-foto-list');
                                     const firstRow = list.querySelector('.penanganan-permanen-foto-row');
-                                    
+
                                     const clone = firstRow.cloneNode(true);
-                                    
-                                    // Clear inputs
                                     clone.querySelectorAll('input, textarea').forEach(el => el.value = '');
-                                    // Reset button text
                                     const span = clone.querySelector('button span');
                                     if (span) span.textContent = 'Browse Image/Video';
-                                    // Show remove button
                                     clone.querySelector('[data-remove-permanen-foto-row]').classList.remove('hidden');
-                                    
+
                                     list.appendChild(clone);
                                 }
                             });
 
-                            // Handle Remove Photo Row
                             document.addEventListener('click', function (e) {
                                 const btn = e.target.closest('[data-remove-permanen-foto-row]');
                                 if (!btn) return;
-                                
+
                                 const list = btn.closest('.penanganan-permanen-foto-list');
                                 const rows = list.querySelectorAll('.penanganan-permanen-foto-row');
-                                
+
                                 if (rows.length > 1) {
                                     btn.closest('.penanganan-permanen-foto-row').remove();
                                 } else {
-                                    // If it's the last row, just clear the data instead of deleting the element
                                     const row = btn.closest('.penanganan-permanen-foto-row');
                                     row.querySelectorAll('input, textarea').forEach(el => el.value = '');
                                     const span = row.querySelector('button span');
@@ -787,10 +774,10 @@
                 @endif
             </div>
 
-            {{-- ================= Status Terkini ================= --}}
+            {{-- ================= Status Terkini ================= (LaporanBalai) --}}
             <div>
                 @if($readonly)
-                    {!! $detailRow('Status Terkini', $laporan->status_terkini ?? null) !!}
+                    {!! $detailRow('Status Terkini', $laporanBalai->status_terkini ?? null) !!}
                 @else
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Status Terkini</label>
                     <div class="rounded-lg border border-gray-300 overflow-hidden">
@@ -801,17 +788,17 @@
                         </div>
                         <textarea name="status_terkini" rows="4"
                                 placeholder="(a. Air berangsur/sudah surut dari ketinggian ... menjadi ...)"
-                                class="w-full border-0 px-3 py-2 text-sm focus:ring-0 focus:outline-none">{{ $laporan->status_terkini ?? '' }}</textarea>
+                                class="w-full border-0 px-3 py-2 text-sm focus:ring-0 focus:outline-none">{{ $laporanBalai->status_terkini ?? '' }}</textarea>
                     </div>
                 @endif
             </div>
 
-            {{-- ================= Dokumen Laporan Pimpinan ================= --}}
+            {{-- ================= Dokumen Laporan Pimpinan ================= (LaporanBalai) --}}
             <div>
                 <h2 class="font-bold text-gray-900 mb-4">Dokumen Laporan Pimpinan</h2>
 
                 @if($readonly)
-                    @forelse (($laporan->dokumenLaporanPimpinan ?? []) as $dok)
+                    @forelse (($laporanBalai->dokumenLaporanPimpinan ?? []) as $dok)
                         <div class="{{ !$loop->last ? 'mb-3 pb-3 border-b border-gray-100' : '' }}">
                             {!! $detailRow('Dokumen ' . $loop->iteration, $dok->nama_dokumen ?? '-') !!}
                             {!! $detailRow('Deskripsi', $dok->deskripsi ?? '-') !!}
@@ -827,41 +814,41 @@
                 @else
                     <div id="dokumen-laporan-list" class="space-y-4 mb-4">
                         @php
-                            $existingDokumen = $laporan?->dokumenLaporanPimpinan ?? collect();
+                            $existingDokumen = $laporanBalai?->dokumenLaporanPimpinan ?? collect();
                         @endphp
 
                         @forelse ($existingDokumen as $dok)
                             <div class="dokumen-laporan-row flex items-start gap-4">
-                                <input type="hidden" name="dokumen[][id]" value="{{ $dok->id }}">
-                                <input type="file" name="dokumen[][file]" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx" 
+                                <input type="hidden" name="dokumen[id][]" value="{{ $dok->id }}">
+                                <input type="file" name="dokumen[file][]" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx"
                                     onchange="this.nextElementSibling.querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Browse Dokumen'">
                                 <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white w-48 overflow-hidden text-ellipsis whitespace-nowrap text-left hover:bg-gray-50 transition">
                                     <span>{{ $dok->file_path ? basename($dok->file_path) : 'Browse Dokumen' }}</span>
                                 </button>
-                                
+
                                 <div class="flex-1 space-y-2">
-                                    <input type="text" name="dokumen[][nama_dokumen]" value="{{ $dok->nama_dokumen ?? '' }}" placeholder="Nama Dokumen" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <input type="text" name="dokumen[][deskripsi]" value="{{ $dok->deskripsi ?? '' }}" placeholder="Deskripsi Singkat" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="dokumen[nama_dokumen][]" value="{{ $dok->nama_dokumen ?? '' }}" placeholder="Nama Dokumen" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="dokumen[deskripsi][]" value="{{ $dok->deskripsi ?? '' }}" placeholder="Deskripsi Singkat" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
 
-                                <button type="button" data-remove-dokumen-row 
+                                <button type="button" data-remove-dokumen-row
                                         class="{{ $loop->first && $existingDokumen->count() === 1 ? 'hidden ' : '' }}shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                             </div>
                         @empty
                             <div class="dokumen-laporan-row flex items-start gap-4">
-                                <input type="hidden" name="dokumen[][id]" value="">
-                                <input type="file" name="dokumen[][file]" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx" 
+                                <input type="hidden" name="dokumen[id][]" value="">
+                                <input type="file" name="dokumen[file][]" class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx"
                                     onchange="this.nextElementSibling.querySelector('span').textContent = this.files[0] ? this.files[0].name : 'Browse Dokumen'">
                                 <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white w-48 overflow-hidden text-ellipsis whitespace-nowrap text-left hover:bg-gray-50 transition">
                                     <span>Browse Dokumen</span>
                                 </button>
-                                
+
                                 <div class="flex-1 space-y-2">
-                                    <input type="text" name="dokumen[][nama_dokumen]" placeholder="Nama Dokumen" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <input type="text" name="dokumen[][deskripsi]" placeholder="Deskripsi Singkat" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="dokumen[nama_dokumen][]" placeholder="Nama Dokumen" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="dokumen[deskripsi][]" placeholder="Deskripsi Singkat" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
 
-                                <button type="button" data-remove-dokumen-row 
+                                <button type="button" data-remove-dokumen-row
                                         class="hidden shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                             </div>
                         @endforelse
@@ -874,37 +861,29 @@
 
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
-                            // Add Row Logic
                             document.getElementById('btn-tambah-dokumen')?.addEventListener('click', function () {
                                 const container = document.getElementById('dokumen-laporan-list');
                                 const firstRow = container.querySelector('.dokumen-laporan-row');
                                 const clone = firstRow.cloneNode(true);
-                                
-                                // Clear inputs (text, hidden IDs, files)
+
                                 clone.querySelectorAll('input').forEach(el => el.value = '');
-                                
-                                // Reset preview text back to default
                                 const span = clone.querySelector('button span');
                                 if (span) span.textContent = 'Browse Dokumen';
-                                
-                                // Show remove button
                                 clone.querySelector('[data-remove-dokumen-row]').classList.remove('hidden');
-                                
+
                                 container.appendChild(clone);
                             });
 
-                            // Remove Row Logic
                             document.addEventListener('click', function (e) {
                                 const btn = e.target.closest('[data-remove-dokumen-row]');
                                 if (!btn) return;
-                                
+
                                 const list = document.getElementById('dokumen-laporan-list');
                                 const rows = list.querySelectorAll('.dokumen-laporan-row');
-                                
+
                                 if (rows.length > 1) {
                                     btn.closest('.dokumen-laporan-row').remove();
                                 } else {
-                                    // Clear the row if it's the last one left
                                     const row = btn.closest('.dokumen-laporan-row');
                                     row.querySelectorAll('input').forEach(el => el.value = '');
                                     const span = row.querySelector('button span');
@@ -916,7 +895,7 @@
                 @endif
             </div>
 
-            {{-- ================= Dilaporkan Oleh (PIC) ================= --}}
+            {{-- ================= Dilaporkan Oleh (PIC) ================= (LaporanBalai) --}}
             <div>
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-bold text-gray-900">Dilaporkan oleh (PIC)</h2>
@@ -927,7 +906,7 @@
                 </div>
 
                 @if($readonly)
-                    @forelse (($laporan->picBencanas ?? []) as $pic)
+                    @forelse (($laporanBalai->picBencanas ?? []) as $pic)
                         <div class="{{ !$loop->last ? 'mb-5 pb-5 border-b border-gray-100' : '' }}">
                             <p class="text-sm font-semibold text-gray-700 mb-2">PIC {{ $loop->iteration }}</p>
                             @if($pic->isExternalPic())
@@ -944,7 +923,7 @@
                     @endforelse
                 @else
                     <div id="pic-list" class="space-y-5">
-                        @php $existingPics = $laporan?->picBencanas ?? collect(); @endphp
+                        @php $existingPics = $laporanBalai?->picBencanas ?? collect(); @endphp
 
                         @forelse ($existingPics as $pic)
                             <div class="pic-row border border-gray-200 rounded-lg p-5 space-y-5">
@@ -953,8 +932,7 @@
                                     <button type="button" data-remove-row
                                             class="{{ $loop->first && $existingPics->count() === 1 ? 'hidden ' : '' }}shrink-0 rounded-lg bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">−</button>
                                 </div>
-                                
-                                {{-- Filter Wilayah/Balai --}}
+
                                 <div class="grid grid-cols-2 gap-5">
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1">Unit Organisasi (UNOR)</label>
@@ -967,32 +945,29 @@
                                     </div>
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1">Balai</label>
-                                        <select name="pic[][balai_id]" class="balai-select w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100" disabled>
+                                        <select name="pic[balai_id][]" class="balai-select w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100" disabled>
                                             <option value="">Pilih Balai</option>
                                         </select>
-                                        
-                                        {{-- Hidden inputs for Edit Mode Hydration --}}
+
                                         <input type="hidden" class="old-pic-unor" value="{{ $pic->balai->unor ?? '' }}">
                                         <input type="hidden" class="old-pic-balai-id" value="{{ $pic->balai_id ?? '' }}">
                                     </div>
                                 </div>
 
-                                {{-- Auto-filled inputs based on Balai --}}
                                 <div class="grid grid-cols-2 gap-5">
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1">Nama PIC (Kepala Balai)</label>
-                                        <input type="text" name="pic[][nama_pic]" value="{{ $pic->nama_pic ?? '' }}" readonly class="nama-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
+                                        <input type="text" name="pic[nama_pic][]" value="{{ $pic->nama_pic ?? '' }}" readonly class="nama-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
                                     </div>
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1">No. HP / Kontak</label>
-                                        <input type="text" name="pic[][kontak]" value="{{ $pic->kontak ?? '' }}" readonly class="kontak-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
+                                        <input type="text" name="pic[kontak][]" value="{{ $pic->kontak ?? '' }}" readonly class="kontak-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
                                     </div>
                                 </div>
 
-                                {{-- Fallback PIC Eksternal --}}
                                 <div class="pt-3 border-t border-gray-100">
                                     <label class="block text-xs text-gray-500 mb-1">PIC Lainnya (Opsional / Eksternal)</label>
-                                    <input type="text" name="pic[][pic_lainnya]" value="{{ $pic->pic_lainnya ?? '' }}" placeholder="Masukkan nama jika PIC bukan dari daftar Balai" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="pic[pic_lainnya][]" value="{{ $pic->pic_lainnya ?? '' }}" placeholder="Masukkan nama jika PIC bukan dari daftar Balai" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                             </div>
                         @empty
@@ -1001,7 +976,7 @@
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Data PIC</span>
                                     <button type="button" data-remove-row class="hidden shrink-0 rounded-lg bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition">−</button>
                                 </div>
-                                
+
                                 <div class="grid grid-cols-2 gap-5">
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1">Unit Organisasi (UNOR)</label>
@@ -1014,7 +989,7 @@
                                     </div>
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1">Balai</label>
-                                        <select name="pic[][balai_id]" class="balai-select w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100" disabled>
+                                        <select name="pic[balai_id][]" class="balai-select w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100" disabled>
                                             <option value="">Pilih Balai</option>
                                         </select>
                                     </div>
@@ -1023,26 +998,25 @@
                                 <div class="grid grid-cols-2 gap-5">
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1">Nama PIC (Kepala Balai)</label>
-                                        <input type="text" name="pic[][nama_pic]" readonly class="nama-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
+                                        <input type="text" name="pic[nama_pic][]" readonly class="nama-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
                                     </div>
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1">No. HP / Kontak</label>
-                                        <input type="text" name="pic[][kontak]" readonly class="kontak-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
+                                        <input type="text" name="pic[kontak][]" readonly class="kontak-pic-input w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-600 cursor-not-allowed" placeholder="Otomatis terisi">
                                     </div>
                                 </div>
 
                                 <div class="pt-3 border-t border-gray-100">
                                     <label class="block text-xs text-gray-500 mb-1">PIC Lainnya (Opsional / Eksternal)</label>
-                                    <input type="text" name="pic[][pic_lainnya]" placeholder="Masukkan nama jika PIC bukan dari daftar Balai" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <input type="text" name="pic[pic_lainnya][]" placeholder="Masukkan nama jika PIC bukan dari daftar Balai" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                 </div>
                             </div>
                         @endforelse
                     </div>
 
-                    {{-- Script Khusus Autofill PIC (Multi-Row Support) --}}
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
-                            let picBalaiDataMap = {}; // Cache map for rapid additions
+                            let picBalaiDataMap = {};
 
                             async function fetchPicBalaisByUnor(unorValue, row, selectedId = null) {
                                 const balaiSelect = row.querySelector('.balai-select');
@@ -1072,14 +1046,12 @@
                                     });
                                     balaiSelect.disabled = false;
 
-                                    // Trigger change if we selected a specific Balai on load
                                     if (selectedId) balaiSelect.dispatchEvent(new Event('change', { bubbles: true }));
                                 } catch (error) {
                                     balaiSelect.innerHTML = '<option value="">Gagal memuat data</option>';
                                 }
                             }
 
-                            // Use Event Delegation to handle dynamic rows seamlessly
                             document.addEventListener('change', function(e) {
                                 if (e.target.matches('.unor-select')) {
                                     const row = e.target.closest('.pic-row');
@@ -1102,7 +1074,6 @@
                                 }
                             });
 
-                            // Edit Mode Hydration for all pre-existing rows on load
                             document.querySelectorAll('.pic-row').forEach(row => {
                                 const oldPicUnor = row.querySelector('.old-pic-unor')?.value;
                                 const oldPicBalaiId = row.querySelector('.old-pic-balai-id')?.value;
@@ -1119,39 +1090,34 @@
                             const picList = document.getElementById('pic-list');
                             const addPicBtn = document.querySelector('#btn-add-pic');
 
-                            // Fungsi Toggle Tombol Hapus (Minimal harus ada 1 baris)
                             function toggleRemoveButtons() {
                                 const rows = picList.querySelectorAll('.pic-row');
-                                rows.forEach((row, index) => {
+                                rows.forEach((row) => {
                                     const removeBtn = row.querySelector('[data-remove-row]');
                                     if (removeBtn) {
                                         if (rows.length === 1) {
-                                            removeBtn.classList.add('hidden'); // Sembunyikan jika tersisa 1
+                                            removeBtn.classList.add('hidden');
                                         } else {
-                                            removeBtn.classList.remove('hidden'); // Tampilkan jika lebih dari 1
+                                            removeBtn.classList.remove('hidden');
                                         }
                                     }
                                 });
                             }
 
-                            // --- TAMBAH BARIS PIC ---
                             if (addPicBtn && picList) {
                                 addPicBtn.addEventListener('click', function () {
                                     const rows = picList.querySelectorAll('.pic-row');
                                     if (rows.length === 0) return;
 
-                                    // Clone baris pertama
                                     const firstRow = rows[0];
                                     const newRow = firstRow.cloneNode(true);
 
-                                    // Reset nilai semua input
                                     newRow.querySelectorAll('input').forEach(input => {
                                         if(input.type !== 'hidden') {
                                             input.value = '';
                                         }
                                     });
 
-                                    // Reset nilai semua dropdown
                                     newRow.querySelectorAll('select').forEach(select => {
                                         select.selectedIndex = 0;
                                         if(select.classList.contains('balai-select')) {
@@ -1160,21 +1126,17 @@
                                         }
                                     });
 
-                                    // Tampilkan di view
                                     picList.appendChild(newRow);
-                                    
-                                    // Evaluasi ketersediaan tombol hapus
                                     toggleRemoveButtons();
                                 });
                             }
 
-                            // --- HAPUS BARIS PIC (Event Delegation) ---
                             document.addEventListener('click', function(e) {
                                 const removeBtn = e.target.closest('[data-remove-row]');
                                 if (removeBtn) {
                                     const row = removeBtn.closest('.pic-row');
                                     const rows = picList.querySelectorAll('.pic-row');
-                                    
+
                                     if (rows.length > 1) {
                                         row.remove();
                                         toggleRemoveButtons();
@@ -1182,14 +1144,13 @@
                                 }
                             });
 
-                            // Cek inisial saat halaman dimuat
                             if(picList) toggleRemoveButtons();
                         });
                     </script>
                 @endif
             </div>
 
-            {{-- ================= Log Perubahan Data (khusus mode readonly) ================= --}}
+            {{-- ================= Log Perubahan Data (khusus mode readonly) ================= (LaporanBalai) --}}
             @if($readonly)
                 <div class="pt-6 border-t border-gray-100">
                     <h2 class="font-bold text-gray-900 mb-4">Log Perubahan Data</h2>
@@ -1204,7 +1165,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse (($laporan->logs ?? []) as $log)
+                                @forelse (($laporanBalai->logs ?? []) as $log)
                                     <tr class="{{ $loop->even ? 'bg-gray-50' : 'bg-white' }} border-b border-gray-100 last:border-0">
                                         <td class="px-4 py-3 text-center text-gray-700">
                                             {{ $log->created_at ? $log->created_at->format('d/m/Y H:i') : '-' }}
@@ -1227,7 +1188,6 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        {{-- Colspan disesuaikan menjadi 4 karena ada 4 kolom --}}
                                         <td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">Belum ada riwayat perubahan data</td>
                                     </tr>
                                 @endforelse
@@ -1254,7 +1214,6 @@
                             <input type="checkbox" id="laporanSelesaiCheckbox" class="w-4 h-4 rounded border-gray-400 text-[#161446] focus:ring-[#161446]">
                         </label>
 
-                        {{-- TODO: sambungkan ke aksi kirim pesan konfirmasi kalau sudah siap --}}
                         <button type="button" id="kirimKonfirmasiButton" disabled
                                 class="rounded-lg bg-gray-300 px-5 py-2.5 text-gray-500 font-medium cursor-not-allowed transition-colors">
                             Kirim Pesan Konfirmasi
@@ -1316,13 +1275,9 @@
 </script>
 
 @unless($readonly)
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
-        // ==========================================
-        // 1. ADD / REMOVE DYNAMIC ROWS LOGIC
-        // ==========================================
         function showRemoveButtons(scopeEl) {
             scopeEl.querySelectorAll(
                 '[data-remove-row], [data-remove-foto-row], [data-remove-permanen-foto-row], [data-remove-dokumen-row]'
@@ -1341,33 +1296,15 @@
             });
         });
 
-        function addSumberdayaRow(buttonId, listId, templateId) {
-            document.getElementById(buttonId)?.addEventListener('click', function () {
-                const container = document.getElementById(listId);
-                const template = document.getElementById(templateId);
-                const clone = template.content.firstElementChild.cloneNode(true);
-                container.appendChild(clone);
-            });
-        }
-        addSumberdayaRow('tambah-alat', 'sumberdaya-alat-list', 'tpl-sumberdaya-alat');
-        addSumberdayaRow('tambah-bahan', 'sumberdaya-bahan-list', 'tpl-sumberdaya-bahan');
-
-        document.getElementById('tambah-pic')?.addEventListener('click', function () {
-            const container = document.querySelector('#pic-list');
-            const rows = container.querySelectorAll('.pic-row');
-            const clone = rows[rows.length - 1].cloneNode(true);
-            clone.querySelectorAll('input').forEach(el => el.value = '');
-            showRemoveButtons(clone);
-            container.appendChild(clone);
-        });
-
         document.getElementById('tambah-dokumentasi')?.addEventListener('click', function () {
             const container = document.querySelector('#dokumentasi-bencana-list');
             const div = document.createElement('div');
-            div.className = 'flex gap-4 items-start';
+            div.className = 'flex gap-4 items-start items-center';
             div.innerHTML = `
-                <button type="button" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm">Browse Image/Video</button>
-                <textarea rows="2" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Keterangan foto"></textarea>
+                <input type="hidden" name="fotos[id][]" value="">
+                <input type="file" name="fotos[file][]" class="hidden foto-input" accept="image/*,video/*">
+                <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white hover:bg-gray-50 transition">Browse Image/Video</button>
+                <textarea name="fotos[keterangan][]" rows="2" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Keterangan foto"></textarea>
                 <button type="button" onclick="this.closest('div').remove()" class="shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
             `;
             container.appendChild(div);
@@ -1377,66 +1314,19 @@
             if (e.target.closest('[data-add-foto]')) {
                 const row = e.target.closest('.penanganan-row');
                 const list = row.querySelector('.penanganan-foto-list');
-                const rows = list.querySelectorAll('.penanganan-foto-row');
-                const clone = rows[rows.length - 1].cloneNode(true);
-                clone.querySelectorAll('input, textarea').forEach(el => el.value = '');
-                showRemoveButtons(clone);
-                list.appendChild(clone);
-            }
-        });
-
-        document.addEventListener('click', function (e) {
-            if (e.target.closest('[data-add-foto-permanen]')) {
-                const row = e.target.closest('.penanganan-permanen-row');
-                const list = row.querySelector('.penanganan-permanen-foto-list');
                 const div = document.createElement('div');
-                div.className = 'penanganan-permanen-foto-row flex gap-4 items-start';
+                div.className = 'penanganan-foto-row flex gap-4 items-start';
                 div.innerHTML = `
-                    <button type="button" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm">Browse Image/Video</button>
-                    <textarea rows="2" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Keterangan foto"></textarea>
-                    <button type="button" data-remove-permanen-foto-row class="shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
+                    <input type="file" name="penanganan_sementara_foto[file][]" class="hidden">
+                    <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white">Browse Image/Video</button>
+                    <div class="w-40 space-y-2">
+                        <input type="text" name="penanganan_sementara_foto[latitude][]" placeholder="Latitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                        <input type="text" name="penanganan_sementara_foto[longitude][]" placeholder="Longitude" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                    </div>
+                    <textarea name="penanganan_sementara_foto[keterangan][]" rows="2" placeholder="description" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
+                    <button type="button" data-remove-foto-row class="shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                 `;
                 list.appendChild(div);
-            }
-        });
-        document.addEventListener('click', function (e) {
-            const btn = e.target.closest('[data-remove-permanen-foto-row]');
-            if (!btn) return;
-            btn.closest('.penanganan-permanen-foto-row')?.remove();
-        });
-
-        document.getElementById('tambah-dokumen')?.addEventListener('click', function () {
-            const container = document.getElementById('dokumen-laporan-list');
-            const div = document.createElement('div');
-            div.className = 'dokumen-laporan-row flex items-center gap-4';
-            div.innerHTML = `
-                <button type="button" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm">Browse Dokumen</button>
-                <input type="text" placeholder="Nama/Keterangan Dokumen" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                <button type="button" data-remove-dokumen-row class="shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
-            `;
-            container.appendChild(div);
-        });
-        document.addEventListener('click', function (e) {
-            const btn = e.target.closest('[data-remove-dokumen-row]');
-            if (!btn) return;
-            btn.closest('.dokumen-laporan-row')?.remove();
-        });
-
-        document.addEventListener('click', function (e) {
-            const btn = e.target.closest('[data-remove-row]');
-            if (!btn) return;
-            const row = btn.closest('.infrastruktur-row, .penanganan-row, .penanganan-permanen-row, .sumberdaya-alat-row, .sumberdaya-bahan-row, .pic-row');
-            if (!row) return;
-
-            if (row.classList.contains('sumberdaya-alat-row') || row.classList.contains('sumberdaya-bahan-row')) {
-                row.remove();
-                return;
-            }
-
-            const container = row.parentElement;
-            const siblingsCount = container.querySelectorAll(':scope > ' + row.className.split(' ').map(c => '.' + c).join('')).length;
-            if (siblingsCount > 1) {
-                row.remove();
             }
         });
 
@@ -1450,10 +1340,7 @@
             }
         });
 
-
-        // ==========================================
-        // 2. JENIS BENCANA -> NAMA BENCANA
-        // ==========================================
+        // JENIS BENCANA -> NAMA BENCANA
         const jenisBencanaSelect = document.getElementById('jenis_bencana');
         const namaBencanaSelect = document.getElementById('nama_bencana');
         const oldNamaBencana = document.getElementById('old_nama_bencana')?.value;
@@ -1507,11 +1394,7 @@
         }
 
 
-        // ==========================================
-        // 3. LOKASI CASCADING & KEWENANGAN AJAX
-        // ==========================================
-        
-        // Element selectors
+        // LOKASI CASCADING & KEWENANGAN AJAX
         const provinsi = document.getElementById('provinsi');
         const kabupaten = document.getElementById('kabupaten');
         const kecamatan = document.getElementById('kecamatan');
@@ -1525,10 +1408,9 @@
         const kepalaInput = document.getElementById('kepala_balai');
         const kontakInput = document.getElementById('kontak_balai');
 
-        let balaiDataMap = {}; // Cache for auto-filling kepala & kontak
+        let balaiDataMap = {};
 
         if(provinsi) {
-            // A. Wilayah Cascading Events
             provinsi.addEventListener('change', async function () {
                 kabupaten.innerHTML = '<option value="">Loading...</option>';
                 kecamatan.innerHTML = '<option value="">Pilih Kecamatan</option>';
@@ -1541,15 +1423,12 @@
                 }
 
                 const response = await fetch('/ajax/kabupaten/' + this.value);
-
                 if (!response.ok) {
-                    alert('Gagal mengambil data wilayah. Pastikan Anda memiliki akses.');
                     kabupaten.innerHTML = '<option value="">Gagal memuat data</option>';
                     return;
                 }
 
                 const data = await response.json();
-                
                 kabupaten.innerHTML = '<option value="">Pilih Kabupaten/Kota</option>';
                 data.forEach(item => {
                     kabupaten.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
@@ -1598,7 +1477,6 @@
         }
 
         if(tipeKewenangan) {
-            // B. Kewenangan UI Toggler
             tipeKewenangan.addEventListener('change', function () {
                 wrapBalai.classList.add('hidden');
                 wrapDelegasi.classList.add('hidden');
@@ -1607,7 +1485,6 @@
                 if (this.value === 'delegasi') wrapDelegasi.classList.remove('hidden');
             });
 
-            // C. Kewenangan AJAX (UNOR -> Balai)
             async function fetchBalaisByUnor(unorValue, selectedId = null) {
                 balaiSelect.innerHTML = '<option value="">Loading...</option>';
                 balaiSelect.disabled = true;
@@ -1625,7 +1502,7 @@
 
                 balaiSelect.innerHTML = '<option value="">Pilih Balai</option>';
                 data.forEach(item => {
-                    balaiDataMap[item.id] = item; 
+                    balaiDataMap[item.id] = item;
                     const isSelected = (selectedId && String(selectedId) === String(item.id)) ? 'selected' : '';
                     balaiSelect.innerHTML += `<option value="${item.id}" ${isSelected}>${item.nama_balai}</option>`;
                 });
@@ -1650,19 +1527,16 @@
             });
         }
 
-        // ==========================================
-        // 4. EDIT MODE HYDRATION (Run on Load)
-        // ==========================================
+        // EDIT MODE HYDRATION
         const oldProv = document.getElementById('old_provinsi')?.value;
         const oldKab = document.getElementById('old_kabupaten')?.value;
         const oldKec = document.getElementById('old_kecamatan')?.value;
         const oldKel = document.getElementById('old_kelurahan')?.value;
-        
+
         const oldTipeKewenangan = document.getElementById('old_tipe_kewenangan')?.value;
         const oldUnor = document.getElementById('old_unor')?.value;
         const oldBalaiId = document.getElementById('old_balai_id')?.value;
 
-        // A. Hydrate Locations sequentially to respect async loads
         if (oldProv && provinsi) {
             provinsi.value = oldProv;
             fetch('/ajax/kabupaten/' + oldProv)
@@ -1699,14 +1573,13 @@
                 });
         }
 
-        // B. Hydrate Kewenangan UI
         if (oldTipeKewenangan && tipeKewenangan) {
             tipeKewenangan.value = oldTipeKewenangan;
             tipeKewenangan.dispatchEvent(new Event('change'));
 
             if (oldTipeKewenangan === 'balai' && oldUnor) {
                 unorSelect.value = oldUnor;
-                fetchBalaisByUnor(oldUnor, oldBalaiId); 
+                fetchBalaisByUnor(oldUnor, oldBalaiId);
             }
         }
     });
