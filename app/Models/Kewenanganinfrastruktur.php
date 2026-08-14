@@ -16,7 +16,7 @@ class KewenanganInfrastruktur extends Model
     public const TIPE_DELEGASI = 'delegasi';
 
     protected $fillable = [
-        'laporan_balai_id', // <-- Changed from infrastruktur_terdampak_id
+        'laporan_balai_id',
         'tipe',
         // Type 1: Balai
         'balai_id',
@@ -30,6 +30,8 @@ class KewenanganInfrastruktur extends Model
         'instansi',
         'penanggung_jawab',
         'telepon',
+        // Single photo, no metadata needed -- see migration 0015
+        'foto',
     ];
 
     public function laporanBalai(): BelongsTo

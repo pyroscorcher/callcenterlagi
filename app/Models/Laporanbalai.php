@@ -68,6 +68,16 @@ class LaporanBalai extends Model
         return $this->hasMany(PenangananPermanen::class);
     }
 
+    /**
+     * Report-level Sumberdaya (Alat & Bahan) rows -- ones filled in without
+     * being tied to a specific Penanganan Sementara entry. Entry-specific
+     * rows are still reached via penangananSementara()->alatDanBahan().
+     */
+    public function alatDanBahan(): HasMany
+    {
+        return $this->hasMany(AlatDanBahan::class);
+    }
+
     public function dokumenLaporanPimpinan(): HasMany
     {
         return $this->hasMany(DokumenLaporanPimpinan::class);
