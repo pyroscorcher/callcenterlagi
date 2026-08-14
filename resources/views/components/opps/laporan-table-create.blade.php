@@ -203,6 +203,20 @@
                     </div>
                 </div>
 
+                {{-- Link Google Maps --}}
+                <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
+                    <label for="gmaps_link" class="text-gray-700 font-medium">Link Google Maps</label>
+                    <div>
+                        <input type="url" name="gmaps_link" id="gmaps_link"
+                               value="{{ old('gmaps_link') }}"
+                               placeholder="https://maps.google.com/..."
+                               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:ring-[#161446] focus:border-[#161446]" />
+                        @error('gmaps_link')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+
                 {{-- Dampak Bencana --}}
                 <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
                     <label for="dampak_bencana" class="text-gray-700 font-medium">Dampak Bencana</label>

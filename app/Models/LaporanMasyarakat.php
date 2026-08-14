@@ -24,6 +24,7 @@ class LaporanMasyarakat extends Model
         'kelurahan_id',
         'lintang',
         'bujur',
+        'gmaps_link', // Added Google Maps link
         'deskripsi',
         'infrastruktur_terdampak',
         'status',
@@ -32,7 +33,6 @@ class LaporanMasyarakat extends Model
         'validasi',
         'verifikasi',
     ];
-
 
     public function fotos()
     {
