@@ -113,12 +113,14 @@ class BalaiController extends Controller
     public function laporanPenangananCreate()
     {
         $provinsis = Provinsi::orderBy('nama')->get();
+        $balais = Balai::orderBy('nama_balai')->get();
  
         return view('dashboards.form-laporan-bencana', [
             'mode' => 'create',
             'laporan' => null,
             'laporanBalai' => null,
             'provinsis' => $provinsis,
+            'balais' => $balais,
         ]);
     }
 
@@ -256,6 +258,7 @@ class BalaiController extends Controller
     public function laporanPenangananEdit($id)
     {
         $laporan = LaporanMasyarakat::with('fotos')->findOrFail($id);
+        $balais = Balai::orderBy('nama_balai')->get();
  
         $laporanBalai = LaporanBalai::where('laporan_masyarakat_id', $laporan->id)
             ->where('balai_id', Auth::user()->balai->id)
@@ -278,6 +281,7 @@ class BalaiController extends Controller
             'laporan' => $laporan,
             'laporanBalai' => $laporanBalai,
             'provinsis' => $provinsis,
+            'balais' => $balais,
         ]);
     }
 
@@ -546,7 +550,7 @@ class BalaiController extends Controller
             $laporanBalai->penangananSementara(), 
             $request->input('penanganan_sementara', []), 
             $request->input('penanganan_sementara_foto', []), 
-            $request->file('penanganan_sementara_foto_file', []),
+            $request->file('penanganan_sementara_foto.file', []),
             'penanganan_sementara'
         );
 
@@ -556,7 +560,7 @@ class BalaiController extends Controller
             $laporanBalai->penangananPermanen(), 
             $request->input('penanganan_permanen', []), 
             $request->input('penanganan_permanen_foto', []), 
-            $request->file('penanganan_permanen_foto_file', []),
+            $request->file('penanganan_permanen_foto.file', []),
             'penanganan_permanen'
         );
 
@@ -623,13 +627,14 @@ class BalaiController extends Controller
                         }
                     }
 
-                    if ($fPath || !empty($fData['keterangan'])) {
+                    if ($fPath) {
                         $newF = $model->foto()->create([
                             'foto'       => $fPath,
                             'latitude'   => $fData['latitude'],
                             'longitude'  => $fData['longitude'],
                             'keterangan' => $fData['keterangan'],
                         ]);
+
                         $keptFotoIds[] = $newF->id;
                     }
                 }

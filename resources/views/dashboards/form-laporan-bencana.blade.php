@@ -48,6 +48,7 @@
                 :laporan-balai="$laporanBalai ?? null"
                 :provinsis="$provinsis ?? []"
                 :readonly="$readonly"
+                :balais="$balais ?? []"
             />
         </main>
     </div>
