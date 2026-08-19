@@ -180,19 +180,31 @@ class BalaiController extends Controller
         $laporan = LaporanMasyarakat::create($laporanData);
 
         // Save Fotos Laporan
-        if ($request->has('fotos') && isset($request->fotos['keterangan'])) {
-            $count = count($request->fotos['keterangan']);
-            for ($i = 0; $i < $count; $i++) {
-                $fotoPath = null;
-                if ($request->hasFile("fotos.file.$i")) {
-                    $fotoPath = $request->file("fotos.file.$i")->store('bencana_fotos', 'public');
-                }
-                if ($fotoPath || !empty($request->fotos['keterangan'][$i])) {
-                    $laporan->fotos()->create([
-                        'file_path'  => $fotoPath, // <--- FIXED
-                        'keterangan' => $request->fotos['keterangan'][$i],
-                    ]);
-                }
+        $fotosKeterangan = $request->input('fotos.keterangan', []);
+        $fotosFiles = $request->file('fotos.file', []);
+        
+        // Normalize to arrays safely
+        if (!is_array($fotosKeterangan)) $fotosKeterangan = (array) $fotosKeterangan;
+        if (!is_array($fotosFiles)) $fotosFiles = (array) $fotosFiles;
+
+        // Use the max count to ensure we loop through everything, even if some inputs are missing
+        $count = max(count($fotosKeterangan), count($fotosFiles));
+
+        for ($i = 0; $i < $count; $i++) {
+            $fotoPath = null;
+            
+            if ($request->hasFile("fotos.file.$i")) {
+                $fotoPath = $request->file("fotos.file.$i")->store('bencana_fotos', 'public');
+            }
+            
+            $keterangan = $fotosKeterangan[$i] ?? null;
+
+            // Only create if a file was uploaded OR a keterangan was typed
+            if ($fotoPath || !empty($keterangan)) {
+                $laporan->fotos()->create([
+                    'file_path'  => $fotoPath,
+                    'keterangan' => $keterangan,
+                ]);
             }
         }
 
@@ -325,39 +337,56 @@ class BalaiController extends Controller
         $laporan->update($laporanData);
 
         // Update Fotos Laporan (Preserve old files via ID)
-        if ($request->has('fotos') && isset($request->fotos['keterangan'])) {
-            $keptFotoIds = [];
-            $count = count($request->fotos['keterangan']);
-            for ($i = 0; $i < $count; $i++) {
-                $fotoId = $request->fotos['id'][$i] ?? null;
-                $fotoPath = null;
-                
-                if ($request->hasFile("fotos.file.$i")) {
-                    $fotoPath = $request->file("fotos.file.$i")->store('bencana_fotos', 'public');
-                }
+        $fotosKeterangan = $request->input('fotos.keterangan', []);
+        $fotosFiles = $request->file('fotos.file', []);
+        $fotosIds = $request->input('fotos.id', []);
+        
+        if (!is_array($fotosKeterangan)) $fotosKeterangan = (array) $fotosKeterangan;
+        if (!is_array($fotosFiles)) $fotosFiles = (array) $fotosFiles;
+        if (!is_array($fotosIds)) $fotosIds = (array) $fotosIds;
 
-                if ($fotoId) {
-                    $existing = \App\Models\Foto::find($fotoId);
-                    if ($existing) {
-                        $existing->update([
-                            'keterangan' => $request->fotos['keterangan'][$i],
-                            'file_path' => $fotoPath ?? $existing->file_path
-                        ]);
-                        $keptFotoIds[] = $existing->id;
-                        continue;
-                    }
-                }
+        $count = max(count($fotosKeterangan), count($fotosFiles), count($fotosIds));
+        $keptFotoIds = [];
 
-                if ($fotoPath || !empty($request->fotos['keterangan'][$i])) {
-                    $laporan->fotos()->create([
-                        'file_path'  => $fotoPath, // <--- FIXED
-                        'keterangan' => $request->fotos['keterangan'][$i],
+        for ($i = 0; $i < $count; $i++) {
+            $fotoId = $fotosIds[$i] ?? null;
+            $fotoPath = null;
+            
+            if ($request->hasFile("fotos.file.$i")) {
+                $fotoPath = $request->file("fotos.file.$i")->store('bencana_fotos', 'public');
+            }
+            
+            $keterangan = $fotosKeterangan[$i] ?? null;
+
+            // Update existing photo record
+            if ($fotoId) {
+                $existing = \App\Models\Foto::find($fotoId);
+                if ($existing) {
+                    $existing->update([
+                        'keterangan' => $keterangan,
+                        'file_path' => $fotoPath ?? $existing->file_path
                     ]);
+                    $keptFotoIds[] = $existing->id;
+                    continue; // Move to next iteration
                 }
             }
-            $laporan->fotos()->whereNotIn('id', $keptFotoIds)->delete();
-        } else {
+
+            // Create new photo record
+            if ($fotoPath || !empty($keterangan)) {
+                $newFoto = $laporan->fotos()->create([
+                    'file_path'  => $fotoPath,
+                    'keterangan' => $keterangan,
+                ]);
+                $keptFotoIds[] = $newFoto->id;
+            }
+        }
+
+        // Clean up deleted photos
+        // (Laravel's whereNotIn ignores empty arrays, so we must handle it explicitly)
+        if (empty($keptFotoIds)) {
             $laporan->fotos()->delete();
+        } else {
+            $laporan->fotos()->whereNotIn('id', $keptFotoIds)->delete();
         }
 
         $laporanBalai = LaporanBalai::firstOrCreate(
@@ -424,165 +453,190 @@ class BalaiController extends Controller
     private function syncDynamicRelations(LaporanBalai $laporanBalai, Request $request)
     {
         // 1. PIC
+        $keptPicIds = [];
         if ($request->has('pic') && isset($request->pic['balai_id'])) {
             $count = count($request->pic['balai_id']);
             for ($i = 0; $i < $count; $i++) {
-                if (!empty($request->pic['pic_lainnya'][$i])) {
-                    $laporanBalai->picBencanas()->create(['pic_lainnya' => $request->pic['pic_lainnya'][$i]]);
-                } elseif (!empty($request->pic['balai_id'][$i])) {
-                    $laporanBalai->picBencanas()->create([
-                        'balai_id' => $request->pic['balai_id'][$i],
-                        'nama_pic' => $request->pic['nama_pic'][$i] ?? null,
-                        'kontak'   => $request->pic['kontak'][$i] ?? null,
-                    ]);
-                }
+                $id = $request->pic['id'][$i] ?? null;
+                $data = [
+                    'pic_lainnya' => $request->pic['pic_lainnya'][$i] ?? null,
+                    'balai_id'    => $request->pic['balai_id'][$i] ?? null,
+                    'nama_pic'    => $request->pic['nama_pic'][$i] ?? null,
+                    'kontak'      => $request->pic['kontak'][$i] ?? null,
+                ];
+
+                if (empty($data['pic_lainnya']) && empty($data['balai_id'])) continue;
+
+                $pic = $laporanBalai->picBencanas()->updateOrCreate(['id' => $id], $data);
+                $keptPicIds[] = $pic->id;
             }
         }
+        empty($keptPicIds) ? $laporanBalai->picBencanas()->delete() : $laporanBalai->picBencanas()->whereNotIn('id', $keptPicIds)->delete();
 
         // 2. Infrastruktur Terdampak
+        $keptInfraIds = [];
         if ($request->has('infrastruktur') && isset($request->infrastruktur['unor'])) {
             $count = count($request->infrastruktur['unor']);
             for ($i = 0; $i < $count; $i++) {
-                if (!empty($request->infrastruktur['unor'][$i]) || !empty($request->infrastruktur['kategori'][$i])) {
-                    $docPath = null;
-                    if ($request->hasFile("infrastruktur.dokumentasi.$i")) {
-                        $docPath = $request->file("infrastruktur.dokumentasi.$i")->store('infrastruktur', 'public');
-                    }
-                    $laporanBalai->infrastrukturTerdampak()->create([
-                        'unor'        => $request->infrastruktur['unor'][$i] ?? null,
-                        'kategori'    => $request->infrastruktur['kategori'][$i] ?? null,
-                        'nama'        => $request->infrastruktur['nama'][$i] ?? null,
-                        'satuan'      => $request->infrastruktur['satuan'][$i] ?? null,
-                        'jumlah'      => $request->infrastruktur['jumlah'][$i] ?? null,
-                        'detail'      => $request->infrastruktur['detail'][$i] ?? null,
-                        'dokumentasi' => $docPath,
-                    ]);
-                }
-            }
-        }
+                if (empty($request->infrastruktur['unor'][$i]) && empty($request->infrastruktur['kategori'][$i])) continue;
 
-        // 3. Penanganan Sementara
-        if ($request->has('penanganan_sementara') && isset($request->penanganan_sementara['kewenangan'])) {
-            $count = count($request->penanganan_sementara['kewenangan']);
-            for ($i = 0; $i < $count; $i++) {
-                if (!empty($request->penanganan_sementara['kewenangan'][$i]) || !empty($request->penanganan_sementara['tanggal'][$i])) {
-                    $ps = $laporanBalai->penangananSementara()->create([
-                        'tanggal'         => $request->penanganan_sementara['tanggal'][$i] ?? null,
-                        'kewenangan'      => $request->penanganan_sementara['kewenangan'][$i] ?? null,
-                        'jumlah_personil' => $request->penanganan_sementara['jumlah_personil'][$i] ?? null,
-                        'keterangan'      => $request->penanganan_sementara['keterangan'][$i] ?? null,
-                    ]);
-
-                    // Attach flattened elements to the first row (HTML limitation mitigation without indexing arrays)
-                    if ($i === 0 && $request->has('penanganan_sementara_foto') && isset($request->penanganan_sementara_foto['keterangan'])) {
-                        $fc = count($request->penanganan_sementara_foto['keterangan']);
-                        for ($j = 0; $j < $fc; $j++) {
-                            $fPath = null;
-                            if ($request->hasFile("penanganan_sementara_foto.file.$j")) {
-                                $fPath = $request->file("penanganan_sementara_foto.file.$j")->store('penanganan_sementara', 'public');
-                            }
-                            if ($fPath || !empty($request->penanganan_sementara_foto['keterangan'][$j])) {
-                                $ps->foto()->create([
-                                    'foto'       => $fPath,
-                                    'latitude'   => $request->penanganan_sementara_foto['latitude'][$j] ?? null,
-                                    'longitude'  => $request->penanganan_sementara_foto['longitude'][$j] ?? null,
-                                    'keterangan' => $request->penanganan_sementara_foto['keterangan'][$j] ?? null,
-                                ]);
-                            }
-                        }
-                    }
-
-                    if ($i === 0 && $request->has('sumberdaya') && isset($request->sumberdaya['kategori'])) {
-                        $sc = count($request->sumberdaya['kategori']);
-                        for ($s = 0; $s < $sc; $s++) {
-                            if (!empty($request->sumberdaya['kategori'][$s])) {
-                                $ps->alatDanBahan()->create([
-                                    'kategori' => $request->sumberdaya['kategori'][$s],
-                                    'kelas'    => $request->sumberdaya['kelas'][$s] ?? null,
-                                    'model'    => $request->sumberdaya['model'][$s] ?? null,
-                                    'jumlah'   => $request->sumberdaya['jumlah'][$s] ?? 0,
-                                ]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 4. Penanganan Permanen
-        if ($request->has('penanganan_permanen') && isset($request->penanganan_permanen['kewenangan'])) {
-            $count = count($request->penanganan_permanen['kewenangan']);
-            for ($i = 0; $i < $count; $i++) {
-                if (!empty($request->penanganan_permanen['kewenangan'][$i]) || !empty($request->penanganan_permanen['tanggal'][$i])) {
-                    $pp = $laporanBalai->penangananPermanen()->create([
-                        'tanggal'    => $request->penanganan_permanen['tanggal'][$i] ?? null,
-                        'kewenangan' => $request->penanganan_permanen['kewenangan'][$i] ?? null,
-                        'keterangan' => $request->penanganan_permanen['keterangan'][$i] ?? null,
-                    ]);
-
-                    if ($i === 0 && $request->has('penanganan_permanen_foto') && isset($request->penanganan_permanen_foto['keterangan'])) {
-                        $fc = count($request->penanganan_permanen_foto['keterangan']);
-                        for ($j = 0; $j < $fc; $j++) {
-                            $fPath = null;
-                            if ($request->hasFile("penanganan_permanen_foto.file.$j")) {
-                                $fPath = $request->file("penanganan_permanen_foto.file.$j")->store('penanganan_permanen', 'public');
-                            }
-                            
-                            if ($fPath || !empty($request->penanganan_permanen_foto['keterangan'][$j])) {
-                                $pp->foto()->create([
-                                    'foto'       => $fPath,
-                                    'latitude'   => $request->penanganan_permanen_foto['latitude'][$j] ?? null,
-                                    'longitude'  => $request->penanganan_permanen_foto['longitude'][$j] ?? null,
-                                    'keterangan' => $request->penanganan_permanen_foto['keterangan'][$j] ?? null,
-                                ]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 5. Dokumen Laporan Pimpinan (File retention enabled using specific table IDs)
-        if ($request->has('dokumen') && isset($request->dokumen['nama_dokumen'])) {
-            $keptDokumenIds = [];
-            $count = count($request->dokumen['nama_dokumen']);
-            
-            for ($i = 0; $i < $count; $i++) {
-                if (empty($request->dokumen['nama_dokumen'][$i]) && !$request->hasFile("dokumen.file.$i")) {
-                    continue;
-                }
+                $id = $request->infrastruktur['id'][$i] ?? null;
+                $docPath = null;
                 
-                $dokId = $request->dokumen['id'][$i] ?? null;
-                $filePath = null;
-
-                if ($request->hasFile("dokumen.file.$i")) {
-                    $filePath = $request->file("dokumen.file.$i")->store('dokumen_pimpinan', 'public');
+                // Read from the flattened file array
+                if ($request->hasFile("infrastruktur_dokumentasi.$i")) {
+                    $docPath = $request->file("infrastruktur_dokumentasi.$i")->store('infrastruktur', 'public');
                 }
 
-                if ($dokId) {
-                    $existingDok = \App\Models\DokumenLaporanPimpinan::find($dokId);
-                    if ($existingDok) {
-                        $existingDok->update([
-                            'nama_dokumen' => $request->dokumen['nama_dokumen'][$i],
-                            'deskripsi'    => $request->dokumen['deskripsi'][$i],
-                            'file_path'    => $filePath ?? $existingDok->file_path,
+                if ($id) {
+                    $existing = $laporanBalai->infrastrukturTerdampak()->find($id);
+                    if ($existing) {
+                        $existing->update([
+                            'unor'        => $request->infrastruktur['unor'][$i] ?? null,
+                            'kategori'    => $request->infrastruktur['kategori'][$i] ?? null,
+                            'nama'        => $request->infrastruktur['nama'][$i] ?? null,
+                            'satuan'      => $request->infrastruktur['satuan'][$i] ?? null,
+                            'jumlah'      => $request->infrastruktur['jumlah'][$i] ?? null,
+                            'detail'      => $request->infrastruktur['detail'][$i] ?? null,
+                            'dokumentasi' => $docPath ?? $existing->dokumentasi,
                         ]);
-                        $keptDokumenIds[] = $existingDok->id;
+                        $keptInfraIds[] = $existing->id;
                         continue;
                     }
                 }
 
-                $newDok = $laporanBalai->dokumenLaporanPimpinan()->create([
-                    'nama_dokumen' => $request->dokumen['nama_dokumen'][$i],
-                    'deskripsi'    => $request->dokumen['deskripsi'][$i],
-                    'file_path'    => $filePath,
+                $new = $laporanBalai->infrastrukturTerdampak()->create([
+                    'unor'        => $request->infrastruktur['unor'][$i] ?? null,
+                    'kategori'    => $request->infrastruktur['kategori'][$i] ?? null,
+                    'nama'        => $request->infrastruktur['nama'][$i] ?? null,
+                    'satuan'      => $request->infrastruktur['satuan'][$i] ?? null,
+                    'jumlah'      => $request->infrastruktur['jumlah'][$i] ?? null,
+                    'detail'      => $request->infrastruktur['detail'][$i] ?? null,
+                    'dokumentasi' => $docPath,
                 ]);
-                $keptDokumenIds[] = $newDok->id;
+                $keptInfraIds[] = $new->id;
             }
-            $laporanBalai->dokumenLaporanPimpinan()->whereNotIn('id', $keptDokumenIds)->delete();
-        } else {
-            $laporanBalai->dokumenLaporanPimpinan()->delete();
         }
+        empty($keptInfraIds) ? $laporanBalai->infrastrukturTerdampak()->delete() : $laporanBalai->infrastrukturTerdampak()->whereNotIn('id', $keptInfraIds)->delete();
+
+        // 3. Sumberdaya (Alat & Bahan) - Fixed Point B (Now attached directly to LaporanBalai)
+        $keptSdIds = [];
+        if ($request->has('sumberdaya') && isset($request->sumberdaya['kategori'])) {
+            $count = count($request->sumberdaya['kategori']);
+            for ($i = 0; $i < $count; $i++) {
+                if (empty($request->sumberdaya['kategori'][$i])) continue;
+
+                $sd = $laporanBalai->alatDanBahan()->updateOrCreate(
+                    ['id' => $request->sumberdaya['id'][$i] ?? null],
+                    [
+                        'kategori' => $request->sumberdaya['kategori'][$i],
+                        'kelas'    => $request->sumberdaya['kelas'][$i] ?? null,
+                        'model'    => $request->sumberdaya['model'][$i] ?? null,
+                        'jumlah'   => $request->sumberdaya['jumlah'][$i] ?? 0,
+                    ]
+                );
+                $keptSdIds[] = $sd->id;
+            }
+        }
+        empty($keptSdIds) ? $laporanBalai->alatDanBahan()->delete() : $laporanBalai->alatDanBahan()->whereNotIn('id', $keptSdIds)->delete();
+
+        // 4. Penanganan Sementara + Grouped Photos (Fixed Point C)
+        $this->syncPenanganan(
+            $laporanBalai, 
+            $laporanBalai->penangananSementara(), 
+            $request->input('penanganan_sementara', []), 
+            $request->input('penanganan_sementara_foto', []), 
+            $request->file('penanganan_sementara_foto_file', []),
+            'penanganan_sementara'
+        );
+
+        // 5. Penanganan Permanen + Grouped Photos
+        $this->syncPenanganan(
+            $laporanBalai, 
+            $laporanBalai->penangananPermanen(), 
+            $request->input('penanganan_permanen', []), 
+            $request->input('penanganan_permanen_foto', []), 
+            $request->file('penanganan_permanen_foto_file', []),
+            'penanganan_permanen'
+        );
+
+        // 6. Dokumen Pimpinan (Your existing working code)
+        // [Paste your existing $request->has('dokumen') block here...]
+    }
+
+    /**
+     * Shared Helper for syncing Penanganan Sementara/Permanen + Grouping nested photos via row_key
+     */
+    private function syncPenanganan($laporanBalai, $relation, $inputParams, $inputFotos, $fileFotos, $folderPath)
+    {
+        $keptIds = [];
+        if (isset($inputParams['kewenangan'])) {
+            
+            // Map flat photos array into grouped clusters by row_key
+            $fotosByRowKey = collect($inputFotos['row_key'] ?? [])->map(function($rKey, $idx) use ($inputFotos, $fileFotos) {
+                return [
+                    'id'         => $inputFotos['id'][$idx] ?? null,
+                    'row_key'    => $rKey,
+                    'latitude'   => $inputFotos['latitude'][$idx] ?? null,
+                    'longitude'  => $inputFotos['longitude'][$idx] ?? null,
+                    'keterangan' => $inputFotos['keterangan'][$idx] ?? null,
+                    'file'       => $fileFotos[$idx] ?? null,
+                ];
+            })->groupBy('row_key');
+
+            $count = count($inputParams['kewenangan']);
+            for ($i = 0; $i < $count; $i++) {
+                if (empty($inputParams['kewenangan'][$i]) && empty($inputParams['tanggal'][$i])) continue;
+
+                // Upsert Parent Row
+                $model = $relation->updateOrCreate(
+                    ['id' => $inputParams['id'][$i] ?? null],
+                    [
+                        'tanggal'         => $inputParams['tanggal'][$i] ?? null,
+                        'kewenangan'      => $inputParams['kewenangan'][$i] ?? null,
+                        'jumlah_personil' => $inputParams['jumlah_personil'][$i] ?? null, // Will map safely even if absent on Permanen
+                        'keterangan'      => $inputParams['keterangan'][$i] ?? null,
+                    ]
+                );
+                $keptIds[] = $model->id;
+
+                // Sync nested photos mapping to this exact row's row_key
+                $keptFotoIds = [];
+                $rKey = $inputParams['row_key'][$i] ?? null;
+                $rowFotos = $fotosByRowKey->get($rKey, []);
+
+                foreach ($rowFotos as $fData) {
+                    $fId = $fData['id'] ?? null;
+                    $fPath = $fData['file'] ? $fData['file']->store($folderPath, 'public') : null;
+
+                    if ($fId) {
+                        $exFoto = $model->foto()->find($fId);
+                        if ($exFoto) {
+                            $exFoto->update([
+                                'foto'       => $fPath ?? $exFoto->foto,
+                                'latitude'   => $fData['latitude'],
+                                'longitude'  => $fData['longitude'],
+                                'keterangan' => $fData['keterangan'],
+                            ]);
+                            $keptFotoIds[] = $exFoto->id;
+                            continue;
+                        }
+                    }
+
+                    if ($fPath || !empty($fData['keterangan'])) {
+                        $newF = $model->foto()->create([
+                            'foto'       => $fPath,
+                            'latitude'   => $fData['latitude'],
+                            'longitude'  => $fData['longitude'],
+                            'keterangan' => $fData['keterangan'],
+                        ]);
+                        $keptFotoIds[] = $newF->id;
+                    }
+                }
+                empty($keptFotoIds) ? $model->foto()->delete() : $model->foto()->whereNotIn('id', $keptFotoIds)->delete();
+            }
+        }
+        empty($keptIds) ? $relation->delete() : $relation->whereNotIn('id', $keptIds)->delete();
     }
 
     public function laporanPenangananShow($id)

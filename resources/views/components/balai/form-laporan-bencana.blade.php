@@ -279,27 +279,57 @@
 
                 @if($readonly)
                     @forelse (($laporan->fotos ?? []) as $foto)
-                        {!! $detailRow('Foto ' . $loop->iteration, $foto->keterangan ?? null) !!}
+                        <div class="flex flex-col sm:flex-row py-1.5 gap-1 sm:gap-6">
+                            <div class="w-56 shrink-0 text-sm text-gray-500">Foto {{ $loop->iteration }}</div>
+                            <div class="flex-1 text-sm text-gray-900">
+                                @if($foto->file_path)
+                                    <a href="{{ Storage::url($foto->file_path) }}" target="_blank" class="block mb-2">
+                                        <img src="{{ Storage::url($foto->file_path) }}" alt="Foto {{ $loop->iteration }}" class="h-24 rounded-lg border border-gray-200 object-cover">
+                                    </a>
+                                @endif
+                                <span class="whitespace-pre-line">{{ $foto->keterangan ?: '-' }}</span>
+                            </div>
+                        </div>
                     @empty
                         <p class="text-sm text-gray-400 italic">Tidak ada data</p>
                     @endforelse
                 @else
                     <div class="space-y-4" id="dokumentasi-bencana-list">
                         @forelse (($laporan->fotos ?? []) as $foto)
-                            <div class="flex gap-4 items-start items-center">
+                            <div class="dokumentasi-row flex gap-4 items-center">
                                 <input type="hidden" name="fotos[id][]" value="{{ $foto->id }}">
                                 <input type="file" name="fotos[file][]" class="hidden foto-input" accept="image/*,video/*">
-                                <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white hover:bg-gray-50 transition">Browse Image/Video</button>
+
+                                <div class="shrink-0 w-32">
+                                    @if($foto->file_path)
+                                        <img src="{{ Storage::url($foto->file_path) }}" alt="Preview" class="foto-preview-img w-32 h-20 rounded-lg border border-gray-200 object-cover mb-1">
+                                    @else
+                                        <div class="foto-preview-img w-32 h-20 rounded-lg border border-dashed border-gray-300 hidden items-center justify-center text-gray-300 mb-1"></div>
+                                    @endif
+                                    <button type="button" onclick="this.closest('.dokumentasi-row').querySelector('.foto-input').click()"
+                                            class="foto-browse-btn w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white hover:bg-gray-50 transition truncate">
+                                        {{ $foto->file_path ? 'Ganti File' : 'Browse Image/Video' }}
+                                    </button>
+                                </div>
+
                                 <textarea name="fotos[keterangan][]" rows="2" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Keterangan foto">{{ $foto->keterangan ?? '' }}</textarea>
-                                <button type="button" onclick="this.closest('div').remove()" class="{{ $loop->first ? 'hidden ' : '' }}shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
+                                <button type="button" onclick="this.closest('.dokumentasi-row').remove()" class="{{ $loop->first ? 'hidden ' : '' }}shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                             </div>
                         @empty
-                            <div class="flex gap-4 items-start items-center">
+                            <div class="dokumentasi-row flex gap-4 items-center">
                                 <input type="hidden" name="fotos[id][]" value="">
                                 <input type="file" name="fotos[file][]" class="hidden foto-input" accept="image/*,video/*">
-                                <button type="button" onclick="this.previousElementSibling.click()" class="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white hover:bg-gray-50 transition">Browse Image/Video</button>
+
+                                <div class="shrink-0 w-32">
+                                    <div class="foto-preview-img w-32 h-20 rounded-lg border border-dashed border-gray-300 hidden items-center justify-center text-gray-300 mb-1"></div>
+                                    <button type="button" onclick="this.closest('.dokumentasi-row').querySelector('.foto-input').click()"
+                                            class="foto-browse-btn w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white hover:bg-gray-50 transition truncate">
+                                        Browse Image/Video
+                                    </button>
+                                </div>
+
                                 <textarea name="fotos[keterangan][]" rows="2" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Keterangan foto"></textarea>
-                                <button type="button" onclick="this.closest('div').remove()" class="hidden shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
+                                <button type="button" onclick="this.closest('.dokumentasi-row').remove()" class="hidden shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
                             </div>
                         @endforelse
                     </div>
@@ -307,6 +337,63 @@
                             class="mt-4 rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition">
                         + Tambah Foto/Video
                     </button>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            // Wire preview for both existing and dynamically-added rows.
+                            function wireFotoPreview(row) {
+                                const input = row.querySelector('.foto-input');
+                                const img = row.querySelector('.foto-preview-img');
+                                const btn = row.querySelector('.foto-browse-btn');
+                                if (!input || input.dataset.wired) return;
+                                input.dataset.wired = '1';
+
+                                input.addEventListener('change', function () {
+                                    const file = this.files[0];
+                                    if (!file) return;
+
+                                    btn.textContent = file.name;
+
+                                    if (file.type.startsWith('image/')) {
+                                        const url = URL.createObjectURL(file);
+                                        if (img.tagName === 'IMG') {
+                                            img.src = url;
+                                        } else {
+                                            const newImg = document.createElement('img');
+                                            newImg.src = url;
+                                            newImg.className = img.className.replace('hidden', '').replace('items-center justify-center text-gray-300', '') + ' object-cover';
+                                            img.replaceWith(newImg);
+                                        }
+                                    } else {
+                                        // Video/other: just show the filename inside the box
+                                        img.classList.remove('hidden');
+                                        img.classList.add('flex');
+                                        img.textContent = '🎬 ' + file.name;
+                                    }
+                                });
+                            }
+
+                            document.querySelectorAll('#dokumentasi-bencana-list .dokumentasi-row').forEach(wireFotoPreview);
+
+                            document.getElementById('tambah-dokumentasi')?.addEventListener('click', function () {
+                                const container = document.querySelector('#dokumentasi-bencana-list');
+                                const div = document.createElement('div');
+                                div.className = 'dokumentasi-row flex gap-4 items-center';
+                                div.innerHTML = `
+                                    <input type="hidden" name="fotos[id][]" value="">
+                                    <input type="file" name="fotos[file][]" class="hidden foto-input" accept="image/*,video/*">
+                                    <div class="shrink-0 w-32">
+                                        <div class="foto-preview-img w-32 h-20 rounded-lg border border-dashed border-gray-300 hidden items-center justify-center text-gray-300 mb-1"></div>
+                                        <button type="button" onclick="this.closest('.dokumentasi-row').querySelector('.foto-input').click()" class="foto-browse-btn w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs bg-white hover:bg-gray-50 transition truncate">Browse Image/Video</button>
+                                    </div>
+                                    <textarea name="fotos[keterangan][]" rows="2" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Keterangan foto"></textarea>
+                                    <button type="button" onclick="this.closest('.dokumentasi-row').remove()" class="shrink-0 rounded-lg bg-red-500 text-white w-9 h-9 flex items-center justify-center hover:bg-red-600 transition">×</button>
+                                `;
+                                container.appendChild(div);
+                                wireFotoPreview(div);
+                            });
+                        });
+                    </script>
                 @endif
             </div>
 
@@ -353,6 +440,7 @@
 
                         @forelse ($existingInfrastruktur as $item)
                             <div class="infrastruktur-row border border-gray-200 rounded-lg p-5 space-y-4">
+                                <input type="hidden" name="infrastruktur[id][]" value="{{ $item->id ?? '' }}">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Infrastruktur</span>
                                     <button type="button" data-remove-row
@@ -381,7 +469,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Foto/Video Dokumentasi</label>
-                                    <input type="file" name="infrastruktur[dokumentasi][]" class="hidden">
+                                        <input type="file" name="infrastruktur_dokumentasi[]" class="hidden">
                                     <button type="button" onclick="this.previousElementSibling.click()" class="rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white hover:bg-gray-50 transition">Browse Image/Video</button>
                                 </div>
                             </div>
@@ -414,7 +502,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Foto/Video Dokumentasi</label>
-                                    <input type="file" name="infrastruktur[dokumentasi][]" class="hidden">
+                                        <input type="file" name="infrastruktur_dokumentasi[]" class="hidden">
                                     <button type="button" onclick="this.previousElementSibling.click()" class="rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white hover:bg-gray-50 transition">Browse Image/Video</button>
                                 </div>
                             </div>
@@ -459,7 +547,10 @@
                         @endphp
 
                         @forelse ($existingPenanganan as $p)
+                            @php $rowKey = 'row_' . ($p->id ?? uniqid()); @endphp
                             <div class="penanganan-row border border-gray-200 rounded-lg p-5 space-y-4">
+                                <input type="hidden" name="penanganan_sementara[id][]" value="{{ $p->id ?? '' }}">
+                                <input type="hidden" name="penanganan_sementara[row_key][]" class="row-key-input" value="{{ $rowKey }}">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Penanganan Sementara</span>
                                     <button type="button" data-remove-row
@@ -552,6 +643,7 @@
 
                     <div id="sumberdaya-list" class="space-y-4 mb-4">
                         <div class="sumberdaya-row grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 items-center">
+                            <input type="hidden" name="sumberdaya[id][]" value="{{ $item->id ?? '' }}">
                             <input type="text" name="sumberdaya[kategori][]" placeholder="Kategori" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                             <input type="text" name="sumberdaya[kelas][]" placeholder="Kelas" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                             <input type="text" name="sumberdaya[model][]" placeholder="Model" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
@@ -927,6 +1019,7 @@
 
                         @forelse ($existingPics as $pic)
                             <div class="pic-row border border-gray-200 rounded-lg p-5 space-y-5">
+                                <input type="hidden" name="pic[id][]" value="{{ $pic->id ?? '' }}">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Data PIC</span>
                                     <button type="button" data-remove-row

@@ -99,6 +99,20 @@
                 </dd>
             </div>
 
+            {{-- Link Google Maps --}}
+            <div class="grid grid-cols-[220px_1fr] gap-4 items-center">
+                <dt class="text-gray-700">Link Google Maps</dt>
+                <dd class="text-gray-900">
+                    @if($laporan->gmaps_link)
+                        <a href="{{ $laporan->gmaps_link }}" target="_blank" class="text-blue-600 hover:underline">
+                            {{ $laporan->gmaps_link }}
+                        </a>
+                    @else
+                        <span>-</span>
+                    @endif
+                </dd>
+            </div>
+
             <div class="grid grid-cols-[220px_1fr] gap-4">
                 <dt class="text-gray-700">Dampak Bencana</dt>
                 <dd class="text-gray-900">{{ $laporan->dampak_bencana ?: '-' }}</dd>
@@ -173,7 +187,7 @@
             </a>
 
             <div class="flex items-center gap-3">
-                {{-- NEW: Verifikasi Checkbox (Loads initial state from database) --}}
+                {{-- Verifikasi Checkbox (Loads initial state from database) --}}
                 <label class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-800 cursor-pointer hover:bg-gray-50 transition" id="checkboxWrapper">
                     Laporan Valid?
                     <input type="checkbox" id="laporanValidCheckbox" @checked($laporan->verifikasi) class="w-4 h-4 rounded border-gray-400 text-[#161446] focus:ring-[#161446]">
@@ -210,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Set initial button state based on the database verification value
     updateButtonUI(checkbox.checked);
 
-    // NEW: Handle checkbox click (sends AJAX to update database verifikasi)
+    // Handle checkbox click (sends AJAX to update database verifikasi)
     checkbox.addEventListener('change', async function () {
         const isChecked = checkbox.checked;
         
@@ -250,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Handle Kirim Pesan PIC (unchanged)
+    // Handle Kirim Pesan PIC
     button.addEventListener('click', async function () {
         if (button.disabled) return;
 
@@ -278,6 +292,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             button.textContent = 'Pesan Terkirim';
+            button.classList.add('bg-green-600');
+            button.classList.remove('bg-[#161446]');
             alert(data.message);
         } catch (err) {
             console.error(err); 

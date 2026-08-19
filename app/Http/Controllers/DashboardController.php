@@ -312,53 +312,93 @@ class DashboardController extends Controller
             ->with('status', 'Laporan berhasil dihapus.');
     }
 
-    public function kirimPicNotifikasi(LaporanMasyarakat $laporan, WhatsappNotifier $notifier)
+public function kirimPicNotifikasi(LaporanMasyarakat $laporan, WhatsappNotifier $notifier)
     {
-        $laporan->load('balais.pics');
+        // 1. Eager load semua relasi yang dibutuhkan agar tidak terkena N+1 Query.
+        //    balai.pics -> balai.picUsers, karena tabel `pics` sudah di-drop dan
+        //    PIC sekarang adalah baris di `users` dengan role = 'pic'.
+        $laporan->load([
+            'balais.picUsers',
+            'provinsi',
+            'kabupatenKota',
+            'kecamatan',
+            'kelurahan',
+        ]);
 
         if ($laporan->balais->isEmpty()) {
             return response()->json(['message' => 'Laporan ini belum ditugaskan ke Balai manapun.'], 422);
         }
 
-        $kontakList = $laporan->balais->flatMap->pics->pluck('kontak')->filter()->unique()->values();
-
-        if ($kontakList->isEmpty()) {
-            return response()->json(['message' => 'Tidak ada kontak PIC yang terdaftar untuk Balai terkait.'], 422);
-        }
-
-        $daftarBalai = $laporan->balais->values()
-            ->map(fn ($balai, $i) => ($i + 1) . ". {$balai->nama_balai}")
-            ->implode("\n");
-
+        // 2. Siapkan data statis laporan
         $sitabaLink = route('laporan.show', $laporan->id);
+        $waktuPelaporan = $laporan->created_at ? $laporan->created_at->format('d M Y H:i') : '-';
+        $lokasi = sprintf(
+            "%s, Kec. %s, %s, Prov. %s",
+            $laporan->kelurahan->nama ?? '-',
+            $laporan->kecamatan->nama ?? '-',
+            $laporan->kabupatenKota->nama ?? '-',
+            $laporan->provinsi->nama ?? '-'
+        );
+        $linkGmaps = $laporan->gmaps_link ?: '-';
 
-        $message = <<<TEXT
-    Kepada Balai Besar Wilayah Sungai / Balai Jalan / Balai Bangunan
-    {$daftarBalai}
-    Kami dari Call Center Bencana Kementerian Pekerjaan Umum menginformasikan adanya aduan dari masyarakat.
-    Nama Masyarakat : {$laporan->pelapor}
-    WA : {$laporan->telepon}
-    yang di sampaikan melalui WA Center mengenai kejadian {$laporan->jenis_bencana} | {$laporan->nama_bencana}
-    Lokasi Detail : {$laporan->lokasi}
-    Dampak Bencana: {$laporan->dampak_bencana}
-    Kebutuhan mendesak : {$laporan->kebutuhan_mendesak}
-    Terkait dengan kejadian tersebut, mohon berkenan Kepala Balai dapat mengingatkan PPK untuk segera menindak lanjuti serta disampaikan kembali laporan tersebut pada Sitaba
-    {$sitabaLink}
+        $recipients = [];
+
+        // 3. Looping Balai untuk membuat pesan yang "Personalized"
+        foreach ($laporan->balais as $balai) {
+            $namaBalai = $balai->nama_balai ?? $balai->nama;
+
+            $message = <<<TEXT
+    Kepada {$namaBalai}
+    Kami dari Tim Call Center Bencana Pusdatin menginformasikan adanya aduan masyarakat
+
+    * Nama Pelapor: {$laporan->pelapor}
+    * No. WhatsApp: {$laporan->telepon}
+    RINCIAN LAPORAN
+    * Waktu Pelaporan: {$waktuPelaporan}
+    * Jenis Bencana: {$laporan->jenis_bencana} ({$laporan->nama_bencana})
+    * Lokasi: {$lokasi}
+    * Link Google Maps: {$linkGmaps}
+    Mohon untuk dapat segera ditindaklanjuti serta disampaikan kembali laporan tersebut pada Sitaba
+    🔗 {$sitabaLink}
+
     Salam Hormat,
-    Call Center Bencana Kementerian Pekerjaan Umum
+    Call Center Bencana Pusdatin
     WhatsApp Center : 0815-1000-0158
     TEXT;
 
-        $blastId = $notifier->sendBlast($kontakList->all(), $message);
+            // 4. Masukkan kontak PIC (users dengan role='pic') dari Balai ini ke daftar blast
+            foreach ($balai->picUsers as $picUser) {
+                if (!empty($picUser->kontak)) {
+                    $recipients[] = [
+                        'telepon' => $picUser->kontak,
+                        'message' => $message,
+                    ];
+                }
+            }
+        }
+
+        // Opsional: Filter duplikat nomor HP jika ada 1 PIC memegang 2 Balai yang ter-assign bersamaan
+        $recipients = collect($recipients)->unique('telepon')->values()->all();
+
+        if (empty($recipients)) {
+            return response()->json(['message' => 'Tidak ada kontak PIC yang terdaftar untuk Balai terkait.'], 422);
+        }
+
+        // 5. Kirim ke Node.js menggunakan sendCustomBlast (karena tiap balai pesannya beda)
+        $blastId = $notifier->sendCustomBlast($recipients);
 
         if ($blastId === null) {
             return response()->json(['message' => 'Gagal mengirim pesan ke bot WhatsApp.'], 502);
         }
 
+        $laporan->update([
+            'detail_status' => 'Diteruskan Kepada PIC / Balai',
+        ]);
+
         return response()->json([
-            'message' => 'Pesan sedang dikirim ke ' . $kontakList->count() . ' PIC.',
+            'message' => 'Pesan sedang dikirim ke ' . count($recipients) . ' PIC.',
             'blast_id' => $blastId,
-            'total_pic' => $kontakList->count(),
+            'total_pic' => count($recipients),
         ]);
     }
 

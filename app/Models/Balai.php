@@ -27,4 +27,10 @@ class Balai extends Model
     {
         return $this->hasMany(User::class)->where('role', 'pic');
     }
+
+    public function picUsers()
+    {
+        return $this->hasMany(User::class, 'balai_id')->where('role', 'pic');
+    }
+
 }
