@@ -43,11 +43,6 @@ class LaporanBalai extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    /**
-     * FIX B: this relation was missing entirely. KewenanganInfrastruktur now
-     * points at laporan_balai_id directly (one per report), so this needs to
-     * be a hasOne, not hasMany.
-     */
     public function kewenangan(): HasOne
     {
         return $this->hasOne(KewenanganInfrastruktur::class);
