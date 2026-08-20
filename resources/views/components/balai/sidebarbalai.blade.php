@@ -1,23 +1,36 @@
 @props([
-    'logoUrl' => null, // pass an image path, e.g. asset('images/logo.png')
+    'logoUrl' => null,
 ])
 
-<aside class="w-[330px] min-h-screen bg-[#161446] flex flex-col">
+{{-- Overlay latar belakang untuk tampilan mobile --}}
+<div id="sidebarbalai-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
 
-    {{-- Logo section — replaceable --}}
-    <div class="flex items-center gap-3 px-6 py-6">
-        @if ($logoUrl)
-            <img src="{{ $logoUrl }}" alt="Logo" class="w-fit h-fit">
-        @elseif (isset($logo))
-            {{ $logo }}
-        @else
-            {{-- Fallback placeholder logo, swap via the $logoUrl prop or the $logo slot --}}
-            <svg class="w-12 h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="48" rx="4" fill="#161446"/>
-                <path d="M10 8h12a12 12 0 0 1 0 24H10V8z" fill="#F7B733"/>
-                <path d="M10 32h12a8 8 0 0 0 8-8H10v8z" fill="#3B39C4"/>
+{{-- Sidebar Container --}}
+<aside id="sidebarbalai"
+       class="fixed top-0 left-0 z-50 w-[330px] h-screen bg-[#161446] flex flex-col transition-transform duration-300 -translate-x-full md:translate-x-0 md:static md:min-h-screen">
+
+    {{-- Header Sidebar + Logo + Tombol Close Mobile --}}
+    <div class="flex items-center justify-between px-6 py-6">
+        <div class="flex items-center gap-3">
+            @if ($logoUrl)
+                <img src="{{ $logoUrl }}" alt="Logo" class="w-fit h-fit">
+            @elseif (isset($logo))
+                {{ $logo }}
+            @else
+                <svg class="w-12 h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="48" height="48" rx="4" fill="#161446"/>
+                    <path d="M10 8h12a12 12 0 0 1 0 24H10V8z" fill="#F7B733"/>
+                    <path d="M10 32h12a8 8 0 0 0 8-8H10v8z" fill="#3B39C4"/>
+                </svg>
+            @endif
+        </div>
+
+        {{-- Tombol Close (Hanya muncul di tampilan mobile) --}}
+        <button id="close-sidebarbalai-btn" class="md:hidden text-white hover:text-gray-300 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
-        @endif
+        </button>
     </div>
 
     {{-- Nav --}}
@@ -38,8 +51,8 @@
         </a>
 
         <a href="{{ route('balai.data-pic-balai.show') }}"
-        class="block px-3 py-2 rounded-lg text-white/90 text-sm
-                {{ request()->routeIs('balai.data-pic-balai.*') ? 'bg-white/10 font-bold text-white' : 'hover:bg-white/5' }}">
+           class="block px-3 py-2 rounded-lg text-white/90 text-sm
+                  {{ request()->routeIs('balai.data-pic-balai.*') ? 'bg-white/10 font-bold text-white' : 'hover:bg-white/5' }}">
             Data PIC Balai
         </a>
 

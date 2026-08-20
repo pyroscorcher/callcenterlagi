@@ -8,6 +8,16 @@
 </head>
 <body class="bg-[#161446]">
 
+    {{-- Mobile Header (Hidden on Desktop) --}}
+    <div class="md:hidden flex items-center justify-between p-4 bg-[#161446] text-white border-b border-white/10">
+        <div class="font-bold text-lg">SITABA</div>
+        <button id="open-sidebarbalai-btn" class="p-2 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+    </div>
+
     <div class="flex min-h-screen">
 
         <x-balai.sidebarbalai :logo-url="asset('logositaba.png')" />
@@ -86,30 +96,31 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            const tabPanels = document.querySelectorAll('.tab-panel');
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- 1. TAB SWITCHING ---
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
 
-            tabButtons.forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const target = btn.dataset.tab;
+        tabButtons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const target = btn.dataset.tab;
 
-                    tabButtons.forEach(function (b) {
-                        b.classList.remove('border-[#3B39C4]', 'text-[#3B39C4]', 'font-semibold');
-                        b.classList.add('border-transparent', 'text-gray-500', 'font-medium');
-                    });
-                    btn.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
-                    btn.classList.add('border-[#3B39C4]', 'text-[#3B39C4]', 'font-semibold');
+                tabButtons.forEach(function (b) {
+                    b.classList.remove('border-[#3B39C4]', 'text-[#3B39C4]', 'font-semibold');
+                    b.classList.add('border-transparent', 'text-gray-500', 'font-medium');
+                });
+                btn.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
+                btn.classList.add('border-[#3B39C4]', 'text-[#3B39C4]', 'font-semibold');
 
-                    tabPanels.forEach(function (panel) {
-                        panel.classList.toggle('hidden', panel.id !== 'tab-' + target);
-                    });
+                tabPanels.forEach(function (panel) {
+                    panel.classList.toggle('hidden', panel.id !== 'tab-' + target);
                 });
             });
+        });
 
-            const searchInput = document.getElementById('searchInput');
-            if (!searchInput) return;
-
+        // --- 2. LIVE SEARCH TABLE ---
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
             searchInput.addEventListener('input', function () {
                 const query = searchInput.value.trim().toLowerCase();
                 const activePanel = document.querySelector('.tab-panel:not(.hidden)');
@@ -121,8 +132,24 @@
                     row.style.display = text.includes(query) ? '' : 'none';
                 });
             });
-        });
-    </script>
+        }
+
+        // --- 3. TOGGLE SIDEBAR BALAI ---
+        const sidebarBalai = document.getElementById('sidebarbalai');
+        const openBtn = document.getElementById('open-sidebarbalai-btn');
+        const closeBtn = document.getElementById('close-sidebarbalai-btn');
+        const overlay = document.getElementById('sidebarbalai-overlay');
+
+        function toggleSidebarBalai() {
+            if (sidebarBalai) sidebarBalai.classList.toggle('-translate-x-full');
+            if (overlay) overlay.classList.toggle('hidden');
+        }
+
+        if (openBtn) openBtn.addEventListener('click', toggleSidebarBalai);
+        if (closeBtn) closeBtn.addEventListener('click', toggleSidebarBalai);
+        if (overlay) overlay.addEventListener('click', toggleSidebarBalai);
+    });
+</script>
 
 </body>
 </html>
