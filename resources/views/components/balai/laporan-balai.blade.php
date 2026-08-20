@@ -70,11 +70,9 @@
                                             </a>
 
                                             <form action="{{ route('balai.laporan-penanganan-balai.destroy', $laporan->id) }}"
-                                                  method="POST"
-                                                  onsubmit="return confirm('Yakin ingin menghapus laporan ini?');">
+                                                method="POST" class="delete-form">
                                                 @csrf
                                                 @method('DELETE')
-
                                                 <button
                                                     type="submit"
                                                     class="inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700">
@@ -108,3 +106,34 @@
 
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteForms = document.querySelectorAll('.delete-form');
+        deleteForms.forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                Swal.fire({
+                    title: 'Yakin ingin menghapus?',
+                    text: 'Data laporan yang dihapus tidak dapat dikembalikan.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true,
+                    focusCancel: true
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>

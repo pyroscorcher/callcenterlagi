@@ -1628,8 +1628,8 @@
                 </div>
             @else
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="if (document.referrer) { window.history.back(); } else { window.location.href = '{{ route('balai.laporan-penanganan-balai') }}'; }"
-                       class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-gray-800 font-medium hover:bg-gray-50 transition">
+                    <button type="button" id="btnKembaliForm"
+                    class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-gray-800 font-medium hover:bg-gray-50 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
@@ -2052,5 +2052,34 @@
             }
         }
     });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btnKembali = document.getElementById('btnKembaliForm');
+    if (!btnKembali) return;
+
+    btnKembali.addEventListener('click', function () {
+        Swal.fire({
+            title: 'Anda yakin ingin membatalkan laporan?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#161446',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Batalkan',
+            cancelButtonText: 'Tidak',
+            reverseButtons: true,
+            focusCancel: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (document.referrer) {
+                    window.history.back();
+                } else {
+                    window.location.href = "{{ route('balai.laporan-penanganan-balai') }}";
+                }
+            }
+        });
+    });
+});
 </script>
 @endunless

@@ -197,6 +197,10 @@ class BalaiController extends Controller
             'dokumen'                   => 'nullable|array',
             'dokumen.id.*'              => 'nullable|integer',
             'dokumen.file.*'            => 'nullable|file|max:20480',
+
+            'required'    => 'Bagian ini wajib diisi.',
+            'required_if' => 'Bagian ini wajib diisi.',
+            '*.required'  => 'Bagian ini wajib diisi.',
         ]);
     
         $laporanData = collect($validated)->only([
